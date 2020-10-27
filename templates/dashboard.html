@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>Dashboard</title>
+    <title>Tripmaster Dashboard</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
@@ -14,9 +14,9 @@
     <link rel="stylesheet" type="text/css" href="/static/css/tm.dashboard.css" />
     <script src="/static/js/jquery.min.js"></script>
     <script src="/static/js/dx.all.js"></script>
+    <script src="/static/js/odometer.js"></script>
     <script src="/static/js/tm.dashboard.js"></script>
     <script src="/static/js/tm.common.js"></script>
-    <script src="/static/js/odometer.js"></script>
     <script src="/static/js/websocket.js"></script>
     <script>
 		var DEBUG = {{ debug }};
@@ -36,28 +36,43 @@
 <body onload="WebSocket_Open('dashboard')" class="dx-viewport">
 	<div id="button-reloadpage"></div>
 	
-	<div class="main" onClick="resetSector();">
-		<div id="box-twocolumn">
-			<div class="tm-background" data-options="dxItem: {ratio: 2}">
-				<div id="circulargauge-speed"></div>
+	<div id="multiview-dashboard" class="main tm-background">
+		<script id="mv-sector" type="text/html">
+			<div id="sector-box" class="twocolumn-box" onClick="resetSector();">
+				<div data-options="dxItem: {ratio: 2}">
+					<div id="circulargauge-speed"></div>
+				</div>
+				<div data-options="dxItem: {ratio: 1}" id="right-sector">
+					<div id="lineargauge-kmsector"></div>
+				</div>
 			</div>
-			<div class="tm-background" data-options="dxItem: {ratio: 1}">
-				<div id="lineargauge-kmsector"></div>
+			<div id="odometer-kmsector"></div>
+			<div id="odometer-kmtotal"></div>
+			<script>
+				new Odometer({
+				  el: document.getElementById("odometer-kmsector"),
+				  digits: 4,
+				});
+				new Odometer({
+				  el: document.getElementById("odometer-kmtotal"),
+				});
+			</script>
+		</script>
+		<script id="mv-regtest" type="text/html">
+			<div id="regtest-box" class="twocolumn-box">
+				<div data-options="dxItem: {ratio: 2}">
+					<div id="circulargauge-devavgspeed"></div>
+					<div id="textbox-regtestseconds"></div>
+				</div>
+				<div data-options="dxItem: {ratio: 1}" id="right-regtest">
+					<div></div>
+				</div>
 			</div>
-		</div>
-		<div id="odometer-kmsector"></div>
-		<div id="odometer-kmtotal" class="odometer"></div>
+		
+		</script>
 	</div>
-	
 	<script>
 		window.addEventListener("resize", resizeAndPosition);
-		var odoKmTotal = document.getElementById("odometer-kmtotal");
-		var odoKmSector = document.getElementById("odometer-kmsector");
-		// odometer-kmsector
-		od = new Odometer({
-		  el: odoKmSector,
-		  digits: 4,
-		});
 	</script>
 </body>
 </html>

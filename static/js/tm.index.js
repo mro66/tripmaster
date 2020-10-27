@@ -7,7 +7,7 @@ $(function(){
 			visible: true,
 			width: "50%",
 			onClick: function(e) {
-			   location.assign("/dashboard.html");
+				location.assign("/dashboard.html");
 			 },
 		});   
 	
@@ -18,12 +18,8 @@ $(function(){
 			visible: true,
 			width: "50%",
 			onClick: function(e) {
-			   location.assign("/settings.html");
+				location.assign("/settings.html");
 			 },
 		}); 
 		
-		$("#switch-dashboard").dxSwitch({
-		});   
-	
-
 });

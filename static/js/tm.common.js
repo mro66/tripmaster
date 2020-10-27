@@ -2,6 +2,63 @@ var kmLeftInSector = 0;
 var kmSectorPreset = 0;
 var windowDiagonal = Math.sqrt(Math.pow(window.innerHeight, 2) + Math.pow(window.innerWidth, 2))/1000;
 
+// Gemeinsame Optionen ...
+
+// ...der linearen Anzeige des Etappenfortschritts
+var linearGaugeOptions = {
+   animation: {
+		enabled: true,
+		easing: "linear"
+	},
+	geometry: {
+		orientation: "vertical"
+	},
+	size: {
+		height: "100%",
+		width: "100%",
+	},
+	subvalues: [],
+	subvalueIndicator: {
+		type: "textCloud",
+		horizontalOrientation: "right",
+		offset: 23,
+		arrowLength: 5,
+		text: {
+			font: {
+				size: "5vw",
+				color: "Ivory",
+			},
+			customizeText: function (e) {
+				if (e.value == 100) {
+					return formatNumber(kmSectorPreset) + " km &#10003;";
+				} else {
+					return "-" + formatDistance(kmLeftInSector);
+				}
+			}
+		}
+	},
+	scale: {
+		tickInterval: 20,
+		label: {
+			customizeText: function (e) {
+				return e.value+" %";
+			},
+			font: {
+				size: "5vw",
+				color: "gray",
+			},
+		},
+	},
+	redrawOnResize: true,
+};
+
+// ... der Anzeigetextboxen
+var textBoxOptions = {
+	readOnly: true,
+	focusStateEnabled: false,
+	hoverStateEnabled: false,	
+};
+
 $(function(){
 
     // Reload nach Abbruch der WebSocket Verbindung
@@ -15,55 +72,6 @@ $(function(){
 			   location.reload();
 			 },
 		});   
-	
-	// Lineare Anzeige des Abschnittfortschritts
-	
-		var kmSectorLinearGauge = $("#lineargauge-kmsector").dxLinearGauge({
-		   animation: {
-				enabled: true,
-				easing: "linear"
-			},
-			geometry: {
-				orientation: "vertical"
-			},
-			size: {
-				height: "100%",
-				width: "100%",
-			},
-            subvalues: [],
-			subvalueIndicator: {
-				type: "textCloud",
-				horizontalOrientation: "right",
-				offset: 23,
-				arrowLength: 5,
-				text: {
-					font: {
-						size: "5vw",
-						color: "Ivory",
-					},
-					customizeText: function (e) {
-						if (e.value == 100) {
-							return formatNumber(kmSectorPreset) + " km &#10003;";
-						} else {
-							return "-" + formatDistance(kmLeftInSector);
-						}
-					}
-				}
-			},
-			scale: {
-				tickInterval: 20,
-				label: {
-					customizeText: function (e) {
-						return e.value+" %";
-					},
-					font: {
-						size: "5vw",
-						color: "gray",
-					},
-				},
-			},
-		}).dxLinearGauge("instance");
-		
 });
 
 // Farbverlauf der Linearen Anzeige (leider deaktiviert, da bei einem Farbwechsel die Anzeige immer zuerst auf 0 springt :-(

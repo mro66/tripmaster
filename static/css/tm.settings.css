@@ -1,10 +1,22 @@
+.tm-background-input {
+    background: Linen;
+}
+
 /* TabPanel */
 .dx-tab, .dx-switch, .dx-field-label {
 	font-size: 5vw;
 }
 
+/*
+wird von mobilen Browsern ignoriert...
+.dx-fieldset {
+	padding: 20px 10px;
+	margin: 10px 10px;
+}
+*/
+
 /* Setup Tab */
-.setupTab .dx-field-label {
+.tab-setup .dx-field-label {
 	font-size: 6vw;
 }
 
@@ -17,14 +29,59 @@
 
 /* TextBox */
 .dx-textbox-red {
-	border: 1px #d9534f solid ;
+	border: 1px var(--tm-red) solid ;
 }
 .dx-texteditor.dx-state-readonly {
     border-color: #ddd;
 }
 
-/* Switch */
+.tenseconds {
+	font-weight: bold;
+	animation-name: tenseconds;
+	animation-duration: 10s;
+}
 
+.secondyellow {
+	font-weight: bold;
+	animation-name: yellow;
+	animation-duration: 1s;
+}
+
+.secondred {
+	font-weight: bold;
+	animation-name: red;
+	animation-duration: 1s;
+}
+
+.flicker {
+	font-weight: normal;
+	animation-name: flicker;
+	animation-duration: 0.5s;
+}
+
+/* Standard syntax */
+@keyframes yellow {
+	0%  {background-color: var(--tm-yellow); color: white;}
+	100%   {background-color: white; color: var(--tm-yellow);}
+}
+
+@keyframes red {
+	0%  {background-color: var(--tm-red); color: white;}
+	100%   {background-color: white; color: var(--tm-red);}
+}
+
+@keyframes flicker {
+	0%  {background-color: white; color: var(--tm-red);}
+	16%  {background-color: var(--tm-red); color: white;}
+	33%  {background-color: white; color: var(--tm-red);}
+	50%  {background-color: var(--tm-red); color: white;}
+	66%  {background-color: white; color: var(--tm-red);}
+	83%  {background-color: var(--tm-red); color: white;}
+	100% {background-color: white; color: black;}
+}
+
+
+/* Switch */
 .dx-field-value:not(.dx-widget) > .dx-switch {
     float: none;
 }

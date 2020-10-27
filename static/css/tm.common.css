@@ -1,6 +1,13 @@
+:root {
+	--tm-red: #d9534f;
+	--tm-yellow: #f0ad4e;
+	--tm-green: #5cb85c;
+	--tm-blue: #337ab7;
+}
+
 @font-face {
- font-family: 'Alternate Gothic';
-  src: url('/static/css/fonts/Alternate Gothic.otf');
+	font-family: 'Tripmaster Font';
+	src: url('/static/css/fonts/Alternate Gothic.otf');
 }
 
 html, body {

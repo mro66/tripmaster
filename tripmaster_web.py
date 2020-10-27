@@ -41,8 +41,9 @@ UMIN_READER = None
 
 # Messen alle ... Sekunden
 SAMPLE_TIME = 1.0
-# Messzeitpunkt
+# Messzeitpunkt gesamt und Etappe
 T = 0.0
+T_SECTOR = 0.0
 # Umdrehungen pro Minute
 UMIN = 0.0
 MS = 0.0
@@ -52,19 +53,20 @@ TYRE_SIZE = config.getint("Settings", "Radumfang") / 100
 AVG_KMH = 0.0
 # Vorgegebene  Durchschnittsgeschwindigkeit
 AVG_KMH_PRESET = 0.0
-# Zurückgelegte Kilometer - gesamt, Rallye und Abschnitt
+# Zurückgelegte Kilometer - gesamt, Rallye und Etappe
 KM_TOTAL = 0.0
 KM_RALLYE = 0.0
 KM_SECTOR = 0.0
-# Vorgegebene Abschnittlänge
+# Vorgegebene Etappenlänge
 KM_SECTOR_PRESET = 0.0
 # Rückwärtszählen beim Verfahren
 REVERSE = 1
+# Zeitvorgabe der GLP
+COUNTDOWN = 0
 
 #-------------------------------------------------------------------
 
 DEBUG = 1
-httpPort = 80
 websocketPort = 7070
 theMaster = None
 
@@ -75,36 +77,13 @@ def printDEBUG(message):
     if DEBUG:
         print(message)
 
-def getRPM():
-    global UMIN, T, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, REVERSE, AVG_KMH
-    # UMIN ermitteln
-    # UMIN = int(UMIN_READER.RPM() + 0.5)
-    #... ohne Sensor
-    UMIN = 1000 #+ math.sin((T * 5)/180 * math.pi) * 1000
-    # Messzeitpunkt
-    T += SAMPLE_TIME
-    # Geschwindigkeit in Meter pro Sekunde
-    MS = UMIN / 60 * TYRE_SIZE
-    # Geschwindigkeit in Kilometer pro Stunde
-    KMH = MS * 3.6
-    # Zurückgelegte Kilometer - Gesamt, Rallye und Abschnitt (Rückwärtszählen beim Umdrehen außer bei Gesamt)
-    KM_TOTAL += MS * SAMPLE_TIME / 1000
-    KM_RALLYE += MS * SAMPLE_TIME / 1000 * REVERSE
-    KM_SECTOR += MS * SAMPLE_TIME / 1000 * REVERSE
-    # % zurückgelegte Strecke im Abschnitt
-    FRAC_SECTOR_DRIVEN = 0
-    if KM_SECTOR_PRESET > 0:
-        FRAC_SECTOR_DRIVEN = int(min(KM_SECTOR / KM_SECTOR_PRESET * 100, 100))
-    # noch zurückzulegende Strecke im Abschnitt (mit der 0.005 wird der Wert 0 in der TextCloud vermieden)
-    KM_SECTOR_TO_BE_DRIVEN = max(KM_SECTOR_PRESET - KM_SECTOR, 0) #0.005)
-        
-    if T > 0.0:
-        # Durchschnittliche Geschwindigkeit in Kilometer pro Stunde im Abschnitt
-        AVG_KMH = KM_SECTOR * 1000 / T * 3.6
-    return "data:{0:0.1f}:{1:0.1f}:{2:0.1f}:{3:0.1f}:{4:0.2f}:{5:0.2f}:{6:0.2f}:{7:0.2f}:{8:0.2f}:{9:}".format(T, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN)
+# Schreibt Nachrichten an alle Clients
+def messageToAllClients(clients, message):
+    for index, client in enumerate(clients):
+        if client:
+            client.write_message( message )
 
 #-------------------------------------------------------------------
-
 ### Parse request from client
 #required format-> command:param
 def WebRequestHandler(requestlist):
@@ -117,35 +96,78 @@ def WebRequestHandler(requestlist):
         param = requestsplit[1]
         if param == "dummy":
             param = "0"
-
         if command == "RPM":
             returnlist = getRPM()
+        if command == "regTest":
+            global COUNTDOWN
+            COUNTDOWN -= 1
+            returnlist = "{:}".format(COUNTDOWN)
  
     return returnlist
 
-def pushDataTimed(clients, what, when):
+def getRPM():
+    global UMIN, T, T_SECTOR, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, REVERSE, AVG_KMH
+    # UMIN ermitteln
+    # UMIN = int(UMIN_READER.RPM() + 0.5)
+    #... ohne Sensor
+    UMIN = 1000 + math.sin((T * 5)/180 * math.pi) * 1000
+    # Messzeitpunkt gesamt und Etappe
+    T += SAMPLE_TIME
+    T_SECTOR += SAMPLE_TIME
+    # Geschwindigkeit in Meter pro Sekunde
+    MS = UMIN / 60 * TYRE_SIZE
+    # Geschwindigkeit in Kilometer pro Stunde
+    KMH = MS * 3.6
+    # Zurückgelegte Kilometer - Gesamt, Rallye und Etappe (Rückwärtszählen beim Umdrehen außer bei Gesamt)
+    KM_TOTAL += MS * SAMPLE_TIME / 1000
+    KM_RALLYE += MS * SAMPLE_TIME / 1000 * REVERSE
+    KM_SECTOR += MS * SAMPLE_TIME / 1000 * REVERSE
+    # % zurückgelegte Strecke in der Etappe
+    FRAC_SECTOR_DRIVEN = 0
+    if KM_SECTOR_PRESET > 0:
+        FRAC_SECTOR_DRIVEN = int(min(KM_SECTOR / KM_SECTOR_PRESET * 100, 100))
+    # noch zurückzulegende Strecke in der Etappe (mit der 0.005 wird der Wert 0 in der TextCloud vermieden)
+    KM_SECTOR_TO_BE_DRIVEN = max(KM_SECTOR_PRESET - KM_SECTOR, 0) #0.005)
+        
+    if T_SECTOR > 0.0:
+        # Durchschnittliche Geschwindigkeit in Kilometer pro Stunde in der Etappe
+        AVG_KMH = KM_SECTOR * 1000 / T_SECTOR * 3.6
+    return "data:{0:0.1f}:{1:0.1f}:{2:0.1f}:{3:0.1f}:{4:0.2f}:{5:0.2f}:{6:0.2f}:{7:0.2f}:{8:0.2f}:{9:}".format(T, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN)
+
+def startTheMaster(client):
+    timed = threading.Timer(SAMPLE_TIME, pushSensorData, [client.wsClients, "RPM", "{:.1f}".format(SAMPLE_TIME)] )
+    timed.start()
+    timers.append(timed)
+    messageToAllClients(client.wsClients, "Tripmaster gestartet!:success:masterStarted")
+    
+def pushSensorData(clients, what, when):
     what = str(what)
     when = float(when)
     message = WebRequestHandler(what.splitlines());
     messageToAllClients(clients, message)
-    timed = threading.Timer( when, pushDataTimed, [clients, what, when] )
+    timed = threading.Timer( when, pushSensorData, [clients, what, when] )
     timed.start()
     timers.append(timed)
 
-def messageToAllClients(clients, message):
-    for index, client in enumerate(clients):
-        if client:
-            client.write_message( message )
-
-def startTheMaster(client):
-    global theMaster, pi, UMIN_READER
-    if theMaster is None:
-        timed = threading.Timer(SAMPLE_TIME, pushDataTimed, [client.wsClients, "RPM", "{:.1f}".format(SAMPLE_TIME)] )
+def startRegtest(client):
+    timed = threading.Timer(1.0, pushRegtestData, [client.wsClients, "regTest", "1.0"] )
+    timed.start()
+    timers.append(timed)
+    
+def pushRegtestData(clients, what, when):
+    what = str(what)
+    when = float(when)
+    message = WebRequestHandler(what.splitlines())
+    secondsLeft = int(message)
+    if secondsLeft == 0:
+        messageToAllClients(clients, "countdown:"+message)
+        messageToAllClients(clients, "GLP gestoppt:success:regTestStopped")
+    elif secondsLeft > 0:
+        messageToAllClients(clients, "countdown:"+message)
+        timed = threading.Timer( when, pushRegtestData, [clients, what, when] )
         timed.start()
         timers.append(timed)
-        theMaster = client
-        messageToAllClients(client.wsClients, "Tripmaster gestartet!:success:masterStarted")
-    
+
 ### WebSocket server tornado <-> WebInterface
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
     # Array der WebSocket Clients
@@ -165,10 +187,11 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             # pi = pigpio.pi()
             # UMIN_READER starten - für VM kommentieren
             # UMIN_READER = reader(pi, REED_GPIO)
-            startTheMaster(self)
+            theMaster = self
+            startTheMaster(theMaster)
     # the client sent a message
     def on_message(self, message):
-        global theMaster, T, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, REVERSE, TYRE_SIZE
+        global theMaster, T, T_SECTOR, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, REVERSE, TYRE_SIZE, COUNTDOWN
         printDEBUG("Message from WebIf: >>>"+message+"<<<")
         # command:param
         message = message.strip()
@@ -181,7 +204,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
         # Master Start und Pause
         if command == "startMaster":
-            startTheMaster(self)
+            if theMaster is None:
+                theMaster = self
+                startTheMaster(theMaster)
         elif command == "pauseMaster":
             if theMaster is not None:
                 for index, timer in enumerate(timers):
@@ -189,21 +214,30 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                         timer.cancel()
                 theMaster = None
                 messageToAllClients(self.wsClients, "Tripmaster pausiert:warning")
-        # Abschnittsteuerung
+        # Etappensteuerung
         elif command == "resetSector":
+            T_SECTOR = 0.0
             KM_SECTOR = 0.0
             KM_SECTOR_PRESET = 0.0
-            messageToAllClients(self.wsClients, "Abschnittzähler auf Null!:success")
+            messageToAllClients(self.wsClients, "Etappenzähler auf Null!:success")
         elif command == "setSectorLength":
             KM_SECTOR_PRESET = float(param)
-            messageToAllClients(self.wsClients, "Abschnitt auf "+locale.format("%.2f", KM_SECTOR_PRESET)+" km gesetzt!:success")
+            messageToAllClients(self.wsClients, "Etappe auf "+locale.format("%.2f", KM_SECTOR_PRESET)+" km gesetzt!:success")
         elif command == "toggleReverse":
             REVERSE = REVERSE * -1
             if REVERSE == -1:
                 messageToAllClients(self.wsClients, "Verfahren! km-Zähler rückwärts:warning")
             else:
                 messageToAllClients(self.wsClients, "km-Zähler wieder normal:success")
-        # Abschnittsteuerung
+        # Gleichmäßigkeitsprüfung
+        elif command == "startRegtest":
+            COUNTDOWN = int(param)
+            startRegtest(self)
+            messageToAllClients(self.wsClients, param+" sek GLP gestartet:success:regTestStarted")
+        elif command == "stopRegtest":
+            COUNTDOWN = 0
+            messageToAllClients(self.wsClients, "GLP gestoppt:success:regTestStopped")
+        # Einstellungen
         elif command == "resetTripmaster":
             T = 0.0
             KM_TOTAL = 0.0
@@ -212,7 +246,6 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             KM_SECTOR_PRESET = 0.0
             REVERSE = 1
             messageToAllClients(self.wsClients, "Tripmaster zurückgesetzt!:success")
-        # Parameterverwaltung
         elif command in parameters:
             config.set("Settings", command, param)
             if command == "Radumfang":
@@ -241,7 +274,6 @@ class Web_Application(tornado.web.Application):
             (r"/dashboard.html", DashboardHandler),
             (r"/settings.html", SettingsHandler),
             (r"/static/(.*)", StaticHandler),
-            (r"/static/js/(.*)", StaticHandler),
             (r'/(favicon.ico)', StaticHandler, {"path": ""}),
           ]
         settings = dict(
@@ -307,11 +339,17 @@ class StaticHandler(tornado.web.RequestHandler):
 try:
     timers = list()
     ws_app = tornado.web.Application([(r"/(.*)", WebSocketHandler),])
-    ws_server = tornado.httpserver.HTTPServer(ws_app)
+    ws_server = tornado.httpserver.HTTPServer(ws_app, ssl_options={
+        "certfile": "/home/pi/tripmaster/certs/servercert.pem",
+        "keyfile": "/home/pi/tripmaster/certs/serverkey.pem",
+    })
     ws_server.listen(websocketPort)
 
-    web_server = tornado.httpserver.HTTPServer(Web_Application())
-    web_server.listen(httpPort)
+    web_server = tornado.httpserver.HTTPServer(Web_Application(), ssl_options={
+        "certfile": "/home/pi/tripmaster/certs/servercert.pem",
+        "keyfile": "/home/pi/tripmaster/certs/serverkey.pem",
+    })
+    web_server.listen(443)
     tornado.ioloop.IOLoop.instance().start()
 except (KeyboardInterrupt, SystemExit):
     for index, timer in enumerate(timers):

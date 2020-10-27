@@ -2,8 +2,8 @@
   "lang": "de",
   "name": "Tripmaster ",
   "short_name": "Tripmaster",
-  "display": "browser",
-  "orientation": "portrait",
+  "display": "fullscreen",
+  "orientation": "any",
   "icons": [{
     "src": "/static/img/tripmaster-64.png",
     "sizes": "64x64"

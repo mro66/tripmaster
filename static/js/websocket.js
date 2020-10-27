@@ -1,36 +1,36 @@
-var ws;
-var ws_status = "closed";
-function set_ws_status(status) {
-    ws_status = status;
+var wss;
+var wss_status = "closed";
+function set_wss_status(status) {
+    wss_status = status;
     if (document.getElementById("connectionStatus") !== null) {
         document.getElementById("connectionStatus").innerHTML = status;
     }
 }
 
 function WebSocket_Close() {
-    ws.close();
+    wss.close();
 }
 
 function WebSocket_Open(page) {
-    ws = new WebSocket("ws://"+location.hostname+":7070/"+page);
-    ws.onerror = function(evt) {
+    wss = new WebSocket("wss://"+location.hostname+":7070/"+page);
+    wss.onerror = function(evt) {
         mylog('Fehler: '+evt.data);
     }
-    ws.onopen = function() {
+    wss.onopen = function() {
         mylog('Verbindung geöffnet!');
-        set_ws_status("opened");
+        set_wss_status("opened");
         if (document.getElementById("circulargauge-speed") !== null) {
 			$('#circulargauge-speed').dxCircularGauge('instance').option("animation.duration", SAMPLE_TIME);
 		}
         if ((document.getElementById("lineargauge-kmsector") !== null)) {
 			$("#lineargauge-kmsector").dxLinearGauge('instance').option("animation.duration", SAMPLE_TIME);
-			if ((document.getElementById("box-twocolumn") !== null)) {
+			if ((document.getElementById("odometer-kmsector") !== null)) {
 				resizeAndPosition();
 			}
 		}
 		DevExpress.ui.notify("WebSocket geöffnet", "success");
     }
-    ws.onclose = function(evt) {
+    wss.onclose = function(evt) {
         if (isset(evt.reason)) {
         	mylog('Verbindung geschlossen:'+evt.reason);
         } else {
@@ -41,9 +41,9 @@ function WebSocket_Open(page) {
 			document.getElementsByClassName("main")[0].style.display = "none";
 			$("#button-reloadpage").dxButton('instance').option("visible", true);
 		}
-        set_ws_status("closed");
+        set_wss_status("closed");
     }
-    ws.onmessage = function(evt) {
+    wss.onmessage = function(evt) {
 		var message = evt.data;
         var values = message.split(':');
         if (values[0] == "data") {
@@ -68,7 +68,7 @@ function WebSocket_Open(page) {
 			} 
 			if (document.getElementById("odometer-kmsector") !== null) {
 				document.getElementById("odometer-kmsector").innerHTML = parseFloat(KM_SECTOR).toLocaleString('de-DE');
-			// Linearanzeige: restliche km im Abschnitt
+			// Linearanzeige: restliche km in der Etappe
 			} 
 			if (document.getElementById("lineargauge-kmsector") !== null) {
 				kmSectorPreset = KM_SECTOR_PRESET;
@@ -78,11 +78,11 @@ function WebSocket_Open(page) {
 				$("#lineargauge-kmsector").dxLinearGauge('instance').option("subvalues", subvalues);
             } 
 			// Entfernungstextboxen
-			// Vorgabe des Abschnitts
+			// Vorgegebene Etappenlänge
 			if (document.getElementById("textbox-sectorpreset") !== null) {
 				$("#textbox-sectorpreset").dxTextBox('instance').option("value", formatDistance(KM_SECTOR_PRESET));
 			} 
-			// Abschnitt
+			// Etappe
 			if (document.getElementById("textbox-sectorcounter") !== null) {
 				$("#textbox-sectorcounter").dxTextBox('instance').option("value", formatDistance(KM_SECTOR));
 			} 
@@ -94,6 +94,12 @@ function WebSocket_Open(page) {
 			if (document.getElementById("textbox-totalcounter") !== null) {
 				$("#textbox-totalcounter").dxTextBox('instance').option("value", formatDistance(KM_TOTAL));
 			} 
+		} else if (values[0] == "countdown") {
+			var countdown = values[1]
+			if (document.getElementById("textbox-regtestseconds") !== null) {
+				$("#textbox-regtestseconds").dxTextBox('instance').option("value", countdown + " sek");
+			}
+			
 		} else {
 			mylog('<-: '+message);
 		
@@ -102,9 +108,16 @@ function WebSocket_Open(page) {
 			COMMAND = values[2];
 			
 			if (values.length == 3) {
-				if ((COMMAND = "masterStarted") && (document.getElementById("switch-pausetripmaster") !== null)) {
+				if ((COMMAND == "masterStarted") && (document.getElementById("switch-pausetripmaster") !== null)) {
 					$("#switch-pausetripmaster").dxSwitch('instance').option("value", false);
-				}
+				};
+				if (document.getElementById("multiview-dashboard") !== null) {
+					if (COMMAND == "regTestStarted") {
+						$("#multiview-dashboard").dxMultiView('instance').option("selectedIndex", 1);
+					} else if (COMMAND == "regTestStopped") {
+						$("#multiview-dashboard").dxMultiView('instance').option("selectedIndex", 0);
+					}
+				};
 			};
 			DevExpress.ui.notify(TEXT, TYPE);
 		}
@@ -112,8 +125,8 @@ function WebSocket_Open(page) {
 }
 
 function WebSocket_Send(data) {
-    if (ws_status == "opened") {
-        ws.send(data);
+    if (wss_status == "opened") {
+        wss.send(data);
         mylog('->: '+data);
     }
 }
