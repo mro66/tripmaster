@@ -1,0 +1,17 @@
+/* TabPanel */
+.dx-tab {
+	font-size: 1.2em;
+}
+
+/* Button */
+
+.dx-button {
+    float: none;
+    width: 100%;
+}
+
+.dx-viewport .dx-field-value:not(.dx-switch):not(.dx-checkbox):not(.dx-button),
+.dx-viewport .dx-field-label {
+    float: none;
+    width: 100%;
+}

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Tripmaster Settings</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+	<link rel="stylesheet" type="text/css" href="/static/dx.common.css" />
+	<link rel="stylesheet" type="text/css" href="/static/dx.light.css" />
+    <link rel="dx-theme" data-theme="generic.light" href="/static/dx.light.css" />
+    <link rel="stylesheet" type="text/css" href="/static/tm.common.css" />
+    <link rel="stylesheet" type="text/css" href="/static/tm.settings.css" />
+    <script src="/static/jquery.min.js"></script>
+    <script src="/static/dx.all.js"></script>
+    <script src="/static/tm.settings.js"></script>
+    <script src="/static/tm.common.js"></script>
+    <script src="/static/websocket.js"></script>
+	<script>window.jQuery || document.write(decodeURIComponent('%3Cscript src="js/jquery.min.js"%3E%3C/script%3E'))</script>
+    <script>
+		var DEBUG = {{ debug }};
+		var SAMPLE_TIME = {{ sample_time }};
+	</script>
+</head>
+<body onload="WebSocket_Open('settings')" class="dx-viewport">
+	<div id="button-reloadpage"></div>
+	<div id="settings" class="main">
+		<div id="tabPanelContainer">
+			<script id="etappeTab" type="text/html">
+				<div class="dx-fieldset">
+					<div class="dx-field">
+						<div class="dx-field-value">
+							<div id="button-resetsector"></div>
+						</div>
+					</div>
+					<div class="dx-field">
+						<div class="dx-field-value">
+							<div id="selectbox-sectorkm"></div>
+						</div>
+						<div class="dx-field-value">
+							<div id="selectbox-sector100m"></div>
+						</div>
+					</div>
+					<div class="dx-field">
+						<div class="dx-field-value">
+							<div id="button-setsector"></div>
+						</div>
+					</div>
+				</div>
+				<div id="lineargauge-kmsector"></div>
+			</script>
+
+			<script id="glpTab" type="text/html">
+				<div class="dx-fieldset">
+					<div class="dx-field">
+						<div class="dx-field-value">
+							<div id="selectbox-glpkm"></div>
+						</div>
+						<div class="dx-field-value">
+							<div id="selectbox-glp100m"></div>
+						</div>
+					</div>
+				</div>
+			</script>
+			
+			<script id="setupTab" type="text/html">
+				TODO
+			</script>
+		</div>
+    </div>
+</body>
+</html>

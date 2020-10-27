@@ -1,0 +1,29 @@
+/* Circular gauge */
+#circulargauge-speed {
+	position: relative;
+    height: 100%;
+    width: 320px;
+	z-index: 10;
+	float: left;
+	/* border: 1px solid black; */
+}
+
+/* Odometer */
+
+.odometer {
+  font-size: 20px;
+}
+
+#km_sector {
+  position: absolute;
+  top: 115px;
+  left: 135px;
+  z-index: 0;
+}
+
+#km_total {
+  position: absolute;
+  top: 210px;
+  left: 128px;
+  z-index: 0;
+}

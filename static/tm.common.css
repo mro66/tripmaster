@@ -1,0 +1,12 @@
+@font-face {
+ font-family: 'Alternate Gothic';
+  src: url('/static/Alternate Gothic.otf');
+}
+
+.dx-field-value .dx-widget, .dx-item, #button-reloadpage{
+    font-size: 1.75em;
+}
+
+.red1px {
+	border: 1px red solid;
+}
