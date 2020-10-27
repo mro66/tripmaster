@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Start WLAN
+Comment=Startet den zweiten WLAN Adapter
+Icon=/usr/share/pixmaps/debian-logo.png
+Exec=sudo ifconfig wlan1 up
+Type=Application
+Encoding=UTF-8
+Terminal=true
+Categories=None
+X-KeepTerminal=false

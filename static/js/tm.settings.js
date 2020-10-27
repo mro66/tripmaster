@@ -289,7 +289,7 @@ $(function(){
             // sectorTextBox.option("value", formatDistance(0));
             sectorPresetTextBox.option("value", "0 m");
             sectorPresetRestTextBox.option("value", "0 m");
-            // Wenn der 
+            // Wenn der Abschnitt zurückgesetzt wird, fahren wir vorwärts
             if (reverseButton.option("icon") === "fas fa-arrow-down") {
                 setReverse(false);
             }
@@ -303,19 +303,29 @@ $(function(){
         elementAttr: {
             style: "color: var(--tm-green)",
         },
+        onContentReady: function(e) {
+            if (REVERSE) {
+                e.component.option("icon", "fas fa-arrow-down");
+                e.component.option("elementAttr", {"style": "color: var(--tm-red)"});
+            } else {
+                e.component.option("icon", "fas fa-arrow-up");
+                e.component.option("elementAttr", {"style": "color: var(--tm-green)"});
+            }                
+        },
         onClick: function(e) {
             setReverse(e.component.option("icon") === "fas fa-arrow-up");
         },
     })).dxButton("instance");
     
         function setReverse(backwards) {
-            WebSocket_Send("toggleReverse");
             if (backwards) {
+                WebSocket_Send("reverse:true");
                 reverseButton.option("icon", "fas fa-arrow-down");
                 reverseButton.option("elementAttr", {"style": "color: var(--tm-red)"});
                 // Wenn rückwärts, dann roter Text
                 $("#textbox-sector").find(".dx-texteditor-input").css("color", "var(--tm-red)");                    
             } else {
+                WebSocket_Send("reverse:false");
                 reverseButton.option("icon", "fas fa-arrow-up");
                 reverseButton.option("elementAttr", {"style": "color: var(--tm-green)"});
                 $("#textbox-sector").find(".dx-texteditor-input").css("color", "");                    
@@ -325,6 +335,14 @@ $(function(){
     // Anzeige der km-Stände
     var sectorTextBox = $("#textbox-sector").dxTextBox($.extend(true, {}, textBoxOptions,{
         value: formatDistance(0),
+        onContentReady: function(e) {
+            if (REVERSE) {
+                // Wenn rückwärts, dann roter Text
+                $("#textbox-sector").find(".dx-texteditor-input").css("color", "var(--tm-red)");                    
+            } else {
+                $("#textbox-sector").find(".dx-texteditor-input").css("color", ""); 
+            }                
+        },
     })).dxTextBox("instance");
 
     var sectorPresetTextBox = $("#textbox-sectorpreset").dxTextBox($.extend(true, {}, textBoxOptions,{
@@ -837,27 +855,6 @@ $(function(){
 // Tab Setup
 
     // RasPi
-    $(".button-info").dxButton({
-        icon: "fas fa-info-circle",
-        elementAttr: {
-            style: "border-style: none; color: var(--tm-yellow)",
-        },
-        onClick: function(e) { 
-            $("#popup-info").dxPopup("show");
-        },
-    });
-    
-    $("#popup-info").dxPopup({
-        title: "Info",
-        // showTitle: true,
-        // showCloseButton: true,
-        dragEnabled: false,
-        onShown: function (e) {
-            $("#textbox-cputemp").dxTextBox($.extend(true, {}, textBoxOptions,{
-            }));
-        },
-    })
-
     $("#button-sudoreboot").dxButton($.extend(true, {}, metalButtonOptions, {
         icon: "fas fa-redo",
         disabled: false,

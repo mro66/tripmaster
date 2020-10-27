@@ -24,7 +24,7 @@
     <script>
         var DEBUG = {{ debug }};
         var SAMPLE_TIME = {{ sample_time }};
-        var REVERSE = ('{{ sector_reverse }}' === 'False');
+        var REVERSE = ('{{ sector_reverse }}' === 'True');
         window.jQuery || document.write(decodeURIComponent('%3Cscript src="static/jquery.min.js"%3E%3C/script%3E'))
         
         var ACTIVE_CONFIG = '{{ active_config }}';
@@ -156,13 +156,7 @@
         <!-- Setup -->
         <script id="tab-setup" type="text/html">
             <div class="flex-row">
-                <div>Raspberry Pi
-                    <span class="button-info"></span>
-                    <div id="popup-info">
-                        <div class="label-key">CPU Temperatur</div>
-                        <div id="textbox-cputemp"></div>
-                    </div>
-                </div>
+                <div>Raspberry Pi</div>
                 <div>
                     <div id="button-sudohalt"></div>
                     <div id="button-sudoreboot"></div>

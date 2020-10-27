@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=TM Err
+Comment=Verfolgt das Tripmaster stderr/stdout
+Icon=/usr/share/pixmaps/python3.7.xpm
+Exec=lxterminal -t "TM Log" -e tripmaster_err.sh
+Type=Application
+Encoding=UTF-8
+Terminal=false
+Categories=None

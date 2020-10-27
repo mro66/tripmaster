@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=TM Kill
+Comment=Stoppt den Autostart-Tripmaster
+Icon=/usr/share/pixmaps/python3.7.xpm
+Exec=lxterminal -t "TM Kill" -e kill_tripmaster.sh
+Type=Application
+Encoding=UTF-8
+Terminal=false
+Categories=None
+

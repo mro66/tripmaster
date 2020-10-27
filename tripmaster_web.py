@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 from __future__ import print_function
-from datetime import datetime
+from datetime import datetime, timedelta
 from gpiozero import CPUTemperature
+from ina219 import INA219, DeviceRangeError
 from logging.handlers import RotatingFileHandler
+from psutil import cpu_percent, cpu_count
 from read_RPM import reader
 from tornado.options import options
 import asyncio
@@ -30,7 +32,9 @@ import tornado.ioloop
 
 #-------------------------------------------------------------------
 
-websocketPort = 7070
+WebServer = None
+WebsocketServer = None
+WebsocketPort = 7070
 
 DEBUG = False
 # Kommandozeilenargument
@@ -49,18 +53,16 @@ tz_berlin = pytz.timezone('Europe/Berlin')
 tripmasterPath = os.path.dirname(os.path.abspath(__file__))
 logging.basicConfig(
     handlers=[RotatingFileHandler(tripmasterPath+"/out/tripmaster.log", maxBytes=500000, backupCount=5)],
-    format="%(asctime)s.%(msecs)03d - line %(lineno)d - %(levelname)s - %(message)s", 
+    format="%(asctime)s.%(msecs)03d - line %(lineno)d - %(levelname)s - %(message)s",
     datefmt="%d.%m.%Y %H:%M:%S")
 logger = logging.getLogger('Tripmaster')
 if DEBUG:
     logger.setLevel(logging.DEBUG)
 else:
     logger.setLevel(logging.INFO)
-logger.info("Tripmaster V2.0 gestartet")
-logger.info("DEBUG: " + str(DEBUG))
-logger.debug("Tornado-Version: " + tornado.version)
 
-pickleFile = tripmasterPath + '/out/pickle.dat' 
+pickleFile = tripmasterPath + '/out/pickle.dat'
+outputFile = tripmasterPath + '/out/output.txt'
 
 ### Konfiguration Antriebswellensensor(en)
 # Beim Restarten kommt die Fehlermeldung "channel already in use"
@@ -75,9 +77,10 @@ GPIO.setup(GPIO_PIN_1, GPIO.IN)
 GPIO.setup(GPIO_PIN_2, GPIO.IN)
 # GPIO Pin des Lüfters
 GPIO_PIN_FAN = 27
-# Setup als output und LOW
+# Setup als output Pin und setze auf LOW (= Lüfter aus)
 GPIO.setup(GPIO_PIN_FAN, GPIO.OUT)
 GPIO.output(GPIO_PIN_FAN, GPIO.LOW)
+
 # Verbindung zu pigpio Deamon
 pi = None
 # Die UMIN_READER
@@ -88,6 +91,12 @@ PULSES_PER_REV = 1.0
 
 ### GPS Deamon
 gpsd.connect()
+
+### Spannungsmessung
+SHUNT_OHM = 0.1
+MAX_STROMSTAERKE = 0.4
+ina = INA219(SHUNT_OHM, MAX_STROMSTAERKE)
+ina.configure(ina.RANGE_16V, ina.GAIN_1_40MV)
 
 ### Konfiguration Fahrzeug
 # INI-Datei
@@ -131,8 +140,6 @@ HAS_SENSORS = False
 # Durchschnittsgeschwindigkeit - aktuell und Vorgabe
 AVG_KMH = 0.0
 AVG_KMH_PRESET = 0.0
-# CPU Temperatur-Liste
-CPU_TEMPS = []
 # Zeitvorgabe der GLP
 COUNTDOWN = 0
 
@@ -144,6 +151,45 @@ RALLYE = None
 STAGE  = None
 # Abschnitt
 SECTOR = None
+
+# Parameter des RasPi (Listen, damit gleitende Mittel berechnet werden können)
+class PI_PARAMS:
+    def __init__(self):
+        self.CPU_LOAD = 0
+        self.STACK_CPU_LOAD = []
+        self.CPU_TEMP = 0
+        self.STACK_CPU_TEMP = []
+        self.UBAT = 0
+        self.STACK_UBAT = []
+
+    def getCPU_LOAD(self):
+        self.CPU_LOAD = self.movingAverage(self.STACK_CPU_LOAD, cpu_percent(), 10)
+        return self.CPU_LOAD
+
+    def calcCPU_TEMP(self):
+        self.CPU_TEMP = self.movingAverage(self.STACK_CPU_TEMP, CPUTemperature().temperature, 20)
+        return self.CPU_TEMP
+
+    def calcUBAT(self):
+        ubat = self.movingAverage(self.STACK_UBAT, ina.voltage() + ina.shunt_voltage()/1000, 20)
+        # Wenn die Spannungsmessung weniger als 2V liefert, ist _wahrscheinlich_ ein Netzteil am USB Port
+        # (sonst würde der Pi nicht laufen)
+        if ubat < 2:
+            ubat = 5.0
+        self.UBAT = ubat
+        return self.UBAT
+
+    def movingAverage(self, stack, newval, maxlength):
+        # Neuen Wert am Ende des Stacks einfügen
+        stack.append(newval)
+        if len(stack) > maxlength:
+            # Erstes Element entfernen, wenn maximale Länge des Stacks überschritten wird
+            stack.pop(0)
+        # Mittelwert des Stacks zurückgeben
+        return sum(stack) / len(stack)
+
+PI_STATUS = PI_PARAMS()
+UBATWARNING = 0
 
 class POINT_ATTR:
     def __init__(self, name, icon, iconcolor):
@@ -189,7 +235,7 @@ class SECTION:
         self.start       = 0        # Startzeit
         self.finish      = 0        # Zielzeit
         self.preset      = 0.0      # Streckenvorgabe
-        self.reverse     = 1        # 1 = Tacho läuft normal, -1 = Tacho läuft rückwärts
+        self.reverse     = 1        # km-Zähler läuft ... 1 = normal, -1 = rückwärts
         self.km          = 0.0      # Strecke
         self.km_gps      = 0.0      # Strecke (GPS)
         self.points      = []       # Start/Ende bei Etappen, Trackpunkte bei Abschnitten
@@ -205,7 +251,7 @@ class SECTION:
 
     def isStarted(self):
         return ((self.start > 0) and (self.start <= int(datetime.timestamp(datetime.now()))))
-        
+
     def setAutostart(self, autostart, start):
         self.autostart = autostart
         self.start     = start
@@ -223,7 +269,7 @@ class SECTION:
     def endStage(self, lon, lat):
         self.start = 0
         self.setPoint(lon, lat, "stage", "stage_finish")
-        logger.debug("   Etappe " + str(self.id) + " gestoppt:  " + locale.format_string("%.2f", lon) + "/" + locale.format_string("%.2f", lat))       
+        logger.debug("   Etappe " + str(self.id) + " gestoppt:  " + locale.format_string("%.2f", lon) + "/" + locale.format_string("%.2f", lat))
 
     def startSector(self, stage, lon, lat):
         newsector = SECTION()
@@ -274,7 +320,7 @@ class SECTION:
             return self.points[-1].lat
         else:
             return None
-    
+
     # Gibt beim Daten laden die letzte subsection zurück
     def getLastSubsection(self):
         if (len(self.subsection) > 0):
@@ -287,21 +333,34 @@ def pickleData():
         pickle.dump(RALLYE, fp)
 
 def unpickleData():
-    with open(pickleFile, 'rb') as fp:
-        return pickle.load(fp)
+    if os.path.exists(pickleFile) and (os.path.getsize(pickleFile) > 0):
+        try:
+            with open(pickleFile, 'rb') as fp:
+                return pickle.load(fp)
+        except EOFError:
+            logger.error("EOFError!")
+    return None
+
+def saveOutput(var):
+    with open(outputFile, 'a') as fo:
+        fo.write('{:}'.format(datetime.now().strftime('%d.%m.%Y %H:%M:%S')))
+        for v in var:
+            fo.write('\t{:0.4f}'.format(v).replace('.', ','))
+        fo.write('\n')
+
 
 # ----------------------------------------------------------------
 
 def saveKMZ(rallye):
-    
+
     KML = simplekml.Kml(open=1)
-    
+
     # Set aller genutzten POINT subtypes, Sets haben keine(!) Duplikate
     subtypes = set();
-    
+
     # RALLYE und SECTOR haben keine Punkte (SECTOR hat nur Tracks)
     for stage in rallye.subsection:
-        # Etappebeginn, -ende 
+        # Etappebeginn, -ende
         for p in stage.points:
             subtypes.add(p.subtype)
         # Zählpunkte
@@ -310,7 +369,7 @@ def saveKMZ(rallye):
         # Orientierungskontrollen
         for p in stage.checkpoints:
             subtypes.add(p.subtype)
-        
+
     # Nur die Styles für die genutzten POINT subtypes definieren
     styles = {};
     for s in subtypes:
@@ -325,22 +384,22 @@ def saveKMZ(rallye):
     styles["track1"] = simplekml.Style()
     styles["track1"].linestyle.width = 5
     styles["track1"].linestyle.color = "ff5cb85c"  # grün
-        
+
     for stage in rallye.subsection:
-    
-        sf = KML.newfolder(name="Etappe " + str(stage.id+1))            
+
+        sf = KML.newfolder(name="Etappe " + str(stage.id+1))
         for p in stage.points:
             # 'name' ist der label, 'description' erscheint darunter
             newpoint = sf.newpoint(coords = [(p.lon, p.lat)], name = POINTS[p.subtype].name, description = "Länge: " + locale.format_string("%.2f", stage.km)+" km")
             newpoint.style = styles[p.subtype]
-        
+
         f = sf.newfolder(name="Abschnitte")
         for sector in stage.subsection:
             newtrack = f.newlinestring(name = "Abschnitt "+str(sector.id+1), description = "Länge: " + locale.format_string("%.2f", sector.km)+" km")
             newtrack.style = styles["track"+str(sector.id % 2)]
             for p in sector.points:
                 newtrack.coords.addcoordinates([(p.lon, p.lat)])
-            
+
         f = sf.newfolder(name="Zählpunkte")
         # Nur aktive Punkte werden gespeichert
         for p in (x for x in stage.countpoints if x.active == 1):
@@ -351,10 +410,10 @@ def saveKMZ(rallye):
         for p in (x for x in stage.checkpoints if x.active == 1):
             newpoint = f.newpoint(coords = [(p.lon, p.lat)], name = p.value, description = POINTS[p.subtype].name)
             newpoint.style = styles[p.subtype]
-            
+
     KML_FILE = tripmasterPath+"/out/{0:%Y%m%d_%H%M}.kmz".format(datetime.now());
     KML.savekmz(KML_FILE)
-    
+
     now = time.time()
     # Maximal fünf Sekunden warten
     last_time = now + 5
@@ -363,7 +422,7 @@ def saveKMZ(rallye):
             return True
         else:
             # Eine halbe Sekunde warten, dann wieder prüfen
-            time.sleep( 0.5 )
+            time.sleep(0.5)
     return False
 
 # ----------------------------------------------------------------
@@ -371,12 +430,17 @@ def saveKMZ(rallye):
 def startRallye(loadSavedData = True):
     global INDEX, RALLYE, STAGE, SECTOR
     # Daten laden sofern vorhanden
-    if os.path.exists(pickleFile)and loadSavedData:
+    if loadSavedData == True:
         RALLYE = unpickleData()
-        STAGE  = RALLYE.getLastSubsection()
-        SECTOR = STAGE.getLastSubsection()
-    else:
-        if os.path.exists(pickleFile):       
+        # Gibt es einen Fehler beim Laden, dann gleich neu machen
+        if RALLYE == None:
+            loadSavedData = False
+        else:
+            STAGE  = RALLYE.getLastSubsection()
+            SECTOR = STAGE.getLastSubsection()
+
+    if loadSavedData == False:
+        if os.path.exists(pickleFile):
             os.rename(pickleFile, tripmasterPath+"/out/{0:%Y%m%d_%H%M}.dat".format(datetime.now()))
         INDEX  = 0
         RALLYE = SECTION()
@@ -392,7 +456,10 @@ startRallye()
 def messageToAllClients(clients, message):
     for client in clients:      # for index, client in enumerate(clients):
         if client:
-            client.write_message(message)
+            try:
+                client.write_message(message)
+            except BufferError as err:
+                logger.error("BufferError beim Aussenden einer Message zum Client")
 
 #-------------------------------------------------------------------
 ### Parse request from client
@@ -427,7 +494,7 @@ def syncTime(GPS_CURRENT):
         return False
 
 def getData():
-    global STAGE, SECTOR, IS_TIME_SYNC, HAS_SENSORS, INDEX, AVG_KMH, CPU_TEMPS
+    global STAGE, SECTOR, IS_TIME_SYNC, HAS_SENSORS, INDEX, AVG_KMH, PI_STATUS, UBATWARNING
 
     # Ein 0 V Potential an einem der GPIO Pins aktiviert die Antriebswellensensoren
     if ((GPIO.input(GPIO_PIN_1) == 0) or (GPIO.input(GPIO_PIN_2) == 0)) and not HAS_SENSORS:
@@ -439,10 +506,44 @@ def getData():
 
     # Aktuelle GPS Position
     GPS_CURRENT = gpsd.get_current()
-    
-    # Alle 10 Durchläufe Zeit synchronisieren
+
+    # CPU Auslastung
+    CPU_LOAD = PI_STATUS.getCPU_LOAD()
+    # CPU Temperatur
+    CPU_TEMP = PI_STATUS.CPU_TEMP
+    # Akkuspannung
+    UBAT = PI_STATUS.UBAT
+
+    # Alle 10 Durchläufe Zeit synchronisieren und den RasPi Status abfragen und speichern
     if (INDEX % 10 == 0) or (IS_TIME_SYNC == None):
         IS_TIME_SYNC = syncTime(GPS_CURRENT)
+        CPU_LOAD = PI_STATUS.getCPU_LOAD()
+
+        # Gleitendes Mittel der CPU Temperatur
+        CPU_TEMP = PI_STATUS.calcCPU_TEMP()
+
+        # Lüfter an bei über 70°C
+        if (CPU_TEMP > 70.0):
+            GPIO.output(GPIO_PIN_FAN, GPIO.HIGH)
+        # Lüfter aus bei unter 58°C
+        else:
+            if (CPU_TEMP < 58.0):
+                GPIO.output(GPIO_PIN_FAN, GPIO.LOW)
+
+        # Gleitendes Mittel der Akkuspannung
+        UBAT = PI_STATUS.calcUBAT()
+        if (UBAT < 3.20):
+            UBATWARNING -= 1
+        elif (UBAT < 3.25):
+            UBATWARNING = 0
+        elif (UBAT < 3.30):
+            UBATWARNING = 1
+        else:
+            UBATWARNING = 2
+
+        saveOutput([CPU_TEMP,UBAT])
+
+    CPU_TEMP = CPU_LOAD
 
     if DEBUG:
         GPS_CURRENT.mode   = 3
@@ -453,7 +554,7 @@ def getData():
 
     # Umdrehungen der Antriebswelle(n) pro Minute
     UMIN    = 0.0
-    
+
     # Geschwindigkeit in Kilometer pro Stunde
     KMH     = 0.0
     AVG_KMH = 0.0
@@ -461,8 +562,8 @@ def getData():
 
     # Gefahrene Distanz in km (berechnet aus Geokoordinaten)
     DIST = 0.0
-    
-    # noch zurückzulegende Strecke im Abschnitt 
+
+    # noch zurückzulegende Strecke im Abschnitt
     SECTOR_PRESET_REST = 0.0
     # % zurückgelegte Strecke im Abschnitt
     FRAC_SECTOR_DRIVEN = 0
@@ -485,7 +586,7 @@ def getData():
             STAGE = STAGE.startStage(RALLYE, GPS_CURRENT.lon, GPS_CURRENT.lat)
             # Abschnitt starten
             SECTOR = SECTOR.startSector(STAGE, GPS_CURRENT.lon, GPS_CURRENT.lat)
-            
+
         # Mindestens ein 2D Fix
         if (GPS_CURRENT.mode >= 2):
 
@@ -542,30 +643,17 @@ def getData():
             STAGE_TIMETOFINISH = STAGE.finish - int(datetime.timestamp(datetime.now()))
             STAGE_FRACTIME = round((1 - STAGE_TIMETOFINISH / STAGE.getDuration()) * 100)
     else:
-        # Wenn Etappe nicht läuft, zurücksetzen von Etappen- und Abschnittstrecke 
+        # Wenn Etappe nicht läuft, zurücksetzen von Etappen- und Abschnittstrecke
         STAGE.km = 0.0
         SECTOR.km = 0.0
         if STAGE.start > 0:
             STAGE_TIMETOSTART = STAGE.start - int(datetime.timestamp(datetime.now()))
-    
+
     # Aktuelle Zeit als String HH-MM-SS
     NOW = datetime.now().strftime('%H-%M-%S') # .%f')[:-3]
-    
-    # Gleitendes Mittel der letzen x Werte
-    CPU_TEMPS.append(CPUTemperature().temperature)
-    if len(CPU_TEMPS) > 20:
-        CPU_TEMPS.pop(0)
-    CPU_TEMP = sum(CPU_TEMPS) / len(CPU_TEMPS)
 
-    # Lüfter an bei über 70°C 
-    if (CPU_TEMP > 70.0):
-        GPIO.output(GPIO_PIN_FAN, GPIO.HIGH)
-    # Lüfter aus bei unter 58°C 
-    else:
-        if (CPU_TEMP < 58.0):
-            GPIO.output(GPIO_PIN_FAN, GPIO.LOW)
 
-    datastring = "data:{0:}:{1:0.1f}:{2:0.1f}:{3:0.1f}:{4:0.2f}:{5:0.2f}:{6:0.2f}:{7:0.2f}:{8:0.2f}:{9:}:{10:0.1f}:{11:}:{12:0.6f}:{13:0.6f}:{14:}:{15:}:{16:}:{17:}:{18:}:{19:}:{20:0.1f}".format(NOW, UMIN, KMH, AVG_KMH, RALLYE.km, STAGE.km, SECTOR.km, SECTOR.preset, SECTOR_PRESET_REST, FRAC_SECTOR_DRIVEN, DEV_AVG_KMH, GPS_CURRENT.mode, GPS_CURRENT.lon, GPS_CURRENT.lat, int(HAS_SENSORS), int(IS_TIME_SYNC), int(STAGE.isStarted()), int(STAGE_FRACTIME), STAGE_TIMETOSTART, STAGE_TIMETOFINISH, CPU_TEMP)
+    datastring = "data:{0:}:{1:0.1f}:{2:0.1f}:{3:0.1f}:{4:0.2f}:{5:0.2f}:{6:0.2f}:{7:0.2f}:{8:0.2f}:{9:}:{10:0.1f}:{11:}:{12:0.6f}:{13:0.6f}:{14:}:{15:}:{16:}:{17:}:{18:}:{19:}:{20:0.1f}:{21:0.2f}:{22:}".format(NOW, UMIN, KMH, AVG_KMH, RALLYE.km, STAGE.km, SECTOR.km, SECTOR.preset, SECTOR_PRESET_REST, FRAC_SECTOR_DRIVEN, DEV_AVG_KMH, GPS_CURRENT.mode, GPS_CURRENT.lon, GPS_CURRENT.lat, int(HAS_SENSORS), int(IS_TIME_SYNC), int(STAGE.isStarted()), int(STAGE_FRACTIME), STAGE_TIMETOSTART, STAGE_TIMETOFINISH, CPU_TEMP, UBAT, UBATWARNING)
 
     return datastring
 
@@ -579,18 +667,23 @@ def calcGPSdistance(lambda1, lambda2, phi1, phi2):
     return math.sqrt(x*x + y*y) * 6371
 
 def pushSpeedData(clients, what, when):
-    what    = str(what)
-    message = WebRequestHandler(what.splitlines());
-    messageToAllClients(clients, message)
-    now     = datetime.now()
-    diff    = now - now.replace(microsecond=20000)
-    # f       = 1.0 # math.sqrt(2) # 1.582 * (1 - math.exp(-(now.microsecond/20000))) # math.sqrt(now.microsecond/20000)
-    when    = SAMPLE_TIME - diff.total_seconds() # * f  # float(when)
-    # logger.debug(now.strftime('%H-%M-%S.%f')[:-3] + "\twhen\t{0:0.6f}\tdiff\t{1:0.3f}".format(when, diff.total_seconds()))
-    timed   = threading.Timer( when, pushSpeedData, [clients, what, when] )
-    timed.start()
-    timers.append(timed)
-    
+    if (UBATWARNING < -3):
+        # messageToAllClients(clients, "shutdown")
+        # subprocess.call("sudo reboot", shell=True)
+        subprocess.call("sudo shutdown -h now", shell=True)
+    else:
+        what    = str(what)
+        message = WebRequestHandler(what.splitlines());
+        messageToAllClients(clients, message)
+        now     = datetime.now()
+        diff    = now - now.replace(microsecond=20000)
+        # f       = 1.0 # math.sqrt(2) # 1.582 * (1 - math.exp(-(now.microsecond/20000))) # math.sqrt(now.microsecond/20000)
+        when    = SAMPLE_TIME - diff.total_seconds() # * f  # float(when)
+        # logger.debug(now.strftime('%H-%M-%S.%f')[:-3] + "\twhen\t{0:0.6f}\tdiff\t{1:0.3f}".format(when, diff.total_seconds()))
+        timed   = threading.Timer( when, pushSpeedData, [clients, what, when] )
+        timed.start()
+        timers.append(timed)
+
 def startRegtest(client):
     timed = threading.Timer(1.0, pushRegtestData, [client.wsClients, "regTest", "1.0"] )
     timed.start()
@@ -682,11 +775,12 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             startRallye(False)
 
         # Verfahren
-        elif command == "toggleReverse":
-            SECTOR.reverse = SECTOR.reverse * -1
-            if SECTOR.reverse == -1:
+        elif command == "reverse":
+            if param == 'true':
+                SECTOR.reverse = -1
                 messageToAllClients(self.wsClients, "Verfahren! km-Zähler rückwärts:warning")
             else:
+                SECTOR.reverse = 1
                 messageToAllClients(self.wsClients, "km-Zähler wieder normal:success")
 
         # Etappe starten/beenden
@@ -744,7 +838,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             name       = paramsplit[2]
             value      = paramsplit[3]
             active     = int(paramsplit[4])
-            
+
             STAGE.changePoint(type, id, active, value)
 
             # ID zur Anzeige 1-basiert, im System 0-basiert
@@ -803,10 +897,21 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         # RasPi Steuerung
         elif command == "sudoReboot":
             messageToAllClients(self.wsClients, "Starte RasPi neu...")
+            stopTornado()
+            time.sleep(3)
             subprocess.call("sudo reboot", shell=True)
+
+            # subprocess.Popen("sudo /etc/rc.local", shell=True)
+            # sys.exit()
+
         elif command == "sudoHalt":
             messageToAllClients(self.wsClients, "Fahre RasPi herunter...")
+            stopTornado()
+            time.sleep(3)
             subprocess.call("sudo shutdown -h now", shell=True)
+            
+            # subprocess.Popen("start_tripmaster_debug.sh", shell=True)
+            # sys.exit()
 
         # KMZ Dateien erstellen und herunterladen oder löschen
         elif command == "getFiles":
@@ -855,6 +960,12 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                 config.write(configfile)
             messageToAllClients(self.wsClients, "Button " + buttonNo + " als '" + POINTS[pointType].name + "' definiert:success:setButtons#" + button + "#" + POINTS[pointType].icon + "#" + POINTS[pointType].iconcolor + "#" + pointCategory + "#" + pointType)
 
+        # Nachricht an alle Clients senden
+        elif (command == "WarningToAll"):
+            messageToAllClients(self.wsClients, param + ":warning")
+        elif (command == "ErrorToAll"):
+            messageToAllClients(self.wsClients, param + ":error")
+
         else:
             self.write_message("Unbekannter Befehl - " + command + ":error")
 
@@ -876,26 +987,6 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def on_close(self):
         # Aus der Liste laufender Clients entfernen
         self.wsClients.remove(self)
-
-        if len(self.wsClients) == 0:
-            # UMIN_READER stoppen
-            UMIN_READER_1.cancel()
-            UMIN_READER_2.cancel()
-            # Verbindung mit pigpio beenden
-            pi.stop()
-
-            # Tripmaster stoppen
-            for timer in timers:        #for index, timer in enumerate(timers):
-                if timer:
-                    timer.cancel()
-            # Laufende Etappe beenden
-            if STAGE.isStarted():
-                STAGE.start = 0
-                currentPos = self.getGPS();
-                if currentPos is not None:
-                    STAGE.endStage(currentPos.lon, currentPos.lat)
-
-            logger.info("Letzter WebSocket Client getrennt")
 
         logger.info("CLOSE - Anzahl noch verbundener Clients: " + str(len(self.wsClients)))
 
@@ -926,7 +1017,7 @@ class DashboardHandler(tornado.web.RequestHandler):
             "dashboard.html",
             debug = int(DEBUG),
             sample_time = int(SAMPLE_TIME * 1000),
-            sector_reverse = max(SECTOR.reverse, 0),
+            # sector_reverse = max(SECTOR.reverse, 0),
         )
 
 class SettingsHandler(tornado.web.RequestHandler):
@@ -971,29 +1062,75 @@ class DownloadHandler(tornado.web.RequestHandler):
             self.set_header("Content-Type", "text/txt")
         self.write(self.file)
 
-try:
-    timers = list()
-    options.logging = None
-    # asyncio.set_event_loop(asyncio.new_event_loop())
-    ws_app = tornado.web.Application([(r"/(.*)", WebSocketHandler),])
-    ws_server = tornado.httpserver.HTTPServer(ws_app, ssl_options={
-        "certfile": tripmasterPath+"/certs/servercert.pem",
-        "keyfile": tripmasterPath+"/certs/serverkey.pem",
-    })
-    ws_server.listen(websocketPort)
+def startTornado(*args, **kwargs):
+    global WebServer, WebsocketServer
 
-    web_server = tornado.httpserver.HTTPServer(Web_Application(), ssl_options={
+    logger.info("Starte Tripmaster V3.0")
+    logger.info("DEBUG: " + str(DEBUG))
+    logger.debug("Tornado-Version: " + tornado.version)
+
+    # WebServer
+    WebServer = tornado.httpserver.HTTPServer(Web_Application(), ssl_options={
         "certfile": tripmasterPath+"/certs/servercert.pem",
         "keyfile": tripmasterPath+"/certs/serverkey.pem",
     })
-    web_server.listen(443)
-    tornado.ioloop.IOLoop.instance().start()
-except (KeyboardInterrupt, SystemExit):
-    # Alle timer stoppen
-    for t in timers:        # for i, t in enumerate(timers):
-        if t:
-            t.cancel()
+    WebServer.listen(443)
+    logger.debug("WebServer gestartet")
+
+    # WebsocketServer
+    websocketapp = tornado.web.Application([(r"/(.*)", WebSocketHandler),])
+    WebsocketServer = tornado.httpserver.HTTPServer(websocketapp, ssl_options={
+        "certfile": tripmasterPath+"/certs/servercert.pem",
+        "keyfile": tripmasterPath+"/certs/serverkey.pem",
+    })
+    WebsocketServer.listen(WebsocketPort)
+    logger.debug("WebsocketServer gestartet")
+
+    # Tornado starten
+    logger.debug("Starte Tornado")
+    tornado.ioloop.IOLoop.current().start()
+
+def stopTornado():
+
+    # # UMIN_READER stoppen
+    # UMIN_READER_1.cancel()
+    # UMIN_READER_2.cancel()
+    # # Verbindung mit pigpio beenden
+    # pi.stop()
+
+    # # Laufende Etappe beenden
+    # if STAGE.isStarted():
+        # STAGE.start = 0
+        # currentPos = getGPS();
+        # if currentPos is not None:
+            # STAGE.endStage(currentPos.lon, currentPos.lat)
+
+    # Tripmaster stoppen
+    for timer in timers:        #for index, timer in enumerate(timers):
+        if timer:
+            timer.cancel()
+
     # GPIOs zurücksetzen
     GPIO.cleanup()
-    
-    logger.info("Tornado beendet")
+
+    WebsocketServer.stop()
+    logger.debug("WebServer gestoppt")
+    WebServer.stop()
+    logger.debug("WebsocketServer gestoppt")
+
+    logger.debug("Beende Tornado")
+    tornado.ioloop.IOLoop.current().stop()
+
+if __name__ == "__main__":
+    try:
+        timers = list()
+        # If you want Tornado to leave the logging configuration alone so you can manage it yourself
+        options.logging = None
+
+        # Ab Tornado-Version 5.0 wird asyncio verwendet
+        # asyncio.set_event_loop(asyncio.new_event_loop())
+
+        startTornado()
+
+    except (KeyboardInterrupt, SystemExit):
+        stopTornado()

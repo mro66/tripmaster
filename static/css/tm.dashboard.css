@@ -41,7 +41,22 @@
     visibility: hidden;
     font-family: 'Tripmaster Font';
     font-size: 7vmin;
-    color: "var(--tm-lightgray)";
+    color: var(--tm-lightgray);
+}
+
+#status-bat {
+    /* color: var(--tm-red); */
+    visibility: hidden;
+}
+
+/* Blinkendes Element */
+.blink_me {
+  animation: blinker 1s linear infinite;
+}
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
 }
 
 /* Countdown */
@@ -61,18 +76,18 @@
     background-color: Ivory;
 }
 
-/* Uhr */
+/* Status und Uhr */
 @font-face {
     font-family: 'Consolas';
     src: url('/static/css/fonts/Consolas.otf');
 }
 
-#clock-box {
+#clock-box, #status-box {
     background: black;
     align-items: center !important;
     font-family: 'Consolas';
 }
-#clock-box .dx-box-item-content {
+#clock-box .dx-box-item-content, #status-box .dx-box-item-content {
     align-items: center;
     }
     

@@ -3,6 +3,13 @@ DevExpress.localization.loadMessages({
     de: { "Yes": "Ja", "No": "Nein", "Cancel": "Abbrechen" }
 });
 
+// Bildschirmdimension zum Skalieren
+// var windowDiagonal = Math.sqrt(Math.pow(window.innerHeight, 2) + Math.pow(window.innerWidth, 2))/1000;
+var vmin = Math.sqrt(Math.pow(window.innerHeight, 2))/550;
+var vmin1 = 1 / vmin;
+// console.log("vmin: " + vmin + ", vmin1: " + vmin1);
+
+
 // Ab Chrome 84 (Juli 2020) wird die Wake Lock API unterstützt
 async function requestWakeLock(){
     if ('wakeLock' in navigator) {
@@ -56,6 +63,61 @@ var stageStarted = {
     },
 };
 
+var statusGaugeOptions = {
+    // "containerBackgroundColor": "black",
+    animation: {
+        enabled: true,
+        easing: "linear",
+    },
+    geometry: {
+        endAngle: 225,
+        startAngle: 315
+    },
+    size: {
+        height: window.innerHeight,
+        width: window.innerWidth / 3, //function(e) { return e.element.width(); },
+    },
+    rangeContainer: {
+        backgroundColor: "var(--tm-digit)",
+        offset: 9.5*vmin,
+        orientation: "outside",
+        width: 10*vmin,
+    },
+    scale: {
+        label: {
+            font: {
+                family: "Tripmaster Font",
+                color: "var(--tm-digit)",
+                size: 30*vmin,
+            },
+            indentFromTick: -30*vmin,
+        },
+        orientation: "inside",
+        tick: {
+            color: "var(--tm-digit)",
+            length: 20*vmin,
+            width: 6*vmin
+            },
+    },
+    title: {
+        verticalAlignment: "bottom",
+        font: {
+            family: "Tripmaster Font",
+            color: "var(--tm-digit)",
+            size: 35*vmin,
+        },
+    },
+    valueIndicator: {
+        color: "var(--tm-digit)",
+        indentFromCenter: 180*vmin, // 120,
+        spindleGapSize: 0,
+        spindleSize: 0,
+        offset: 0,
+        type: "triangleNeedle",
+        width: 10*vmin, // 10,
+    },
+};
+
 // Optionen Anzeigetextboxen
 var textBoxOptions = {
     readOnly: true,
@@ -73,7 +135,7 @@ var metalButtonOptions = {
     hoverStateEnabled: false,
 };
 
-// Optionen Etappe Start/Stop
+// Optionen Etappe Start/Stop Button
 var toggleStageButtonOptions = {
     icon: "fas fa-flag-checkered",
     elementAttr: {

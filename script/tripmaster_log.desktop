@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=TM Log
+Comment=Verfolgt das Tripmaster Log
+Icon=/usr/share/pixmaps/python3.7.xpm
+Exec=lxterminal -t "TM Log" -e tripmaster_log.sh
+Type=Application
+Encoding=UTF-8
+Terminal=false
+Categories=None

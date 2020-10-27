@@ -22,7 +22,6 @@
     <script>
         var DEBUG = {{ debug }};
         var SAMPLE_TIME = {{ sample_time }};
-        var REVERSE = {{ sector_reverse }};
         window.jQuery || document.write(decodeURIComponent('%3Cscript src="static/jquery.min.js"%3E%3C/script%3E'))
     </script>
     <style>
@@ -40,20 +39,30 @@
         <div id="button-reloadpage"></div> 
     </div>
     <div id="multiview-dashboard" name="main" class="tm-background">
-        <script id="mv-clock" type="text/html">
-            <div id="clock-box" class="dashboard-box">
-                <div data-options="dxItem: {ratio: 2}">
-                    <div id="smallclock"></div>
-                    <div id="clock"></div>
-                </div>
+        <script id="mv-status" type="text/html">
+            <div id="status-box" class="dashboard-box">
                 <div data-options="dxItem: {ratio: 1}">
                     <div id="circulargauge-cputemp"></div>
+                </div>
+                <div data-options="dxItem: {ratio: 1}">
+                    <div id="circulargauge-ubat"></div>
+                </div>
+            </div>        
+        </script>
+        <script id="mv-clock" type="text/html">
+            <div id="clock-box" class="dashboard-box">
+                <div data-options="dxItem: {ratio: 1}">
+                    <div id="smallclock"></div>
+                    <div id="clock"></div>
                 </div>
             </div>        
         </script>
         <script id="mv-sector" type="text/html">
              <div id="sector-box" class="dashboard-box">
                 <div data-options="dxItem: {ratio: 2}">
+                    <div id="status-bat" class="status-indicator">
+                        <i class="fas fa-bolt"></i>
+                    </div>
                     <div id="status-gps" class="status-indicator">
                         <i class="fas fa-satellite-dish"></i>
                     </div>
@@ -103,7 +112,7 @@
         </script>
     </div>
     <script>
-        window.addEventListener("resize", resizeAndPosition);
+        window.addEventListener("resize", rePosition);
     </script>
 </body>
 </html>

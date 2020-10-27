@@ -1,6 +1,7 @@
 // WebSocket
 var wss;
 var wss_status = "closed";
+var LASTUBATWARNING = 0
 
 function set_wss_status(status) {
     wss_status = status;
@@ -28,7 +29,7 @@ function WebSocket_Open(page) {
                 $("#odometer-kmstage").ready(function() { 
                     kmsector.render();
                     $("#odometer-kmsector").ready(function() { 
-                        resizeAndPosition();
+                        rePosition();
                     });
                 });
             };
@@ -60,8 +61,8 @@ function WebSocket_Open(page) {
             // TIME, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_STAGE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_PRESET_REST, FRAC_SECTOR_DRIVEN, 
             // 11,          12,       13,  14,  15,          16,           17,            18,             19,                20
             // DEV_AVG_KMH, GPS_MODE, LON, LAT, HAS_SENSORS, IS_TIME_SYNC, STAGE_STARTED, STAGE_FRACTIME, STAGE_TIMETOSTART, STAGE_TIMETOFINISH
-            // 21
-            // CPU_TEMP
+            // 21        22    23
+            // CPU_TEMP, UBAT, UBATWARNING
             TIME                  = values[1].replace(/-/g, ":");; 
             KMH                   = values[3]; 
             AVG_KMH               = parseFloat(values[4]); 
@@ -82,6 +83,8 @@ function WebSocket_Open(page) {
             STAGE_TIMETOSTART     = parseInt(values[19]);
             STAGE_TIMETOFINISH    = parseInt(values[20]);
             CPU_TEMP              = parseFloat(values[21]);
+            UBAT                  = parseFloat(values[22]);
+            UBATWARNING           = parseInt(values[23]);
 
             // Tacho
             if (document.getElementById("circulargauge-speed") !== null) {
@@ -140,7 +143,26 @@ function WebSocket_Open(page) {
                         }, 3000);                        
                     } 
                 } ;
-            } 
+            };
+            // Statusanzeige: Akkuspannung
+            if (document.getElementById("status-bat") !== null) {
+                var statusBat = document.getElementById("status-bat");
+                if (UBATWARNING == 2) {
+                    statusBat.style.visibility = "hidden";
+                } else if (UBATWARNING == 1) {
+                    statusBat.style.visibility = "visible";
+                    statusBat.style.color = "var(--tm-yellow)";
+                    statusBat.className = "status-indicator";
+                } else {
+                    statusBat.style.visibility = "visible";
+                    statusBat.style.color = "var(--tm-red)";
+                    statusBat.className += " blink_me";
+                    if ((UBATWARNING < 0) && (LASTUBATWARNING != UBATWARNING)) {
+                        WebSocket_Send("ErrorToAll:Beende Tripmaster in wenigen Sekunden!")
+                    };
+                };
+                LASTUBATWARNING = UBATWARNING;
+            };
             // Statusanzeige: GPS
             if (document.getElementById("status-gps") !== null) {
                 switch(GPS_MODE) {
@@ -239,7 +261,7 @@ function WebSocket_Open(page) {
                     smallclock.innerHTML = TIME;
                     if (STAGE_TIMETOSTART == 1) {
                         setTimeout(function() {
-                            $("#multiview-dashboard").dxMultiView("instance").option("selectedIndex", 1);
+                            $("#multiview-dashboard").dxMultiView("instance").option("selectedIndex", 2);
                         }, 900);         
                     }                        
                 } else if (STAGE_FRACTIME > 0) {
@@ -297,13 +319,12 @@ function WebSocket_Open(page) {
                 devSpeed.subvalues([DEV_AVG_KMH]);
             };
             // CPU Temperatur des RasPi
-            if ((document.getElementById("textbox-cputemp") !== null)) {
-                if($("#textbox-cputemp").dxTextBox("instance").option("visible") == true) {
-                    $("#textbox-cputemp").dxTextBox("instance").option("value", CPU_TEMP);
-                };
-            };
             if ((document.getElementById("circulargauge-cputemp") !== null)) {
                 $("#circulargauge-cputemp").dxCircularGauge("instance").option("value", CPU_TEMP);
+            };
+            // Spannung des Akkus
+            if ((document.getElementById("circulargauge-ubat") !== null)) {
+                $("#circulargauge-ubat").dxCircularGauge("instance").option("value", UBAT);
             };
         }
         else if (values[0] == "countdown") {
@@ -422,14 +443,14 @@ function WebSocket_Open(page) {
                 // Nur Dashboard
                 if (document.getElementById("multiview-dashboard") !== null) {
                     if (COMMAND == "switchToClock") {
-                        $("#multiview-dashboard").dxMultiView("instance").option("selectedIndex", 0);
-                    } else if (COMMAND == "switchToMain") {
                         $("#multiview-dashboard").dxMultiView("instance").option("selectedIndex", 1);
-                    } else if (COMMAND == "regTestStarted") {
+                    } else if (COMMAND == "switchToMain") {
                         $("#multiview-dashboard").dxMultiView("instance").option("selectedIndex", 2);
+                    } else if (COMMAND == "regTestStarted") {
+                        $("#multiview-dashboard").dxMultiView("instance").option("selectedIndex", 3);
                     } else if (COMMAND == "regTestStopped") {
                         setTimeout(function() {
-                            $("#multiview-dashboard").dxMultiView("instance").option("selectedIndex", 1);
+                            $("#multiview-dashboard").dxMultiView("instance").option("selectedIndex", 2);
                             AVG_KMH_PRESET = 0;
                             $('#circulargauge-devavgspeed').dxCircularGauge("instance").option("scale.label.customizeText", function(arg) {
                                 return formatSpeed(AVG_KMH_PRESET);
@@ -441,7 +462,7 @@ function WebSocket_Open(page) {
                         }, 2000);                        
                     } else if (COMMAND == "sectorLengthset") {
                         if (document.getElementById("button-group") !== null) {
-                            $("#multiview-dashboard").dxMultiView("instance").option("selectedIndex", 1)
+                            $("#multiview-dashboard").dxMultiView("instance").option("selectedIndex", 2)
                             linearGaugeToFront();
                         };
                     }

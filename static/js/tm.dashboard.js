@@ -1,7 +1,3 @@
-// Bildschirmdimension zum Skalieren
-// var windowDiagonal = Math.sqrt(Math.pow(window.innerHeight, 2) + Math.pow(window.innerWidth, 2))/1000;
-var vmin = Math.sqrt(Math.pow(window.innerHeight, 2))/550;
-var vmin1 = 1 / vmin;
 var AVG_KMH_PRESET = 0;
 var audioClick = document.createElement('audio');
 audioClick.setAttribute('src', '/static/Click.ogg');
@@ -44,11 +40,13 @@ $(function(){
     // Multiview
     $("#multiview-dashboard").dxMultiView({
         height: "100%",
-        selectedIndex: 1,
+        selectedIndex: 2,
         loop: false,
         animationEnabled: true,
         deferRendering: false,
         items: [{
+            template: $("#mv-status"),
+        },{
             template: $("#mv-clock"),
         }, {
             template: $("#mv-sector"),
@@ -63,75 +61,79 @@ $(function(){
         height: "100%",
     });
 
-// Multiview Uhr
+// Multiview Status
 
-    $("#circulargauge-cputemp").dxCircularGauge({
-        // "containerBackgroundColor": "black",
-        geometry: {
-            endAngle: 225,
-            startAngle: 315
-        },
+    $("#circulargauge-cputemp").dxCircularGauge($.extend(true, {}, statusGaugeOptions, {
         rangeContainer: {
-            backgroundColor: "var(--tm-digit)",
-            offset: 8,
-            orientation: "outside",
-            width: 8,
             ranges: [
                {
-                color: "var(--tm-red)",
-                startValue: 80,
-                endValue: 70
+                color: "var(--tm-green)",
+                endValue: 0,
+                startValue: 60,
                },
                {
                 color: "var(--tm-yellow)",
+                endValue: 60,
                 startValue: 70,
-                endValue: 60
                },
                {
-                color: "var(--tm-green)",
-                startValue: 60,
-                endValue: 40
+                color: "var(--tm-red)",
+                endValue: 70,
+                startValue: 100,
                },
             ],
            },
         scale: {
-            endValue: 40,
-            startValue: 80,
-            label: {
-                font: {
-                    family: "Tripmaster Font",
-                    color: "var(--tm-digit)",
-                    size: 25*vmin, // 30,
-                },
-                indentFromTick: -20,
-            },
-            orientation: "inside",
-            tickInterval: 10,
-            tick: {
-                color: "var(--tm-digit)",
-                length: 16*vmin, // 16,
-                width: 4
-                },
+            endValue: 0,
+            startValue: 100,
+            tickInterval: 20,
         },
         title: {
             text: "Temp",
-            verticalAlignment: "bottom",
-            font: {
-                family: "Tripmaster Font",
-                color: "var(--tm-digit)",
-                size: 25*vmin, // 30,
-            },
         },
-        valueIndicator: {
-            color: "var(--tm-digit)",
-            indentFromCenter: 120*vmin1, // 120,
-            spindleGapSize: 0,
-            spindleSize: 0,
-            offset: 0,
-            type: "triangleNeedle",
-            width: 10*vmin, // 10,
+        onInitialized: function(e) {
+            e.element.click(function() {
+                var cputemp = String($("#circulargauge-cputemp").dxCircularGauge("instance").option("value")).replace('.', ',');
+                DevExpress.ui.notify("Die CPU-Temperatur beträgt " + cputemp + "°C", "info")
+            });
         },
-    });
+    }));
+
+    $("#circulargauge-ubat").dxCircularGauge($.extend(true, {}, statusGaugeOptions, {
+        rangeContainer: {
+            ranges: [
+               {
+                color: "var(--tm-red)",
+                endValue: 3.0,
+                startValue: 3.3,
+               },
+               {
+                color: "var(--tm-yellow)",
+                endValue: 3.3,
+                startValue: 3.6,
+               },
+               {
+                color: "var(--tm-green)",
+                endValue: 3.6,
+                startValue: 4.2,
+               },
+            ],
+           },
+        scale: {
+            endValue: 3.0,
+            startValue: 4.2,
+            tickInterval: 0.3,
+        },
+        title: {
+            text: "Volt",
+        },
+        onInitialized: function(e) {
+            e.element.click(function() {
+                var ubat = String($("#circulargauge-ubat").dxCircularGauge("instance").option("value")).replace('.', ',');
+                DevExpress.ui.notify("Die Akkuspannung beträgt " + ubat + "V", "info")
+            });
+        },
+    }));
 
 // Multiview Tacho
 
@@ -416,7 +418,7 @@ $(function(){
         
 });
 
-function resizeAndPosition() {
+function rePosition() {
     // Anzeigen neu zeichnen
     var speedCircularGauge = $("#circulargauge-speed").dxCircularGauge('instance')
     speedCircularGauge.render();
@@ -425,9 +427,10 @@ function resizeAndPosition() {
     var y = parseFloat(document.getElementsByClassName("dxg-spindle-hole")[0].getAttribute('cy'));
     var spindleSize = parseFloat(speedCircularGauge.option("valueIndicator.spindleSize"));
     
-    // Elemente an der Mitte des Tachos ausrichten
+    // Elemente an der Mitte des Tachos (x,y) ausrichten
     var odoKmStage = document.getElementById("odometer-kmstage");
     var odoKmSector = document.getElementById("odometer-kmsector");
+    var statusBat = document.getElementById("status-bat");
     var statusGPS = document.getElementById("status-gps");
     var statusTyre = document.getElementById("status-tyre");
     
@@ -436,6 +439,8 @@ function resizeAndPosition() {
     odoKmStage.style.top = y - spindleSize - parseFloat(odoKmStage.clientHeight) + "px";
     // kmsector
     odoKmSector.style.top = y + spindleSize + "px";
+    // bat
+    statusBat.style.top = parseFloat(odoKmStage.style.top) - statusBat.clientHeight * 1.5 + "px";
     // gps
     statusGPS.style.top = y - statusGPS.clientHeight / 2 + "px";
     // tyre
@@ -447,13 +452,15 @@ function resizeAndPosition() {
     // kmsector
     odoKmSector.style.left = x - odoKmSector.clientWidth / 2 + "px";
     odoKmSector.style.visibility = "visible";
+    // bat
+    statusBat.style.left = x - statusBat.clientWidth / 2 + "px";
     // gps
     statusGPS.style.left = x - statusGPS.clientWidth / 2 - spindleSize * 2 + "px";
     statusGPS.style.visibility = "visible";
     // tyre
     statusTyre.style.left = x - statusTyre.clientWidth / 2 + spindleSize * 2 + "px";
     statusTyre.style.visibility = "visible";
-   
+    
 };
 
 function buttonsToFront() {
