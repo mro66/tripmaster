@@ -17,20 +17,9 @@ $(function(){
 		}, {
 			template: $("#mv-regtest"),
 		}],
-        onSelectionChanged: function(e) {
-			if (e.component.option("selectedIndex")==1) {
-                // document.getElementById("lineargauge-kmsector").style.display = "block";
-                // document.getElementById("status-information").style.display = "block";
-				// $("#lineargauge-kmsector").appendTo("#right-regtest");
-			} else {
-				// $("#lineargauge-kmsector").appendTo("#right-sector");
-                // document.getElementById("lineargauge-kmsector").style.display = "none";
-			}
-        }
     });
     
 	// Box mit zwei Spalten
-		
 	$(".twocolumn-box").dxBox({
 		direction: "row",
 		width: "100%",
@@ -93,90 +82,89 @@ $(function(){
     });
 
  
-	$("#lineargauge-kmsector").dxLinearGauge($.extend(true, {}, linearGaugeOptions, {
+	$("#lineargauge-kmsector").dxLinearGauge({
 		elementAttr: {
-            // style: "display: block",
+            style: "display: flex; justify-content: center;",
 		},
 		size: {
 			height: window.innerHeight,
             width: function(e) { return e.element.width(); },
 		},
-		rangeContainer: {
-			width: 5 * windowDiagonal,
-		},
-		scale: {
-			label: {
-				font: {
-					size: "3vw",
+       animation: {
+            enabled: true,
+            easing: "linear"
+        },
+        geometry: {
+            orientation: "vertical"
+        },
+        valueIndicator: {
+            size: 15 * windowDiagonal,
+        },
+        subvalues: [],
+        subvalueIndicator: {
+            type: "textCloud",
+            // color: "var(--tm-blue)",
+            horizontalOrientation: "right",
+            offset: 35 * windowDiagonal,
+            arrowLength: 15 * windowDiagonal,
+            text: {
+                font: {
 					family: "Tripmaster Font", 
-				}
-			}
-		},
-		subvalueIndicator: {
-			text: {
-				font: {
-					size: "3vw",
-					family: "Tripmaster Font", 
-				}
-			},
-			arrowLength: 15 * windowDiagonal,
-			offset: 25 * windowDiagonal,
-		},
-		valueIndicator: {
-			size: 10 * windowDiagonal,
-		},
-	}));
+                    size: "3.5vmax",
+                    color: "Ivory",
+                },
+                customizeText: function (e) {
+                    if (e.value == 100) {
+                        // $("#lineargauge-kmsector").dxLinearGauge('instance').option("subvalueIndicator.color", "var(--tm-green)");
+                        return formatNumber(kmSectorPreset) + " km &#10003;";
+                    } else {
+                        return "-" + formatDistance(kmLeftInSector);
+                    }
+                }
+            }
+        },
+        rangeContainer: {
+            horizontalOrientation: "center",
+            width: {
+                start: 10 * windowDiagonal,
+                end: 10 * windowDiagonal,
+            },
+            offset: -5 * windowDiagonal,
+        },
+        scale: {
+            tick: {
+                width: 5 * windowDiagonal,
+                color: "var(--tm-red)",
+                length: 15 * windowDiagonal,
+            },
+            tickInterval: 25,
+            horizontalOrientation: "left",
+            label: {
+                visible: false,
+            },
+        },
+        redrawOnResize: true,
+	});
 		
-	// Gemeinsame Optionen der Statusbuttons
-	var buttonOptions = {
-		elementAttr: {
-			class: "statusbutton",
-			style: "color: lightgray",
-		},
-		focusStateEnabled: false,
-		hoverStateEnabled: false,
-	};
-	
-	$("#button-togglerecording").dxButton($.extend(true, {}, buttonOptions, {
-		icon: "fas fa-circle",
-		elementAttr: {
-			style: "color: var(--tm-red);",
-            class: "statusbutton small",
-		},
-		onClick: function(e) {
-			WebSocket_Send('toggleRecording');
-		},
-	})); 
-
-	var roundaboutButton = $("#button-roundabout").dxButton($.extend(true, {}, buttonOptions, {
+	$("#button-roundabout").dxButton($.extend(true, {}, metalButtonOptions, {
 		icon: "fas fa-sync",
 		elementAttr: {
 			style: "color: var(--tm-blue)",
 		},
 		onClick: function(e) {
-			mynotify("Kreisverkehr Button gedrückt");
+            WebSocket_Send('registerPoint:roundabout');
 		},
-	})).dxButton("instance"); 
+	})); 
 
-	var roundaboutButton = $("#button-townsign").dxButton($.extend(true, {}, buttonOptions, {
+	$("#button-townsign").dxButton($.extend(true, {}, metalButtonOptions, {
 		icon: "fas fa-sign",
 		elementAttr: {
 			style: "color: var(--tm-yellow)",
 		},
 		onClick: function(e) {
-			mynotify("Ortseingangs Button gedrückt");
+            WebSocket_Send('registerPoint:checkpoint');
 		},
-	})).dxButton("instance"); 
-
-	var checkpointButton = $("#button-checkpoint").dxButton($.extend(true, {}, buttonOptions, {
-		icon: "fas fa-map-marker-alt",
-		elementAttr: {
-			style: "color: var(--tm-green)",
-		},
-		onClick: function(e) {
-			mynotify("OK Button gedrückt");
-		},
-	})).dxButton("instance"); 
+	})); 
 
 
 	$("#circulargauge-devavgspeed").dxCircularGauge({
@@ -291,20 +279,16 @@ $(function(){
 		},
 	});
 
-	$("#textbox-regtestseconds").dxTextBox($.extend(true, {}, textBoxOptions,{
+	$("#textbox-regtesttime").dxTextBox($.extend(true, {}, textBoxOptions,{
 		value: "0 sek",
 	}));
 		
 });
 
 function resizeAndPosition() {
-
 	// Anzeigen neu zeichnen
 	var speedCircularGauge = $("#circulargauge-speed").dxCircularGauge('instance')
 	speedCircularGauge.render();
-	// var kmSectorLinearGauge = $("#lineargauge-kmsector").dxLinearGauge('instance');
-	// kmSectorLinearGauge.option("size.height", window.innerHeight);
-	// kmSectorLinearGauge.render();
 	
 	var x = parseFloat(document.getElementsByClassName("dxg-spindle-hole")[0].getAttribute('cx'));
 	var y = parseFloat(document.getElementsByClassName("dxg-spindle-hole")[0].getAttribute('cy'));
@@ -315,7 +299,7 @@ function resizeAndPosition() {
 	var odoKmSector = document.getElementById("odometer-kmsector");
 	var statusGPS = document.getElementById("status-gps");
 	var statusTyre = document.getElementById("status-tyre");
-	
+    
 	//top ...
 	// kmtotal
 	odoKmTotal.style.top = y - spindleSize - parseFloat(odoKmTotal.clientHeight) + "px";
@@ -338,9 +322,31 @@ function resizeAndPosition() {
     // tyre
     statusTyre.style.left = x - statusTyre.clientWidth / 2 + spindleSize * 2 + "px";
 	statusTyre.style.visibility = "visible";
-    
-    // document.getElementById("lineargauge-kmsector").style.display = "none";
-    // document.getElementById("status-information").style.display = "";
-    
-    
+   
 };
+
+function showButtons() {
+    if ($("#lineargauge-kmsector").parent().get( 0 ).id == "right-sector")
+        buttonsToFront();
+        setTimeout(function() {
+            linearGaugeToFront();
+        }, 5000);                        
+}
+
+function buttonsToFront() {
+   $("#lineargauge-kmsector").fadeOut("slow", function(){
+        $("#button-group").fadeIn("slow");                               
+        $("#lineargauge-kmsector").appendTo("#right-regtest");
+        $("#lineargauge-kmsector").fadeIn("slow");                               
+    });
+};
+
+function linearGaugeToFront() {
+    mylog("Gauge's parent: " + $("#lineargauge-kmsector").parent().get( 0 ).id)
+    $("#lineargauge-kmsector").fadeOut("slow");
+    $("#button-group").fadeOut("slow", function(){
+        $("#lineargauge-kmsector").appendTo("#right-sector");
+        $("#lineargauge-kmsector").fadeIn("slow");                               
+    });
+};
+

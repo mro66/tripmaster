@@ -31,186 +31,156 @@
 <body onload="WebSocket_Open('settings')" class="dx-viewport">
 	<div id="button-reloadpage"></div>
 	<div id="tabpanel-settings" class="main">
+    
+        <!-- Sektor -->
 		<script id="tab-sector" type="text/html">
-			<div class="dx-fieldset tm-background-input" style="padding: 20px 10px; margin: 10px 10px;">
-				<div class="dx-field">
-					<div class="dx-field-value">
-						<div id="button-resetsector"></div>
-					</div>
-				</div>
-				<div class="dx-field">
-					<div class="dx-field-value">
-						<div id="button-setsector"></div>
-					</div>
-				</div>
-				<div class="dx-field flex-row">
-					<div class="dx-field-value">
-						<div id="numberbox-sector1000m"></div>
-					</div>
-					<div class="dx-field-value">
-						<div id="numberbox-sector100m"></div>
-					</div>
-				</div>
-				<div class="dx-field flex-row">
-					<div class="dx-field-label">Umkehren</div>
-					<div class="dx-field-value">
-						<div id="switch-reverse"></div>
-					</div>
-				</div>
-			</div>
-			
-			<div class="sector-box">
-				<div data-options="dxItem: {ratio: 1.1}">
-					<div id="lineargauge-kmsector"></div>
-				</div>
-				<div data-options="dxItem: {ratio: 0.9}">
-					<div class="dx-fieldset" style="padding: 20px 10px; margin: 10px 10px;">
-						<div class="dx-field-label">Vorgabe</div>
-						<div class="dx-field-value">
-							<div id="textbox-sectorpreset"></div>
-						</div>
-						<div class="dx-field-label">Zähler</div>
-						<div class="dx-field-value" id="tab0_sectorcounter">
-							<div id="textbox-sectorcounter"></div>
-						</div>
-					</div>
-				</div>
-			</div>
+            <div class="flex-row-stretch">
+                <div>Sektor</div>
+                <div>
+                    <div id="button-reverse"></div>
+                    <div id="button-setsector"></div>
+                    <div id="button-resetsector"></div>
+                </div>
+            </div>
+            <div class="flex-row-stretch">
+                <div id="numberbox-sectorpreset"></div>
+            </div>
+            <div class="flex-row-stretch tm-background-output">
+                <div>Sektor</div>
+                <div id="tab0_sector" class="col50">
+                    <div id="textbox-sector"></div>
+                </div>
+            </div>
+            <div class="flex-row-stretch tm-background-output">
+                <div>Vorgabe</div>
+                <div class="col50">
+                    <div id="textbox-sectorpreset"></div>
+                </div>
+            </div>
+             <div class="flex-row-stretch tm-background-output">
+                <div>Rest</div>
+                <div class="col50">
+                    <div id="textbox-sectorpresetrest"></div>
+                </div>
+            </div>
 		</script>
 
+        <!-- GLP -->
 		<script id="tab-regtest" type="text/html">
-			<div class="dx-fieldset tm-background-input" style="padding: 20px 10px; margin: 10px 10px;">
-				<div class="dx-field">
-					<div class="dx-field-value">
-						<div id="button-resetregtest"></div>
-					</div>
-				</div>
-				<div class="dx-field">
-					<div class="dx-field-value">
-						<div id="button-setregtest"></div>
-					</div>
-				</div>
-				<div class="dx-field flex-row">
-					<div class="dx-field-value">
-						<div id="numberbox-regtestminute"></div>
-					</div>
-					<div class="dx-field-value">
-						<div id="numberbox-regtestsecond"></div>
-					</div>
-				</div>
-				<div class="dx-field flex-row">
-					<div class="dx-field-value">
-						<div id="numberbox-regtest1000m"></div>
-					</div>
-					<div class="dx-field-value">
-						<div id="numberbox-regtest100m"></div>
-					</div>
-				</div>
-				<!-- <div class="dx-field flex-row"> -->
-					<!-- <div class="dx-field-value"> -->
-						<!-- <div id="numberbox-regteststarthour"></div> -->
-					<!-- </div> -->
-					<!-- <div class="dx-field-value"> -->
-						<!-- <div id="numberbox-regteststartminute"></div> -->
-					<!-- </div> -->
-					<!-- <div class="dx-field-value"> -->
-						<!-- <div id="numberbox-regteststartsecond"></div> -->
-					<!-- </div> -->
-				<!-- </div> -->
-			</div>
-			<div class="dx-fieldset" style="padding: 20px 10px; margin: 10px 10px;">
-				<div class="dx-field flex-row">
-					<div class="dx-field-label">Zeit</div>
-					<div class="dx-field-value flex-row-stretch">
-						<div id="textbox-regtestseconds"></div>
-					</div>
-				</div>
-				<div class="dx-field flex-row">
-					<div class="dx-field-label"></div>
-					<div class="dx-field-value flex-row-stretch">
-						<div id="textbox-regtestminutes"></div>
-					</div>
-				</div>
-				<div class="dx-field flex-row-stretch">
-					<div class="dx-field-label">Strecke</div>
-					<div class="dx-field-value">
-						<div id="textbox-regtestlength"></div>
-					</div>
-				</div>
-				<div class="dx-field flex-row">
-					<div class="dx-field-label">&#216; Geschwind.</div>
-					<div class="dx-field-value flex-row-stretch">
-						<div id="textbox-regtestavgspeed"></div>
-					</div>
-				</div>
-			</div>
+        
+            <!-- Einstellungen -->
+            <div class="flex-row-stretch">
+                <div>Gleichmäßigkeits-<br>prüfung</div>
+                <div>
+                    <div id="button-setregtest"></div>
+                    <div id="button-resetregtest"></div>
+                </div>
+            </div>
+            <div class="flex-row-stretch">
+                <div id="numberbox-regtesttime"></div>
+            </div>
+            <div class="flex-row-stretch">
+                <div id="numberbox-regtestlength"></div>
+            </div>
+            
+            <!-- Anzeige -->
+            <div class="flex-row-stretch tm-background-output">
+                <div>Zeit</div>
+                <div class="col50">
+                    <div id="textbox-regtesttime"></div>
+                </div>
+            </div>
+            <div class="flex-row-stretch tm-background-output">
+                <div class="col50">
+                    <div id="textbox-regtestminutes"></div>
+                </div>
+                <div class="col50">
+                    <div id="textbox-regtestminutesdecimal"></div>
+                </div>
+            </div>
+            <div class="flex-row-stretch tm-background-output">
+                <div>Strecke</div>
+                <div class="col50">
+                    <div id="textbox-regtestlength"></div>
+                </div>
+            </div>
+            <div class="flex-row-stretch tm-background-output">
+                <div>&#216; Geschwind.</div>
+                <div class="col50">
+                    <div id="textbox-regtestavgspeed"></div>
+                </div>
+            </div>
 		</script>
 		
 		<script id="tab-setup" type="text/html">
-			<div class="dx-fieldset tm-background-input" style="padding: 20px 10px; margin: 10px 10px;">
-				<div class="dx-field flex-row">
-					<div class="dx-field-label">Anhalten</div>
-					<div class="dx-field-value">
-						<div id="switch-stoptripmaster"></div>
-					</div>
-				</div>
-				<div class="dx-field flex-row">
-					<div class="dx-field-label">Sound</div>
-					<div class="dx-field-value">
-						<div id="switch-enablesound"></div>
-					</div>
-				</div>
-				<div class="dx-field flex-row">
-					<div class="dx-field-label">Konfiguration</div>
-					<div class="dx-field-value flex-row-stretch">
-						<div id="selectbox-configuration"></div>
-						<div id="button-editconfiguration"></div>
-						<div id="popup-editconfiguration" >
-							<div class="dx-field-label" id="label-key0"></div>
-							<div id="textbox-key0"></div>
-							<div class="dx-field-label" id="label-key1"></div>
-							<div id="textbox-key1"></div>
-							<div class="dx-field-label" id="label-key2"></div>
-							<div id="textbox-key2"></div>
-							<div id="button-saveconfiguration"></div>
-							<div id="button-resetconfiguration"></div>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="dx-fieldset tm-background-input" style="padding: 20px 10px; margin: 10px 10px;">
-				<div class="dx-field" id="reset-tripmaster">
-					<div class="dx-field-value">
-						<div id="button-reset-tripmaster"></div>
-					</div>
-				</div>
-			</div>
-			<div class="dx-fieldset" style="padding: 20px 10px; margin: 10px 10px;">
-				<div class="dx-field flex-row">
-					<div class="dx-field-label">Etappe</div>
-					<div class="dx-field-value flex-row-stretch" id="tab2_sectorcounter">
-						<div></div>
-					</div>
-				</div>
-				<div class="dx-field flex-row">
-					<div class="dx-field-label">Rallye</div>
-					<div class="dx-field-value flex-row-stretch">
-						<div id="textbox-rallyecounter"></div>
-					</div>
-				</div>
-				<div class="dx-field flex-row">
-					<div class="dx-field-label">Gesamt</div>
-					<div class="dx-field-value flex-row-stretch">
-						<div id="textbox-totalcounter"></div>
-					</div>
-				</div>
-				<div class="dx-field flex-row">
-					<div class="dx-field-value" id="config">
-						 
-					</div>
-				</div>
-			</div>
+            <div class="flex-row-stretch">
+                <div>Tripmaster</div>
+                <div>
+                    <div id="button-togglerecording"></div>
+                    <div id="button-togglesound"></div>
+					<div id="button-resettripmaster"></div>
+                </div>
+            </div>
+            <div class="flex-row-stretch">
+                <div></div>
+                <div>
+                </div>
+            </div>
+            <div class="flex-row-stretch">
+                <div>Konfiguration</div>
+                <div class="col50">
+                    <div id="selectbox-configuration"></div>
+                    <div id="button-editconfiguration"></div>
+                    <div id="popup-editconfiguration" >
+                        <div class="label-key" id="label-key0"></div>
+                        <div id="textbox-key0"></div>
+                        <div class="label-key" id="label-key1"></div>
+                        <div id="textbox-key1"></div>
+                        <div class="label-key" id="label-key2"></div>
+                        <div id="textbox-key2"></div>
+                        <br><br>
+                        <div class="flex-row-stretch space-evenly">
+                            <div>
+                                <div id="button-saveconfiguration"></div>
+                            </div>
+                            <div>
+                                <div id="button-resetconfiguration"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex-row-stretch tm-background-output">
+                <div>Sektor</div>
+                <div class="col50" id="tab2_sector">
+                    <div></div>
+                </div>
+            </div>
+            <div class="flex-row-stretch tm-background-output">
+                <div>Rallye</div>
+                <div class="col50">
+                    <div id="textbox-rallye"></div>
+                </div>
+            </div>
+            <div class="flex-row-stretch tm-background-output">
+                <div>Gesamt</div>
+                <div class="col50">
+                    <div id="textbox-total"></div>
+                </div>
+            </div>
+
+            <div class="flex-row-stretch">
+                <div>Raspberry Pi</div>
+                <div>
+                    <div id="button-sudohalt"></div>
+                    <div id="button-sudoreboot"></div>
+                </div>
+            </div>
+		</script>
+        
+		<script id="tab-roadbook" type="text/html">
 		</script>
 	</div>
-</body>
+    </body>
 </html>

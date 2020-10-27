@@ -4,74 +4,57 @@ var windowDiagonal = Math.sqrt(Math.pow(window.innerHeight, 2) + Math.pow(window
 
 // Gemeinsame Optionen ...
 
-// ...der linearen Anzeige des Etappenfortschritts
-var linearGaugeOptions = {
-   animation: {
-		enabled: true,
-		easing: "linear"
-	},
-	geometry: {
-		orientation: "vertical"
-	},
-	size: {
-		height: "100%",
-		width: "100%",
-	},
-	subvalues: [],
-	subvalueIndicator: {
-		type: "textCloud",
-		horizontalOrientation: "right",
-		offset: 23,
-		arrowLength: 5,
-		text: {
-			font: {
-				size: "5vw",
-				color: "Ivory",
-			},
-			customizeText: function (e) {
-				if (e.value == 100) {
-					return formatNumber(kmSectorPreset) + " km &#10003;";
-				} else {
-					return "-" + formatDistance(kmLeftInSector);
-				}
-			}
-		}
-	},
-	scale: {
-		tickInterval: 20,
-		label: {
-			customizeText: function (e) {
-				return e.value+" %";
-			},
-			font: {
-				size: "5vw",
-				color: "gray",
-			},
-		},
-	},
-	redrawOnResize: true,
-};
-
 // ... der Anzeigetextboxen
 var textBoxOptions = {
 	readOnly: true,
 	focusStateEnabled: false,
-	hoverStateEnabled: false,	
+	hoverStateEnabled: false,
 };
 
+// ... der Metallschaltflächen
+var metalButtonOptions = {
+    elementAttr: {
+        class: "metal-button",
+    },
+    disabled: true,
+    focusStateEnabled: false,
+    hoverStateEnabled: false,
+};
+	
 $(function(){
 
-    // Reload nach Abbruch der WebSocket Verbindung
-	
-		$("#button-reloadpage").dxButton({
-			text: "Neu verbinden",
-			type: "danger",
-			visible: false,
-			width: "90%",
-			onClick: function(e) {
-			   location.reload();
-			 },
-		});   
+    // Reload nach Abbruch der WebSocket Verbindung	
+    $("#button-reloadpage").dxButton({
+        text: "Neu verbinden",
+        type: "danger",
+        visible: false,
+        width: "90%",
+        onClick: function(e) {
+           location.reload();
+         },
+    });   
+
+    // Metallschaltflächen
+	$("#button-togglerecording").dxButton($.extend(true, {}, metalButtonOptions, {
+		icon: "fas fa-flag-checkered",
+		elementAttr: {
+			style: "color: var(--tm-red)",
+		},
+		onClick: function(e) {
+			WebSocket_Send('toggleRecording');
+		},
+	})); 
+
+	$("#button-checkpoint").dxButton($.extend(true, {}, metalButtonOptions, {
+		icon: "fas fa-map-marker-alt",
+		elementAttr: {
+			style: "color: var(--tm-green)",
+		},
+		onClick: function(e) {
+            WebSocket_Send('registerPoint:tmp');
+		},
+	})); 
+
 });
 
 // Farbverlauf der Linearen Anzeige (leider deaktiviert, da bei einem Farbwechsel die Anzeige immer zuerst auf 0 springt :-(
@@ -103,6 +86,19 @@ $(function(){
         });
 	};
 
+// Bestätigungsdialog
+
+    function confirmDialog(dialogTitle) {
+        return DevExpress.ui.dialog.custom({
+            title: dialogTitle,
+            message: "Bist Du sicher?",
+            buttons: [
+                { text: "Ja", onClick: function () { return true } },
+                { text: "Nein", onClick: function () { return false } }
+            ]
+        });
+    };
+		
 // Formatierung von Entfernungsangaben: unter 1 km in Metern, darüber in Kilometer mit zwei Nachkommastellen
 	
 	function formatDistance(distance) {

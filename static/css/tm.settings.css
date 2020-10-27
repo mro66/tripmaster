@@ -1,38 +1,61 @@
-.tm-background-input {
+.tm-background-output {
     background: Linen;
 }
 
-/* TabPanel */
-.dx-tab, .dx-switch, .dx-field-label {
-	font-size: 5vw;
+.metal-button {
+    width: 11vmax;
+    height: 11vmax;
+    margin-left: 1vmax;
 }
 
-/*
-wird von mobilen Browsern ignoriert...
-.dx-fieldset {
-	padding: 20px 10px;
-	margin: 10px 10px;
+/* TabPanel */
+.dx-field-label {
+	font-size: 3vmax;
 }
-*/
+
+.dx-tabpanel .dx-multiview-wrapper {
+    padding-top: 3vmax;
+}
+
+.dx-tab-selected .dx-icon {
+    color: var(--tm-blue) !important;
+}
+.dx-tab .dx-icon {
+    color: gray;
+}
+
+/* Rechte Spalte */
+.col50 {
+    width: 50%;
+}
+
+.flex-row-stretch {
+	display: flex;
+	align-items: stretch;
+	justify-content: space-between;
+    padding: 1vmax 2.5vmax;
+}
+
+.space-evenly {
+	justify-content: space-evenly;
+}
+	
+.dx-popup-content > .flex-row-stretch, .label-key {
+    padding: 1vmax 0;
+}
+
+.flex-row-stretch > div {
+	display: flex;
+	align-items: center;
+}
+
+.flex-row-stretch div:nth-child(1), .label-key {
+    font-size: 3vmax;
+}
 
 /* Setup Tab */
-.tab-setup .dx-field-label {
-	font-size: 6vw;
-}
-
-/* Button */
-.dx-button, .dx-viewport .dx-field-value:not(.dx-switch):not(.dx-button),
-.dx-viewport .dx-field-label {
-    float: none;
-    width: 100%;
-}
-
-#button-saveconfiguration {
-	margin: 30px 0px;
-}
-
-#button-resetconfiguration {
-	margin: 0px;
+.dx-tab .dx-icon {
+	font-size: 4vmax;
 }
 
 /* TextBox */
@@ -86,10 +109,4 @@ wird von mobilen Browsern ignoriert...
 	66%  {background-color: white; color: var(--tm-red);}
 	83%  {background-color: var(--tm-red); color: white;}
 	100% {background-color: white; color: black;}
-}
-
-
-/* Switch */
-.dx-field-value:not(.dx-widget) > .dx-switch {
-    float: none;
 }

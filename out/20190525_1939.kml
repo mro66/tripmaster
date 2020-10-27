@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1">
+        <Style id="4">
+            <LineStyle id="5">
+                <color>ff5cb85c</color>
+                <colorMode>normal</colorMode>
+                <width>5</width>
+            </LineStyle>
+        </Style>
+        <Style id="2">
+            <LineStyle id="3">
+                <color>ff4f53d9</color>
+                <colorMode>normal</colorMode>
+                <width>5</width>
+            </LineStyle>
+        </Style>
+        <Placemark id="7">
+            <name>Sektor 1</name>
+            <styleUrl>#4</styleUrl>
+            <MultiGeometry id="6">
+                <LineString id="8">
+                    <coordinates>8.043343167,49.835579499999994,0.0 8.044361833,49.836580833,0.0 8.045376000000001,49.837590333,0.0 8.046385167,49.838599832999996,0.0 8.047401667,49.839606,0.0 8.048372167,49.8406215,0.0 8.049327667,49.841643167,0.0 8.050297166999998,49.842644833,0.0 8.051314167000001,49.843642333,0.0 8.0523205,49.844653333,0.0 8.05331,49.845651333,0.0 8.054300167000001,49.846655667,0.0 8.055273167,49.847645,0.0 8.056300499999999,49.848647167,0.0 8.057351833,49.849627667,0.0 8.058369333,49.850610167,0.0 8.059356333,49.851605000000006,0.0 8.060334000000001,49.852639333,0.0 8.0613185,49.853662,0.0 8.062305499999999,49.8546095,0.0 8.063305333,49.855600167,0.0 8.0643105,49.856597,0.0 8.0653235,49.8575755,0.0 8.065723333000001,49.857965833,0.0</coordinates>
+                </LineString>
+            </MultiGeometry>
+        </Placemark>
+        <Placemark id="11">
+            <name>Sektor 2</name>
+            <styleUrl>#2</styleUrl>
+            <MultiGeometry id="10">
+                <LineString id="12">
+                    <coordinates>8.065723333000001,49.857965833,0.0 8.066314333,49.858568167,0.0 8.067338833,49.859553999999996,0.0 8.068339167,49.860565333000004,0.0 8.069363166999999,49.86157,0.0 8.069767833,49.861974667,0.0</coordinates>
+                </LineString>
+            </MultiGeometry>
+        </Placemark>
+        <Placemark id="15">
+            <name>Kreisverkehr</name>
+            <styleUrl>#4</styleUrl>
+            <MultiGeometry id="14">
+                <Point id="16">
+                    <coordinates>8.069767833,49.861974667,0.0</coordinates>
+                </Point>
+                <Point id="17">
+                    <coordinates>8.043343167,49.835579499999994,0.0</coordinates>
+                </Point>
+            </MultiGeometry>
+        </Placemark>
+    </Document>
+</kml>

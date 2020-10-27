@@ -47,22 +47,14 @@
                     <div id="status-tyre" class="status-indicator">
                         <i class="fab fa-galactic-republic"></i>
                     </div>
-					<div id="circulargauge-speed"  onClick="WebSocket_Send('resetSector');"></div>
+					<div id="circulargauge-speed" onClick="WebSocket_Send('resetSector');"></div>
 				</div>
 				<div data-options="dxItem: {ratio: 1}" id="right-sector">
-                    <div id="status-information" style="/*display: none*/">
-						<div class="flex-row space-evenly">
-							<div id="button-togglerecording"></div>
-						</div>
-						<div class="flex-row space-evenly">
-							<div id="button-roundabout"></div>
-						</div>
-						<div class="flex-row space-evenly">
-							<div id="button-townsign"></div>
-						</div>
-						<div class="flex-row space-evenly">
-							<div id="button-checkpoint"></div>
-						</div>
+                    <div id="button-group" class="flex-column">
+                        <div id="button-togglerecording""></div>
+                        <div id="button-roundabout"></div>
+                        <div id="button-townsign"></div>
+                        <div id="button-checkpoint"></div>
 					</div>
 					<div></div>
 				</div>
@@ -83,17 +75,17 @@
 			<div id="regtest-box" class="twocolumn-box">
 				<div data-options="dxItem: {ratio: 3}">
 					<div id="circulargauge-devavgspeed"></div>
-					<div id="textbox-regtestseconds"></div>
+					<div id="textbox-regtesttime"></div>
 				</div>
 				<div data-options="dxItem: {ratio: 1}" id="right-regtest">
-                    <div id="lineargauge-kmsector"></div>
+                    <div id="lineargauge-kmsector" onClick="showButtons()"></div>
 				</div>
 			</div>
 		
 		</script>
 	</div>
 	<script>
-		window.addEventListener("resize", resizeAndPosition);
-</script>
+		<!-- window.addEventListener("resize", resizeAndPosition); -->
+    </script>
 </body>
 </html>
