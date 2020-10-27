@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="/static/websocket.js" type="text/javascript"></script>
+<script src="/static/control.js" type="text/javascript"></script>
+<script>
+var DEBUG = {{ debug }};
+</script>
+</head>
+<body>
+Test: {{ test }}
+<p id="connectionStatus"></p>
+<p id="Log"></p>
+<input type="button" value="Close WebSocket" onClick="WebSocket_Close()" />&nbsp;
+<input type="button" value="Open WebSocket" onClick="WebSocket_Open()" />
+</body>
+</html>
