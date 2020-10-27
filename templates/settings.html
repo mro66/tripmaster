@@ -29,13 +29,15 @@
 	</script>
 </head>
 <body onload="WebSocket_Open('settings')" class="dx-viewport">
-	<div id="button-reloadpage"></div>
-	<div id="tabpanel-settings" class="main">
+    <div id="reloadpage">
+        <div id="button-reloadpage"></div>
+    </div>
+	<div id="tabpanel-settings">
     
-        <!-- Sektor -->
+        <!-- Abschnitt -->
 		<script id="tab-sector" type="text/html">
             <div class="flex-row-stretch">
-                <div>Sektor</div>
+                <div>Abschnitt</div>
                 <div>
                     <div id="button-reverse"></div>
                     <div id="button-setsector"></div>
@@ -46,7 +48,7 @@
                 <div id="numberbox-sectorpreset"></div>
             </div>
             <div class="flex-row-stretch tm-background-output">
-                <div>Sektor</div>
+                <div>Abschnitt</div>
                 <div id="tab0_sector" class="col50">
                     <div id="textbox-sector"></div>
                 </div>
@@ -61,6 +63,24 @@
                 <div>Rest</div>
                 <div class="col50">
                     <div id="textbox-sectorpresetrest"></div>
+                </div>
+            </div>
+            <div class="flex-row-stretch">
+                <div>Etappe</div>
+                <div>
+                    <div id="button-togglestage"></div>
+                </div>
+            </div>
+            <div class="flex-row-stretch">
+                <div>Zielankunft</div>
+                <div class="col50">
+                    <div id="datebox-stageend"></div>
+                </div>
+            </div>
+             <div class="flex-row-stretch tm-background-output">
+                <div>Vebleibende Zeit</div>
+                <div class="col50">
+                    <div id="textbox-timeinstage"></div>
                 </div>
             </div>
 		</script>
@@ -112,11 +132,46 @@
             </div>
 		</script>
 		
+        
+        <!-- Zählpunkte -->
+		<script id="tab-countpoint" type="text/html">
+            <div class="flex-row-stretch">
+                <div id="datagrid-countpoint"></div>
+            </div>
+            <div class="flex-row-stretch">
+                <div>Button für</div>
+            </div>
+            <div class="flex-row-stretch">
+                <div id="selectbox-countpoint"></div>
+            </div>
+		</script>
+
+        <!-- Orientierungskontrollen -->
+		<script id="tab-checkpoint" type="text/html">
+            <div class="flex-row-stretch">
+                <div id="datagrid-checkpoint"></div>
+            </div>
+            <div class="flex-row-stretch">
+                <div>Button für</div>
+            </div>
+            <div class="flex-row-stretch">
+                <div id="selectbox-checkpoint"></div>
+            </div>
+		</script>
+
+        <!-- Setup -->
 		<script id="tab-setup" type="text/html">
+            <div class="flex-row-stretch">
+                <div>Raspberry Pi</div>
+                <div>
+                    <div id="button-sudohalt"></div>
+                    <div id="button-sudoreboot"></div>
+                </div>
+            </div>
+
             <div class="flex-row-stretch">
                 <div>Tripmaster</div>
                 <div>
-                    <div id="button-togglerecording"></div>
                     <div id="button-togglesound"></div>
 					<div id="button-resettripmaster"></div>
                 </div>
@@ -152,15 +207,15 @@
             </div>
 
             <div class="flex-row-stretch tm-background-output">
-                <div>Sektor</div>
+                <div>Abschnitt</div>
                 <div class="col50" id="tab2_sector">
                     <div></div>
                 </div>
             </div>
             <div class="flex-row-stretch tm-background-output">
-                <div>Rallye</div>
+                <div>Etappe</div>
                 <div class="col50">
-                    <div id="textbox-rallye"></div>
+                    <div id="textbox-stage"></div>
                 </div>
             </div>
             <div class="flex-row-stretch tm-background-output">
@@ -170,17 +225,6 @@
                 </div>
             </div>
 
-            <div class="flex-row-stretch">
-                <div>Raspberry Pi</div>
-                <div>
-                    <div id="button-sudohalt"></div>
-                    <div id="button-sudoreboot"></div>
-                </div>
-            </div>
 		</script>
-        
-		<script id="tab-roadbook" type="text/html">
-		</script>
-	</div>
     </body>
 </html>

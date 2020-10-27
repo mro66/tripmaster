@@ -53,9 +53,14 @@
     font-size: 3vmax;
 }
 
-/* Setup Tab */
-.dx-tab .dx-icon {
+/* Setup Tab, Platzhalter in DateBox */
+.dx-tab .dx-icon, .dx-placeholder {
 	font-size: 4vmax;
+}
+
+/* Inputfeld im Datagrid */
+.dx-datagrid-content .dx-texteditor-input {
+    font-size: 3vmax;
 }
 
 /* TextBox */

@@ -18,9 +18,11 @@ html, body {
     margin: 0px;
 }
 
-#button-reloadpage {
-	margin: 5%;
-	font-size: 5vmax;
+#reloadpage {
+    display: none;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
 }
 
 .dx-field-value .dx-widget, .dx-item, .dx-texteditor-input {
@@ -31,13 +33,16 @@ html, body {
     background: Ivory;
 }
 
-
-.dx-button-has-icon .dx-icon {
+.dx-button-content .dx-icon {
     font-size: 5vmax;
     line-height: normal;
     color: inherit;
     width: auto;
     height: auto;
+}
+
+#reloadpage .dx-button-content .dx-icon {
+    font-size: 9vmax;
 }
 
 .metal-button {

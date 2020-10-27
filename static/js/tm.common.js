@@ -1,6 +1,6 @@
+var stageStarted = false;
 var kmLeftInSector = 0;
 var kmSectorPreset = 0;
-var windowDiagonal = Math.sqrt(Math.pow(window.innerHeight, 2) + Math.pow(window.innerWidth, 2))/1000;
 
 // Gemeinsame Optionen ...
 
@@ -24,34 +24,27 @@ var metalButtonOptions = {
 $(function(){
 
     // Reload nach Abbruch der WebSocket Verbindung	
-    $("#button-reloadpage").dxButton({
-        text: "Neu verbinden",
-        type: "danger",
-        visible: false,
-        width: "90%",
+    $("#button-reloadpage").dxButton($.extend(true, {}, metalButtonOptions, {
+        disabled: false,
+		icon: "fas fa-plug",
+        width: "20vmax",
+        height: "20vmax",
+		elementAttr: {
+			style: "color: var(--tm-blue)",
+		},
         onClick: function(e) {
            location.reload();
          },
-    });   
+    }));   
 
-    // Metallschaltflächen
-	$("#button-togglerecording").dxButton($.extend(true, {}, metalButtonOptions, {
+    // Etappe Start/Stop
+	$("#button-togglestage").dxButton($.extend(true, {}, metalButtonOptions, {
 		icon: "fas fa-flag-checkered",
 		elementAttr: {
 			style: "color: var(--tm-red)",
 		},
 		onClick: function(e) {
-			WebSocket_Send('toggleRecording');
-		},
-	})); 
-
-	$("#button-checkpoint").dxButton($.extend(true, {}, metalButtonOptions, {
-		icon: "fas fa-map-marker-alt",
-		elementAttr: {
-			style: "color: var(--tm-green)",
-		},
-		onClick: function(e) {
-            WebSocket_Send('registerPoint:tmp');
+			WebSocket_Send('toggleStage');
 		},
 	})); 
 
@@ -91,7 +84,7 @@ $(function(){
     function confirmDialog(dialogTitle) {
         return DevExpress.ui.dialog.custom({
             title: dialogTitle,
-            message: "Bist Du sicher?",
+            messageHtml: "Bist Du sicher?",
             buttons: [
                 { text: "Ja", onClick: function () { return true } },
                 { text: "Nein", onClick: function () { return false } }

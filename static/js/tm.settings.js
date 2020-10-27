@@ -1,7 +1,55 @@
 var audioElement = document.createElement('audio');
 audioElement.setAttribute('src', '/static/Wine_Glass.ogg');
 var countdownRunning = false;
-    
+
+var checkpointList = [{
+        "Variable": "null",
+        "Name": "Keine",
+        "Icon": "fas fa-minus",
+        "Iconfarbe": "var(--tm-red)"
+    },{
+        "Variable": "roundabout",
+        "Name": "Kreisverkehr",
+        "Icon": "fas fa-sync",
+        "Iconfarbe": "var(--tm-blue)"
+    }, {
+        "Variable": "townsign",
+        "Name": "Ortsschild",
+        "Icon": "fas fa-sign",
+        "Iconfarbe": "var(--tm-yellow)"
+    }, {
+        "Variable": "stampcheck",
+        "Name": "Stempelkontrolle",
+        "Icon": "fas fa-stamp",
+        "Iconfarbe": "var(--tm-red)"
+    }, {
+        "Variable": "mutecheck",
+        "Name": "Stummer Wächter",
+        "Icon": "fas fa-neuter",
+        "Iconfarbe": "var(--tm-green)"
+    }, {
+        "Variable": "checkpoint",
+        "Name": "Sonstiges",
+        "Icon": "fas fa-map-marker-alt",
+        "Iconfarbe": "var(--tm-green)"
+    }];
+
+var countpointList = [{
+        "Variable": "null",
+        "Name": "Keine",
+        "Icon": "fas fa-minus",
+        "Iconfarbe": "var(--tm-red)"
+    },{
+        "Variable": "roundabout",
+        "Name": "Kreisverkehr",
+        "Icon": "fas fa-sync",
+        "Iconfarbe": "var(--tm-blue)"
+    }, {
+        "Variable": "countpoint",
+        "Name": "Sonstiges",
+        "Icon": "fas fa-hashtag",
+        "Iconfarbe": "var(--tm-blue)"
+    }];
 // Zahlenfeld mit <<, <, >, >>
 var numberBoxOptions = {
     inputAttr: {
@@ -47,9 +95,33 @@ var numberBoxOptions = {
     ]
 };
 
+var dataGridOptions = {
+    elementAttr: {
+        style: "font-size: 3vmax",
+    },
+    dataSource: [
+    ],
+    keyExpr: "ID",
+    editing: {
+        mode: "cell",
+        allowUpdating: true,
+        selectTextOnEditStart: true,
+        texts: {
+            cancelRowChanges: "Abbrechen",
+            editRow: "Bearbeiten",
+            saveRowChanges: "Speichern"
+        },
+        useIcons: true,
+    },
+    noDataText: "Keine Daten vorhanden",
+    paging: {
+        pageSize: 12,
+    },
+}
+
 $(function(){
 
-// Das TabPanel im oberen Teil der ContentBox
+// TabPanel 
 
      $("#tabpanel-settings").dxTabPanel({
         deferRendering: false,
@@ -57,7 +129,7 @@ $(function(){
         loop: true,
         selectedIndex: 0,
         items: [{
-            // Sektor
+            // Abschnitt
             "title": [],
             icon: "fas fa-route",
             template: $("#tab-sector"),
@@ -67,20 +139,20 @@ $(function(){
             icon: "fas fa-stopwatch",
             template: $("#tab-regtest"),
         }, {
+            // Bordkarte - Zählpunkte
+            title: [],
+            icon: "fas fa-hashtag",
+            template: $("#tab-countpoint"),
+        }, {
+            // Bordkarte - Orientierungskontrollen
+            title: [],
+            icon: "fas fa-map-marker-alt",
+            template: $("#tab-checkpoint"),
+        }, {
             // Settings
             "title": [],
             icon: "fas fa-cogs",
             template: $("#tab-setup"),
-        }, {
-            // Raspberry Pi Steuerung
-            // "title": [],
-            // icon: "fab fa-raspberry-pi",
-            // template: $("#tab-raspi"),
-        // }, {
-            // Bordkarte
-            "title": [],
-            icon: "far fa-file-alt",
-            template: $("#tab-roadbook"),
         }],
         onSelectionChanged: function(e) {
             if (e.component.option("selectedIndex")==0) {
@@ -91,14 +163,14 @@ $(function(){
         }
     });
 
-// Sektor
+// Tab Abschnitt
 
     var sectorPresetNumberBox = $("#numberbox-sectorpreset").dxNumberBox($.extend(true, {}, numberBoxOptions, {
         max: 25,
         step: 0.05,
         format: "#0.00 km",
         onValueChanged: function(e) {
-            $("#button-setsector").dxButton("instance").option("disabled", (e.value === 0.0))
+            $("#button-setsector").dxButton("instance").option("disabled", (e.value === 0.0) || !stageStarted);
         },
         buttons: [
             {
@@ -177,11 +249,13 @@ $(function(){
     })); 
 
         function resetSector() {
+            sectorPresetNumberBox.option("value", 0);
             sectorTextbox.option("value", formatDistance(0));
             sectorPresetTextbox.option("value", "0 m");
             sectorPresetRestTextbox.option("value", "0 m");
             setReverse(false);
-            WebSocket_Send('resetSector');
+            if (stageStarted)
+                WebSocket_Send('resetSector');
         }
 
     var reverseButton = $("#button-reverse").dxButton($.extend(true, {}, metalButtonOptions, {
@@ -235,7 +309,28 @@ $(function(){
         value: "0 m",
     })).dxTextBox("instance");
 
-// GLP
+    $("#datebox-stageend").dxDateBox({
+        placeholder: "00:00",
+        showClearButton: true,
+        displayFormat: "HH:mm",
+        pickerType: "rollers",
+        type: "time",
+        onValueChanged: function(e) {
+            let stageend = e.component.option("value");
+            if (stageend != null) {
+                stageend.setSeconds(0)
+                stageend.setMilliseconds(0);
+                stageend = stageend.getTime();
+            }
+            WebSocket_Send("setStageTime:"+stageend)
+        },
+    });
+
+    var timeInStageTextbox = $("#textbox-timeinstage").dxTextBox($.extend(true, {}, textBoxOptions,{
+        value: "00:00",
+    })).dxTextBox("instance");
+
+// Tab GLP
 
     var setRegtestButton = $("#button-setregtest").dxButton($.extend(true, {}, metalButtonOptions, {
         icon: "fas fa-check",
@@ -365,7 +460,8 @@ $(function(){
             regtestTimeTextbox.option("value", regtestTime + " sek");
             if (regtestTime > 0) {
                 resetRegtestButton.option("disabled", false);
-                setRegtestButton.option("disabled", false);
+                if (stageStarted)
+                    setRegtestButton.option("disabled", false);
                 // setRegtestStartTime();
             } else {
                 resetRegtestButton.option("disabled", true);
@@ -613,7 +709,186 @@ $(function(){
             }
         };
 
+// Tab Zählpunkte
+
+    $("#datagrid-countpoint").dxDataGrid($.extend(true, {}, dataGridOptions, {
+        columns: [
+            {
+                dataField: "ID",
+                allowEditing: false,
+                width: "6vmax",
+            },
+            {
+                dataField: "Beschreibung",
+                allowEditing: false,
+            },
+            {
+                dataField: "Sicher",
+                dataType: "boolean",
+                caption: "OK",
+                width: "10vmax",
+            },
+        ],
+        summary: {
+            totalItems: [
+                {
+                    column: "Sicher",
+                    summaryType: "sum",
+                    showInColumn: "Beschreibung",
+                }
+            ],
+            texts: {
+                sumOtherColumn: "Anzahl: {0}"
+            }
+        },
+        onRowUpdated: function(e) {
+            id = e.data.ID;
+            description = e.data.Beschreibung;
+            name = e.data.Name;
+            visibility = e.data.Sicher;
+            WebSocket_Send("changepoint:countpoint&"+id+"&"+description+"&"+name+"&"+(visibility?1:0));
+        },
+    }));
+
+    $("#selectbox-countpoint").dxSelectBox({
+        dataSource: countpointList,
+        displayExpr: "Name",
+        valueExpr: "Variable",
+        value: "roundabout"
+    });
+
+// Tab Orientierungskontrollen
+
+    $("#datagrid-checkpoint").dxDataGrid($.extend(true, {}, dataGridOptions, {
+        columns: [
+            {
+                dataField: "ID",
+                allowEditing: false,
+                width: "6vmax",
+            },
+            {
+                dataField: "Beschreibung",
+                allowEditing: false,
+                lookup: {
+                    dataSource: checkpointList,
+                    displayExpr: "Name",
+                    valueExpr: "ID"
+                }
+            },
+            {
+                dataField: "Name",
+                allowEditing: true,
+                width: "12vmax",
+            },
+            {
+                dataField: "Sicher",
+                dataType: "boolean",
+                caption: "OK",  
+                width: "10vmax",
+            },
+        ],
+        onRowUpdated: function(e) {
+            id = e.data.ID;
+            description = e.data.Beschreibung;
+            
+            e.data.Name = e.data.Name.toUpperCase();
+            
+            name = e.data.Name;
+            visibility = e.data.Sicher;           
+            WebSocket_Send("changepoint:checkpoint&"+id+"&"+description+"&"+name+"&"+(visibility?1:0));
+        },
+    }));
+
+    $("#selectbox-checkpoint").dxSelectBox({
+        dataSource: checkpointList,
+        displayExpr: "Name",
+        valueExpr: "Variable",
+        value: "townsign",
+        onSelectionChanged: function(e) {
+            // v = e.data.Variable;
+            // n = e.data.Name;
+            // i = e.data.Icon;
+            // c = e.data.Iconfarbe;
+            // mylog(v); mylog(n); mylog(i); mylog(c);
+        },
+    });
+
 // Tab Setup
+
+    // RasPi - Reboot
+    $("#button-sudoreboot").dxButton($.extend(true, {}, metalButtonOptions, {
+        icon: "fas fa-redo",
+        disabled: false,
+        elementAttr: {
+            style: "color: var(--tm-blue)",
+        },
+        onClick: function(e) {
+            confirmDialog("RasPi neu starten").show().done(function (dialogResult) {
+                if (dialogResult) {
+                    WebSocket_Send('sudoReboot');
+                }
+            });
+        },
+    })); 
+    
+    // RasPi - Halt
+    $("#button-sudohalt").dxButton($.extend(true, {}, metalButtonOptions, {
+        icon: "fas fa-power-off",
+        disabled: false,
+        elementAttr: {
+            style: "color: var(--tm-red)",
+        },
+        onClick: function(e) {
+            confirmDialog("RasPi anhalten").show().done(function (dialogResult) {
+                if (dialogResult) {
+                    WebSocket_Send('sudoHalt');
+                }
+            });
+        },
+    })); 
+
+    // Tripmaster - Sound
+    var toggleSoundButton = $("#button-togglesound").dxButton($.extend(true, {}, metalButtonOptions, {
+        icon: "fas fa-volume-mute",
+        disabled: false,
+        elementAttr: {
+            style: "color: var(--tm-red)",
+        },
+        onClick: function(e) {
+            if (isSoundEnabled()) {
+                toggleSoundButton.option("icon", "fas fa-volume-mute");
+                toggleSoundButton.option("elementAttr", {"style": "color: var(--tm-red)"});
+            } else {
+                toggleSoundButton.option("icon", "fas fa-volume-up");
+                toggleSoundButton.option("elementAttr", {"style": "color: var(--tm-green)"});
+                // Wenn nicht vom User aktiviert, wird "Uncaught (in promise) DOMException" geworfen
+                audioElement.play().catch(function(error) { });
+            };
+        },
+    })).dxButton("instance");
+
+        function isSoundEnabled() {
+            return toggleSoundButton.option("icon") === "fas fa-volume-up"
+        };
+
+    // Tripmaster - Reset
+    $("#button-resettripmaster").dxButton($.extend(true, {}, metalButtonOptions, {
+        icon: "fas fa-redo",
+        disabled: false,
+        elementAttr: {
+            style: "color: var(--tm-blue)",
+        },
+        onClick: function(e) {
+            confirmDialog("Reset Tripmaster").show().done(function (dialogResult) {
+                if (dialogResult) {
+                    WebSocket_Send('resetTripmaster');
+                    stageTextbox.option("value", formatDistance(0));
+                    totalTextbox.option("value", formatDistance(0));
+                }
+            });
+        },
+    })); 
+
 
     var configurationSelectBox = $("#selectbox-configuration").dxSelectBox({
         dataSource: [
@@ -636,6 +911,35 @@ $(function(){
         },
     });
 
+    // Optionen der Eingabetextboxen
+    var inputTextBoxOptions = {
+        // 'value' muss definiert sein, sonst ist ein gelöschter Wert valide
+        value: "1",
+        maskInvalidMessage: "Unzulässiger Wert",
+        showClearButton: true,
+        onChange: function(e) {
+            var isAllValid = true;
+
+            try {
+                result = eval(e.component.option("value"));
+                if (typeof(result) == "undefined") {
+                    e.component.option("isValid", false);
+                };
+            }
+            catch (error) {
+                e.component.focus();
+                e.component.option("isValid", false);
+                DevExpress.ui.notify("Keine auswertbare Anweisung", "error");
+            };
+
+            for (var i=0; i<3; i++) {
+                isAllValid = $("#textbox-key"+i).dxTextBox('instance').option("isValid");
+                if (!isAllValid) break;
+            }
+            $("#button-saveconfiguration").dxButton("instance").option("disabled", !isAllValid);
+        },
+    };
+    
     var editConfigurationPopup = $("#popup-editconfiguration").dxPopup({
         showTitle: true,
         showCloseButton: true,
@@ -688,116 +992,10 @@ $(function(){
         },
     }).dxPopup("instance");
 
-    // Optionen der Eingabetextboxen
-    var inputTextBoxOptions = {
-        // 'value' muss definiert sein, sonst ist ein gelöschter Wert valide
-        value: "1",
-        maskInvalidMessage: "Unzulässiger Wert",
-        showClearButton: true,
-        onChange: function(e) {
-            var isAllValid = true;
-
-            try {
-                result = eval(e.component.option("value"));
-                if (typeof(result) == "undefined") {
-                    e.component.option("isValid", false);
-                };
-            }
-            catch (error) {
-                e.component.focus();
-                e.component.option("isValid", false);
-                DevExpress.ui.notify("Keine auswertbare Anweisung", "error");
-            };
-
-            for (var i=0; i<3; i++) {
-                isAllValid = $("#textbox-key"+i).dxTextBox('instance').option("isValid");
-                if (!isAllValid) break;
-            }
-            $("#button-saveconfiguration").dxButton("instance").option("disabled", !isAllValid);
-        },
-    };
-    
-    var rallyeTextbox = $("#textbox-rallye").dxTextBox($.extend(true, {}, textBoxOptions,{
+    var stageTextbox = $("#textbox-stage").dxTextBox($.extend(true, {}, textBoxOptions,{
     })).dxTextBox("instance");
     
     var totalTextbox = $("#textbox-total").dxTextBox($.extend(true, {}, textBoxOptions,{
     })).dxTextBox("instance");
 
-// RasPi 
-
-    // Reboot
-    $("#button-sudoreboot").dxButton($.extend(true, {}, metalButtonOptions, {
-        icon: "fas fa-redo",
-        disabled: false,
-        elementAttr: {
-            style: "color: var(--tm-blue)",
-        },
-        onClick: function(e) {
-            confirmDialog("RasPi neu starten").show().done(function (dialogResult) {
-                if (dialogResult) {
-                    WebSocket_Send('sudoReboot');
-                }
-            });
-        },
-    })); 
-    
-    // Halt
-    $("#button-sudohalt").dxButton($.extend(true, {}, metalButtonOptions, {
-        icon: "fas fa-power-off",
-        disabled: false,
-        elementAttr: {
-            style: "color: var(--tm-red)",
-        },
-        onClick: function(e) {
-            confirmDialog("RasPi anhalten").show().done(function (dialogResult) {
-                if (dialogResult) {
-                    WebSocket_Send('sudoHalt');
-                }
-            });
-        },
-    })); 
-
-// Tripmaster
-    
-    // Sound
-    var toggleSoundButton = $("#button-togglesound").dxButton($.extend(true, {}, metalButtonOptions, {
-        icon: "fas fa-volume-mute",
-        disabled: false,
-        elementAttr: {
-            style: "color: var(--tm-red)",
-        },
-        onClick: function(e) {
-            if (isSoundEnabled()) {
-                toggleSoundButton.option("icon", "fas fa-volume-mute");
-                toggleSoundButton.option("elementAttr", {"style": "color: var(--tm-red)"});
-            } else {
-                toggleSoundButton.option("icon", "fas fa-volume-up");
-                toggleSoundButton.option("elementAttr", {"style": "color: var(--tm-green)"});
-                // Wenn nicht vom User aktiviert, wird "Uncaught (in promise) DOMException" geworfen
-                audioElement.play().catch(function(error) { });
-            };
-        },
-    })).dxButton("instance");
-
-        function isSoundEnabled() {
-            return toggleSoundButton.option("icon") === "fas fa-volume-up"
-        };
-
-    // Reset
-    $("#button-resettripmaster").dxButton($.extend(true, {}, metalButtonOptions, {
-        icon: "fas fa-redo",
-        disabled: false,
-        elementAttr: {
-            style: "color: var(--tm-blue)",
-        },
-        onClick: function(e) {
-            confirmDialog("Reset Tripmaster").show().done(function (dialogResult) {
-                if (dialogResult) {
-                    WebSocket_Send('resetTripmaster');
-                    rallyeTextbox.option("value", formatDistance(0));
-                    totalTextbox.option("value", formatDistance(0));
-                }
-            });
-        },
-    })); 
 });

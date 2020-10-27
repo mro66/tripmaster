@@ -8,46 +8,54 @@
 
 /* Odometer */
 #odometer-kmtotal, #odometer-kmsector {
-    font-size: 5vw;
+    font-size: 9vh;
     position: absolute;
     visibility: hidden;
     z-index: 0;
 }
 
-
 #right-sector {
 	justify-content: center;
 }
+
+/* justify-content: center;     /* zentriert in Hauptrichtung */
+/* align-items: center;         /* zentriert in Nebenrichtung */
 
 .flex-column {
     height: 100%;
 	display: flex;
 	flex-direction: column;
-	align-items: center;
     justify-content: space-around;
+}
+
+.flex-row {
+    width: 100%;
+    display: flex;
+	flex-direction: row;
+    justify-content: space-evenly; /* space-around; */
 }
 
 .status-indicator {
     position: absolute;
     visibility: hidden;
     font-family: 'Tripmaster Font';
-    font-size: 4vw;
+    font-size: 7vh;
     color: lightgray;
 }
 
 /* Countdown */
-.main, #regtest {
+#regtest {
     height: 100%;
     width: 100%;    
 }
 
+/* textbox-regtesttime */
 #textbox-regtesttime {
     border-color: Ivory;
 }
-
 .dx-widget input {
     font-family: 'Tripmaster Font';
-    font-size: 7.5vw;
+    font-size: 15vh;
     text-align: center;
     background-color: Ivory;
 }

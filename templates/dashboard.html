@@ -35,9 +35,11 @@
 	</style>
 </head>
 <body onload="WebSocket_Open('dashboard')" class="dx-viewport">
-	<div id="button-reloadpage"></div>
-	
-	<div id="multiview-dashboard" class="main tm-background">
+    <div id="reloadpage">
+        <div id="button-reloadpage"></div>
+    </div>
+
+	<div id="multiview-dashboard" class="tm-background">
 		<script id="mv-sector" type="text/html">
 			<div id="sector-box" class="twocolumn-box">
 				<div data-options="dxItem: {ratio: 2}">
@@ -47,16 +49,22 @@
                     <div id="status-tyre" class="status-indicator">
                         <i class="fab fa-galactic-republic"></i>
                     </div>
-					<div id="circulargauge-speed" onClick="WebSocket_Send('resetSector');"></div>
+					<div id="circulargauge-speed" onClick="if (stageStarted) {WebSocket_Send('resetSector');};"></div>
 				</div>
 				<div data-options="dxItem: {ratio: 1}" id="right-sector">
                     <div id="button-group" class="flex-column">
-                        <div id="button-togglerecording""></div>
-                        <div id="button-roundabout"></div>
-                        <div id="button-townsign"></div>
-                        <div id="button-checkpoint"></div>
+                        <div class="flex-row">
+                            <div id="button-togglestage"></div>
+                        </div>
+                        <div class="flex-row">
+                            <div id="button-countpoint"></div>
+                            <div id="button-speccountpoint"></div>
+                        </div>
+                        <div class="flex-row">
+                            <div id="button-checkpoint"></div>
+                            <div id="button-speccheckpoint"></div>
+                        </div>
 					</div>
-					<div></div>
 				</div>
 			</div>
 			<div id="odometer-kmtotal"></div>
@@ -85,7 +93,7 @@
 		</script>
 	</div>
 	<script>
-		<!-- window.addEventListener("resize", resizeAndPosition); -->
+		window.addEventListener("resize", resizeAndPosition);
     </script>
 </body>
 </html>

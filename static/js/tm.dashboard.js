@@ -1,5 +1,6 @@
 // Bildschirmdiagonale zum Skalieren
-var windowDiagonal = Math.sqrt(Math.pow(window.innerHeight, 2) + Math.pow(window.innerWidth, 2))/1000;
+// var windowDiagonal = Math.sqrt(Math.pow(window.innerHeight, 2) + Math.pow(window.innerWidth, 2))/1000;
+var vh = Math.sqrt(Math.pow(window.innerHeight, 2))/550;
 var AVG_KMH_PRESET = 0;
 
 $(function(){
@@ -26,7 +27,7 @@ $(function(){
 		height: "100%",
 	});
 
-   $("#circulargauge-speed").dxCircularGauge({
+    $("#circulargauge-speed").dxCircularGauge({
         containerBackgroundColor: "Ivory",
 		animation: {
             enabled: true,
@@ -37,27 +38,31 @@ $(function(){
             endValue: 150,
             tick: {
                 color: "gray",
-                length: 20 * windowDiagonal,
-                width: 5 * windowDiagonal,
+                length: 22*vh,
+                width: 5*vh,
             },
             tickInterval: 10,
             minorTick: {
                 color: "Ivory",
                 visible: true,
-                length: 15 * windowDiagonal,
-				width: 2 * windowDiagonal,
+                length: 15*vh,
+				width: 2*vh,
             },
             minorTickInterval: 2,
             orientation: "inside",
             label: {
-        		font: {color: "gray", size: "4.5vw", family: "Tripmaster Font" },
-                indentFromTick: -25 * windowDiagonal,
+        		font: {
+                    color: "gray", 
+                    size: 42*vh, 
+                    family: "Tripmaster Font" 
+                },
+                indentFromTick: -30*vh,
            }
         },
         rangeContainer: {
             backgroundColor: "black",
-            offset: 15 * windowDiagonal,
-            width: 15 * windowDiagonal,
+            offset: 15*vh,
+            width: 15*vh,
         },
         value: 0,
         valueIndicator: {
@@ -66,21 +71,20 @@ $(function(){
             secondFraction: 0.5,
             secondColor: "gray",
             offset: 0,
-            width: 7 * windowDiagonal,
-            indentFromCenter: 25 * windowDiagonal,
-            spindleGapSize: 20 * windowDiagonal,
-            spindleSize: 50 * windowDiagonal,
+            width: 7*vh,
+            indentFromCenter: 25*vh,
+            spindleGapSize: 20*vh,
+            spindleSize: 50*vh,
         },
         subvalues: [0],
         subvalueIndicator: {
 			type: "triangleMarker",
-            offset: -5 * windowDiagonal,
-			length: 20 * windowDiagonal,
-			width: 20 * windowDiagonal,
+            offset: -5*vh,
+			length: 20*vh,
+			width: 20*vh,
         },
 		redrawOnResize: true,
     });
-
  
 	$("#lineargauge-kmsector").dxLinearGauge({
 		elementAttr: {
@@ -98,15 +102,14 @@ $(function(){
             orientation: "vertical"
         },
         valueIndicator: {
-            size: 15 * windowDiagonal,
+            size: 15*vh,
         },
         subvalues: [],
         subvalueIndicator: {
             type: "textCloud",
-            // color: "var(--tm-blue)",
             horizontalOrientation: "right",
-            offset: 35 * windowDiagonal,
-            arrowLength: 15 * windowDiagonal,
+            offset: 35*vh,
+            arrowLength: 15*vh,
             text: {
                 font: {
 					family: "Tripmaster Font", 
@@ -126,16 +129,16 @@ $(function(){
         rangeContainer: {
             horizontalOrientation: "center",
             width: {
-                start: 10 * windowDiagonal,
-                end: 10 * windowDiagonal,
+                start: 10*vh,
+                end: 10*vh,
             },
-            offset: -5 * windowDiagonal,
+            offset: -5*vh,
         },
         scale: {
             tick: {
-                width: 5 * windowDiagonal,
+                width: 5*vh,
                 color: "var(--tm-red)",
-                length: 15 * windowDiagonal,
+                length: 15*vh,
             },
             tickInterval: 25,
             horizontalOrientation: "left",
@@ -145,28 +148,51 @@ $(function(){
         },
         redrawOnResize: true,
 	});
-		
-	$("#button-roundabout").dxButton($.extend(true, {}, metalButtonOptions, {
+	
+    // Zählpunkte
+	$("#button-countpoint").dxButton($.extend(true, {}, metalButtonOptions, {
+		icon: "fas fa-hashtag",
+		elementAttr: {
+			style: "color: var(--tm-blue)",
+		},
+		onClick: function(e) {
+            // WebSocket_Send('countpoint:roundabout');
+		},
+	})); 
+
+	$("#button-speccountpoint").dxButton($.extend(true, {}, metalButtonOptions, {
 		icon: "fas fa-sync",
 		elementAttr: {
 			style: "color: var(--tm-blue)",
 		},
 		onClick: function(e) {
-            WebSocket_Send('registerPoint:roundabout');
+            WebSocket_Send('countpoint:roundabout');
 		},
 	})); 
 
-	$("#button-townsign").dxButton($.extend(true, {}, metalButtonOptions, {
+    // Orientierungskontollen
+	$("#button-checkpoint").dxButton($.extend(true, {}, metalButtonOptions, {
+		icon: "fas fa-map-marker-alt",
+		elementAttr: {
+			style: "color: var(--tm-green)",
+		},
+		onClick: function(e) {
+            WebSocket_Send('checkpoint:checkpoint');
+		},
+	})); 
+
+	$("#button-speccheckpoint").dxButton($.extend(true, {}, metalButtonOptions, {
 		icon: "fas fa-sign",
 		elementAttr: {
 			style: "color: var(--tm-yellow)",
 		},
 		onClick: function(e) {
-            WebSocket_Send('registerPoint:checkpoint');
+            WebSocket_Send('checkpoint:townsign');
 		},
 	})); 
 
-
+// GLP
+    // Abweichung von der Durchschnittsgeschwindigkeit
 	$("#circulargauge-devavgspeed").dxCircularGauge({
 		animation: {
 			enabled: true,
@@ -184,18 +210,18 @@ $(function(){
 			endValue: 25,
 			tickInterval: 30,
 			tick: {
-				length: 6 * windowDiagonal,
-				width: 3 * windowDiagonal
+				length: 6*vh,
+				width: 3*vh
 			},
 			minorTickInterval: 10,
 			minorTick: {
-				length: 6 * windowDiagonal,
-				width: 3 * windowDiagonal,
+				length: 6*vh,
+				width: 3*vh,
 				visible: true
 			},
 			label: {
 				visible: true,
-				indentFromTick: -120 * windowDiagonal,
+				indentFromTick: -120*vh,
 				useRangeColors: true,
 				font: {
 					size: "4.5vw",
@@ -208,7 +234,7 @@ $(function(){
 			}
 		},
 		rangeContainer: {
-			width: 7 * windowDiagonal,
+			width: 7*vh,
 			palette: [
 				"var(--tm-red)",
 				"var(--tm-yellow)",
@@ -229,10 +255,10 @@ $(function(){
 			type: "rangeBar",
 			color: "var(--tm-blue)",
 			baseValue: 0,
-			offset: 60 * windowDiagonal,
-			size: 10 * windowDiagonal,
+			offset: 60*vh,
+			size: 10*vh,
 			text: {
-				indent: 15 * windowDiagonal,
+				indent: 15*vh,
 				font: {
 					color: "var(--tm-blue)",
 					size: "3vw",
@@ -251,11 +277,11 @@ $(function(){
 		subvalues: [0],
 		subvalueIndicator: {
 			type: "TriangleNeedle",
-			offset: 60 * windowDiagonal,
+			offset: 60*vh,
 			baseValue: 0,
 			color: "var(--tm-blue)",
-			width: 13 * windowDiagonal,
-			indentFromCenter: 150 * windowDiagonal,
+			width: 13*vh,
+			indentFromCenter: 150*vh,
 			spindleSize: 0
 		},
 		// redrawOnResize: true,
@@ -279,6 +305,7 @@ $(function(){
 		},
 	});
 
+    // Restfahrzeit
 	$("#textbox-regtesttime").dxTextBox($.extend(true, {}, textBoxOptions,{
 		value: "0 sek",
 	}));
@@ -342,7 +369,7 @@ function buttonsToFront() {
 };
 
 function linearGaugeToFront() {
-    mylog("Gauge's parent: " + $("#lineargauge-kmsector").parent().get( 0 ).id)
+    // mylog("Gauge's parent: " + $("#lineargauge-kmsector").parent().get( 0 ).id)
     $("#lineargauge-kmsector").fadeOut("slow");
     $("#button-group").fadeOut("slow", function(){
         $("#lineargauge-kmsector").appendTo("#right-sector");

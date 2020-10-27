@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+    <Document id="1">
+        <open>1</open>
+        <Folder id="9">
+            <Style id="4">
+                <LineStyle id="5">
+                    <color>ff5cb85c</color>
+                    <colorMode>normal</colorMode>
+                    <width>5</width>
+                </LineStyle>
+            </Style>
+            <name>Abschnitte</name>
+            <Placemark id="12">
+                <name>Abschnitt 1</name>
+                <styleUrl>#4</styleUrl>
+                <LineString id="11">
+                    <coordinates>8.043513667,49.8356715,0.0 8.044515667,49.836671,0.0 8.0455165,49.8376715,0.0 8.046517,49.838673166999996,0.0 8.047520500000001,49.839672333,0.0 8.048519667,49.840669,0.0 8.049516833,49.8416685,0.0 8.0505105,49.842669167000004,0.0 8.051504167000001,49.8436705,0.0 8.052493667,49.844671,0.0 8.053488,49.845673500000004,0.0 8.054483167,49.846674833,0.0 8.0554835,49.847676,0.0 8.056478333,49.848673500000004,0.0 8.057477667,49.8496745,0.0 8.0584755,49.850676332999996,0.0 8.059475832999999,49.851679667000006,0.0 8.060474667000001,49.852680667,0.0 8.061471833,49.853681832999996,0.0 8.062465999999999,49.854681500000005,0.0 8.063465667000001,49.855681167,0.0 8.064470667,49.8566825,0.0 8.065479999999999,49.857685833000005,0.0 8.066487832999998,49.858691167,0.0 8.0674945,49.859694,0.0 8.0685045,49.860693833000006,0.0 8.069511333,49.861694333,0.0 8.070519667000001,49.862692833,0.0</coordinates>
+                </LineString>
+            </Placemark>
+        </Folder>
+        <Folder id="10">
+            <Style id="6">
+                <IconStyle id="7">
+                    <colorMode>normal</colorMode>
+                    <scale>1</scale>
+                    <heading>0</heading>
+                    <Icon id="8">
+                        <href>https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Zeichen_215_-_Kreisverkehr%2C_StVO_2000.svg/200px-Zeichen_215_-_Kreisverkehr%2C_StVO_2000.svg.png</href>
+                    </Icon>
+                </IconStyle>
+            </Style>
+            <name>Schilder zählen</name>
+            <Placemark id="14">
+                <visibility>0</visibility>
+                <styleUrl>#6</styleUrl>
+                <Point id="13">
+                    <coordinates>8.042514167,49.834671167,0.0</coordinates>
+                </Point>
+            </Placemark>
+        </Folder>
+    </Document>
+</kml>
