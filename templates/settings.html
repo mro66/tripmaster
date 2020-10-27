@@ -19,6 +19,7 @@
     <script>
 		var DEBUG = {{ debug }};
 		var SAMPLE_TIME = {{ sample_time }};
+		var SECTOR_REVERSE = ({{ sector_reverse }} == -1);
 	</script>
 </head>
 <body onload="WebSocket_Open('settings')" class="dx-viewport">
@@ -46,7 +47,27 @@
 						</div>
 					</div>
 				</div>
-				<div id="lineargauge-kmsector"></div>
+				
+				<div class="box-twocolumn">
+					<div data-options="dxItem: {ratio: 1.1}">
+						<div id="lineargauge-kmsector"></div>
+					</div>
+					<div data-options="dxItem: {ratio: 0.9}">
+						<div class="dx-field-label">Länge Etappe</div>
+						<div class="dx-field-value">
+							<div id="textbox-sectorpreset"></div>
+						</div>
+						<div class="dx-field-label">Seit letzem Reset</div>
+						<div class="dx-field-value">
+							<div id="textbox-sector"></div>
+						</div>
+						<div class="dx-field-label">Umkehren</div>
+						<div class="dx-field-value">
+							<div id="radio-group-sectorreverse" class="demo-light"></div>
+							<!-- <div id="switch-sectorreverse"></div> -->
+						</div>
+					</div>
+				</div>
 			</script>
 
 			<script id="glpTab" type="text/html">
@@ -63,7 +84,12 @@
 			</script>
 			
 			<script id="setupTab" type="text/html">
-				TODO
+				<div class="dx-fieldset">
+					<div class="dx-field-label demo-dark">Tripmaster</div>
+					<div class="dx-field-value">
+						<!-- <div id="radio-group-stoptripmaster" class="demo-light"></div> -->
+					</div>
+				</div>
 			</script>
 		</div>
     </div>

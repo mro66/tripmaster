@@ -48,13 +48,13 @@
   background-color: #fff;
 }
 .dx-datagrid .dx-sort-up {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-datagrid .dx-sort-up:before {
   content: "\f051";
 }
 .dx-datagrid .dx-sort-down {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-datagrid .dx-sort-down:before {
   content: "\f052";
@@ -62,7 +62,7 @@
 .dx-datagrid .dx-header-filter {
   position: relative;
   color: #959595;
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-datagrid .dx-header-filter:before {
   content: "\f050";
@@ -71,14 +71,14 @@
   color: rgba(149, 149, 149, 0.5);
 }
 .dx-datagrid.dx-filter-menu .dx-menu-item-content .dx-icon {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   background-position: 0px 0px;
-  background-size: 14px 14px;
+  background-size: 16px 16px;
   padding: 0px;
-  font-size: 14px;
+  font-size: 16px;
   text-align: center;
-  line-height: 14px;
+  line-height: 16px;
 }
 .dx-datagrid .dx-datagrid-content-fixed .dx-datagrid-table .dx-col-fixed {
   background-color: #fff;
@@ -155,7 +155,7 @@
 .dx-datagrid-column-chooser {
   color: #333;
   font-weight: normal;
-  font-size: 14px;
+  font-size: 16px;
   font-family: 'Helvetica Neue', 'Segoe UI', Helvetica, Verdana, sans-serif;
   line-height: 1.35715;
 }
@@ -176,7 +176,7 @@
 }
 .dx-datagrid-adaptive-more {
   cursor: pointer;
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 21px;
   height: 21px;
   background-position: 0px 0px;
@@ -281,26 +281,26 @@
 }
 .dx-pivotgrid-fields-container .dx-sort {
   color: #959595;
-  font-size: 14px;
-  width: 14px;
+  font-size: 16px;
+  width: 16px;
 }
 .dx-pivotgrid-fields-container .dx-sort-up {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-pivotgrid-fields-container .dx-sort-up:before {
   content: "\f051";
 }
 .dx-pivotgrid-fields-container .dx-sort-down {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-pivotgrid-fields-container .dx-sort-down:before {
   content: "\f052";
 }
 .dx-pivotgrid-fields-container .dx-header-filter {
   color: #959595;
-  font: 14px/1 DXIcons;
-  font-size: 14px;
-  width: 14px;
+  font: 16px/1 DXIcons;
+  font-size: 16px;
+  width: 16px;
 }
 .dx-pivotgrid-fields-container .dx-header-filter:before {
   content: "\f050";
@@ -527,7 +527,7 @@
   border-top: 0px;
 }
 .dx-pivotgrid .dx-expand-icon-container {
-  width: 14px;
+  width: 16px;
 }
 .dx-pivotgrid .dx-pivotgrid-horizontal-headers:last-child {
   border-bottom: 0;
@@ -567,7 +567,7 @@
 .dx-pivotgrid .dx-icon-sorted {
   display: inline-block;
   margin-left: 5px;
-  width: 14px;
+  width: 16px;
 }
 .dx-pivotgrid .dx-menu-item .dx-icon {
   width: 16px;
@@ -869,13 +869,13 @@
   background-color: #fff;
 }
 .dx-treelist-container .dx-sort-up {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-treelist-container .dx-sort-up:before {
   content: "\f051";
 }
 .dx-treelist-container .dx-sort-down {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-treelist-container .dx-sort-down:before {
   content: "\f052";
@@ -883,7 +883,7 @@
 .dx-treelist-container .dx-header-filter {
   position: relative;
   color: #959595;
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-treelist-container .dx-header-filter:before {
   content: "\f050";
@@ -892,14 +892,14 @@
   color: rgba(149, 149, 149, 0.5);
 }
 .dx-treelist-container.dx-filter-menu .dx-menu-item-content .dx-icon {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   background-position: 0px 0px;
-  background-size: 14px 14px;
+  background-size: 16px 16px;
   padding: 0px;
-  font-size: 14px;
+  font-size: 16px;
   text-align: center;
-  line-height: 14px;
+  line-height: 16px;
 }
 .dx-treelist-container .dx-treelist-content-fixed .dx-treelist-table .dx-col-fixed {
   background-color: #fff;
@@ -967,7 +967,7 @@
 .dx-treelist-column-chooser {
   color: #333;
   font-weight: normal;
-  font-size: 14px;
+  font-size: 16px;
   font-family: 'Helvetica Neue', 'Segoe UI', Helvetica, Verdana, sans-serif;
   line-height: 1.35715;
 }
@@ -988,7 +988,7 @@
 }
 .dx-treelist-adaptive-more {
   cursor: pointer;
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 21px;
   height: 21px;
   background-position: 0px 0px;
@@ -1160,14 +1160,14 @@
 }
 .dx-filterbuilder-overlay.dx-filterbuilder-operations .dx-treeview-item .dx-icon {
   color: #898989;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   background-position: 0px 0px;
-  background-size: 14px 14px;
+  background-size: 16px 16px;
   padding: 0px;
-  font-size: 14px;
+  font-size: 16px;
   text-align: center;
-  line-height: 14px;
+  line-height: 16px;
 }
 .dx-recurrence-numberbox-interval,
 .dx-recurrence-numberbox-day-of-month,
@@ -1238,7 +1238,7 @@
   background-color: #fff;
   color: #333;
   font-weight: normal;
-  font-size: 14px;
+  font-size: 16px;
   font-family: 'Helvetica Neue', 'Segoe UI', Helvetica, Verdana, sans-serif;
   line-height: 1.35715;
 }
@@ -1382,409 +1382,409 @@
           transform: translate(0, 0);
 }
 .dx-icon-add {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-add:before {
   content: "\f00b";
 }
 .dx-icon-airplane {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-airplane:before {
   content: "\f000";
 }
 .dx-icon-bookmark {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-bookmark:before {
   content: "\f017";
 }
 .dx-icon-box {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-box:before {
   content: "\f018";
 }
 .dx-icon-car {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-car:before {
   content: "\f01b";
 }
 .dx-icon-card {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-card:before {
   content: "\f019";
 }
 .dx-icon-cart {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-cart:before {
   content: "\f01a";
 }
 .dx-icon-chart {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-chart:before {
   content: "\f01c";
 }
 .dx-icon-check {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-check:before {
   content: "\f005";
 }
 .dx-icon-clear {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-clear:before {
   content: "\f008";
 }
 .dx-icon-clock {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-clock:before {
   content: "\f01d";
 }
 .dx-icon-close {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-close:before {
   content: "\f00a";
 }
 .dx-icon-coffee {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-coffee:before {
   content: "\f02a";
 }
 .dx-icon-comment {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-comment:before {
   content: "\f01e";
 }
 .dx-icon-doc {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-doc:before {
   content: "\f021";
 }
 .dx-icon-download {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-download:before {
   content: "\f022";
 }
 .dx-icon-dragvertical {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-dragvertical:before {
   content: "\f038";
 }
 .dx-icon-edit {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-edit:before {
   content: "\f023";
 }
 .dx-icon-email {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-email:before {
   content: "\f024";
 }
 .dx-icon-event {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-event:before {
   content: "\f026";
 }
 .dx-icon-favorites {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-favorites:before {
   content: "\f025";
 }
 .dx-icon-find {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-find:before {
   content: "\f027";
 }
 .dx-icon-filter {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-filter:before {
   content: "\f050";
 }
 .dx-icon-folder {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-folder:before {
   content: "\f028";
 }
 .dx-icon-food {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-food:before {
   content: "\f029";
 }
 .dx-icon-gift {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-gift:before {
   content: "\f02b";
 }
 .dx-icon-globe {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-globe:before {
   content: "\f02c";
 }
 .dx-icon-group {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-group:before {
   content: "\f02e";
 }
 .dx-icon-help {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-help:before {
   content: "\f02f";
 }
 .dx-icon-home {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-home:before {
   content: "\f030";
 }
 .dx-icon-image {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-image:before {
   content: "\f031";
 }
 .dx-icon-info {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-info:before {
   content: "\f032";
 }
 .dx-icon-key {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-key:before {
   content: "\f033";
 }
 .dx-icon-like {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-like:before {
   content: "\f034";
 }
 .dx-icon-map {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-map:before {
   content: "\f035";
 }
 .dx-icon-menu {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-menu:before {
   content: "\f00c";
 }
 .dx-icon-message {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-message:before {
   content: "\f024";
 }
 .dx-icon-money {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-money:before {
   content: "\f036";
 }
 .dx-icon-music {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-music:before {
   content: "\f037";
 }
 .dx-icon-overflow {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-overflow:before {
   content: "\f00d";
 }
 .dx-icon-percent {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-percent:before {
   content: "\f039";
 }
 .dx-icon-photo {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-photo:before {
   content: "\f03a";
 }
 .dx-icon-plus {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-plus:before {
   content: "\f00b";
 }
 .dx-icon-preferences {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-preferences:before {
   content: "\f03b";
 }
 .dx-icon-product {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-product:before {
   content: "\f03c";
 }
 .dx-icon-pulldown {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-pulldown:before {
   content: "\f062";
 }
 .dx-icon-refresh {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-refresh:before {
   content: "\f03d";
 }
 .dx-icon-remove {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-remove:before {
   content: "\f00a";
 }
 .dx-icon-revert {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-revert:before {
   content: "\f04c";
 }
 .dx-icon-runner {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-runner:before {
   content: "\f040";
 }
 .dx-icon-save {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-save:before {
   content: "\f041";
 }
 .dx-icon-search {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-search:before {
   content: "\f027";
 }
 .dx-icon-tags {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-tags:before {
   content: "\f009";
 }
 .dx-icon-tel {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-tel:before {
   content: "\f003";
 }
 .dx-icon-tips {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-tips:before {
   content: "\f004";
 }
 .dx-icon-todo {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-todo:before {
   content: "\f005";
 }
 .dx-icon-toolbox {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-toolbox:before {
   content: "\f007";
 }
 .dx-icon-trash {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-trash:before {
   content: "\f03e";
 }
 .dx-icon-user {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-user:before {
   content: "\f02d";
 }
 .dx-icon-upload {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-upload:before {
   content: "\f006";
 }
 .dx-icon-floppy {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-floppy:before {
   content: "\f073";
 }
 .dx-icon-arrowleft {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-arrowleft:before {
   content: "\f011";
 }
 .dx-icon-arrowdown {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-arrowdown:before {
   content: "\f015";
 }
 .dx-icon-arrowright {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-arrowright:before {
   content: "\f00e";
 }
 .dx-icon-arrowup {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-arrowup:before {
   content: "\f013";
 }
 .dx-icon-spinleft {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-spinleft:before {
   content: "\f04f";
 }
 .dx-icon-spinright {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-spinright:before {
   content: "\f04e";
 }
 .dx-icon-spinnext {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-spinnext:before {
   content: "\f04e";
@@ -1793,7 +1793,7 @@
   content: "\f04f";
 }
 .dx-icon-spinprev {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-spinprev:before {
   content: "\f04f";
@@ -1802,31 +1802,31 @@
   content: "\f04e";
 }
 .dx-icon-spindown {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-spindown:before {
   content: "\f001";
 }
 .dx-icon-spinup {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-spinup:before {
   content: "\f002";
 }
 .dx-icon-chevronleft {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-chevronleft:before {
   content: "\f012";
 }
 .dx-icon-chevronright {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-chevronright:before {
   content: "\f010";
 }
 .dx-icon-chevronnext {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-chevronnext:before {
   content: "\f010";
@@ -1835,7 +1835,7 @@
   content: "\f012";
 }
 .dx-icon-chevronprev {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-chevronprev:before {
   content: "\f012";
@@ -1844,259 +1844,259 @@
   content: "\f010";
 }
 .dx-icon-chevrondown {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-chevrondown:before {
   content: "\f016";
 }
 .dx-icon-chevronup {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-chevronup:before {
   content: "\f014";
 }
 .dx-icon-chevrondoubleleft {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-chevrondoubleleft:before {
   content: "\f042";
 }
 .dx-icon-chevrondoubleright {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-chevrondoubleright:before {
   content: "\f043";
 }
 .dx-icon-equal {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-equal:before {
   content: "\f044";
 }
 .dx-icon-notequal {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-notequal:before {
   content: "\f045";
 }
 .dx-icon-less {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-less:before {
   content: "\f046";
 }
 .dx-icon-greater {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-greater:before {
   content: "\f047";
 }
 .dx-icon-lessorequal {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-lessorequal:before {
   content: "\f048";
 }
 .dx-icon-greaterorequal {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-greaterorequal:before {
   content: "\f049";
 }
 .dx-icon-isblank {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-isblank:before {
   content: "\f075";
 }
 .dx-icon-isnotblank {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-isnotblank:before {
   content: "\f076";
 }
 .dx-icon-sortup {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-sortup:before {
   content: "\f051";
 }
 .dx-icon-sortdown {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-sortdown:before {
   content: "\f052";
 }
 .dx-icon-sortuptext {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-sortuptext:before {
   content: "\f053";
 }
 .dx-icon-sortdowntext {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-sortdowntext:before {
   content: "\f054";
 }
 .dx-icon-sorted {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-sorted:before {
   content: "\f055";
 }
 .dx-icon-expand {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-expand:before {
   content: "\f04a";
 }
 .dx-icon-collapse {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-collapse:before {
   content: "\f04b";
 }
 .dx-icon-columnfield {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-columnfield:before {
   content: "\f057";
 }
 .dx-icon-rowfield {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-rowfield:before {
   content: "\f058";
 }
 .dx-icon-datafield {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-datafield:before {
   content: "\f056";
 }
 .dx-icon-fields {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-fields:before {
   content: "\f059";
 }
 .dx-icon-fieldchooser {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-fieldchooser:before {
   content: "\f05a";
 }
 .dx-icon-columnchooser {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-columnchooser:before {
   content: "\f04d";
 }
 .dx-icon-pin {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-pin:before {
   content: "\f05b";
 }
 .dx-icon-unpin {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-unpin:before {
   content: "\f05c";
 }
 .dx-icon-pinleft {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-pinleft:before {
   content: "\f05d";
 }
 .dx-icon-pinright {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-pinright:before {
   content: "\f05e";
 }
 .dx-icon-contains {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-contains:before {
   content: "\f063";
 }
 .dx-icon-startswith {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-startswith:before {
   content: "\f064";
 }
 .dx-icon-endswith {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-endswith:before {
   content: "\f065";
 }
 .dx-icon-doesnotcontain {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-doesnotcontain:before {
   content: "\f066";
 }
 .dx-icon-range {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-range:before {
   content: "\f06a";
 }
 .dx-icon-export {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-export:before {
   content: "\f05f";
 }
 .dx-icon-exportxlsx {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-exportxlsx:before {
   content: "\f060";
 }
 .dx-icon-exportpdf {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-exportpdf:before {
   content: "\f061";
 }
 .dx-icon-exportselected {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-exportselected:before {
   content: "\f06d";
 }
 .dx-icon-warning {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-warning:before {
   content: "\f06b";
 }
 .dx-icon-more {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-more:before {
   content: "\f06c";
 }
 .dx-icon-square {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-square:before {
   content: "\f067";
 }
 .dx-icon-clearsquare {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-clearsquare:before {
   content: "\f068";
 }
 .dx-icon-back {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-back:before {
   content: "\f012";
@@ -2105,205 +2105,205 @@
   content: "\f010";
 }
 .dx-icon-repeat {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-repeat:before {
   content: "\f069";
 }
 .dx-icon-selectall {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-selectall:before {
   content: "\f070";
 }
 .dx-icon-unselectall {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-unselectall:before {
   content: "\f071";
 }
 .dx-icon-print {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-print:before {
   content: "\f072";
 }
 .dx-icon-bold {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-bold:before {
   content: "\f077";
 }
 .dx-icon-italic {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-italic:before {
   content: "\f078";
 }
 .dx-icon-underline {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-underline:before {
   content: "\f079";
 }
 .dx-icon-strike {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-strike:before {
   content: "\f07a";
 }
 .dx-icon-indent {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-indent:before {
   content: "\f07b";
 }
 .dx-icon-fontsize {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-fontsize:before {
   content: "\f07c";
 }
 .dx-icon-growfont {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-growfont:before {
   content: "\f07d";
 }
 .dx-icon-shrinkfont {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-shrinkfont:before {
   content: "\f07e";
 }
 .dx-icon-color {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-color:before {
   content: "\f07f";
 }
 .dx-icon-background {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-background:before {
   content: "\f080";
 }
 .dx-icon-superscript {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-superscript:before {
   content: "\f081";
 }
 .dx-icon-subscript {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-subscript:before {
   content: "\f082";
 }
 .dx-icon-header {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-header:before {
   content: "\f083";
 }
 .dx-icon-blockquote {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-blockquote:before {
   content: "\f084";
 }
 .dx-icon-formula {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-formula:before {
   content: "\f056";
 }
 .dx-icon-codeblock {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-codeblock:before {
   content: "\f085";
 }
 .dx-icon-orderedlist {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-orderedlist:before {
   content: "\f086";
 }
 .dx-icon-bulletlist {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-bulletlist:before {
   content: "\f087";
 }
 .dx-icon-increaseindent {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-increaseindent:before {
   content: "\f088";
 }
 .dx-icon-decreaseindent {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-decreaseindent:before {
   content: "\f089";
 }
 .dx-icon-alignleft {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-alignleft:before {
   content: "\f08a";
 }
 .dx-icon-alignright {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-alignright:before {
   content: "\f08b";
 }
 .dx-icon-aligncenter {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-aligncenter:before {
   content: "\f08c";
 }
 .dx-icon-alignjustify {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-alignjustify:before {
   content: "\f08d";
 }
 .dx-icon-link {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-link:before {
   content: "\f08e";
 }
 .dx-icon-video {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-video:before {
   content: "\f08f";
 }
 .dx-icon-mention {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-mention:before {
   content: "\f090";
 }
 .dx-icon-variable {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-variable:before {
   content: "\f091";
 }
 .dx-icon-clearformat {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-clearformat:before {
   content: "\f092";
 }
 .dx-icon-undo {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-undo:before {
   content: "\f04c";
@@ -2312,7 +2312,7 @@
   content: "\f093";
 }
 .dx-icon-redo {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-icon-redo:before {
   content: "\f093";
@@ -2348,7 +2348,7 @@
 .dx-widget {
   color: #333;
   font-weight: normal;
-  font-size: 14px;
+  font-size: 16px;
   font-family: 'Helvetica Neue', 'Segoe UI', Helvetica, Verdana, sans-serif;
   line-height: 1.35715;
 }
@@ -2381,7 +2381,7 @@
   line-height: normal;
 }
 .dx-box-item-content {
-  font-size: 14px;
+  font-size: 16px;
 }
 .dx-button-content {
   line-height: 0;
@@ -3075,7 +3075,7 @@
   background-color: #fff;
 }
 .dx-checkbox-checked .dx-checkbox-icon {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   color: #337ab7;
   font-size: 16px;
   text-align: center;
@@ -3094,11 +3094,11 @@
   margin-left: -8px;
 }
 .dx-checkbox-indeterminate .dx-checkbox-icon {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   color: #337ab7;
-  font-size: 14px;
+  font-size: 16px;
   text-align: center;
-  line-height: 14px;
+  line-height: 16px;
 }
 .dx-checkbox-indeterminate .dx-checkbox-icon:before {
   content: "\f067";
@@ -3106,7 +3106,7 @@
 .dx-checkbox-indeterminate .dx-checkbox-icon:before {
   position: absolute;
   display: block;
-  width: 14px;
+  width: 16px;
   top: 50%;
   margin-top: -7px;
   left: 50%;
@@ -3211,13 +3211,13 @@
 .dx-switch-handle {
   position: relative;
   float: left;
-  -webkit-flex-basis: 14px;
-      -ms-flex-preferred-size: 14px;
-          flex-basis: 14px;
+  -webkit-flex-basis: 16px;
+      -ms-flex-preferred-size: 16px;
+          flex-basis: 16px;
   -webkit-flex-shrink: 0;
       -ms-flex-negative: 0;
           flex-shrink: 0;
-  width: 14px;
+  width: 16px;
   height: 18px;
   margin-top: 2px;
   -webkit-box-sizing: border-box;
@@ -3253,7 +3253,7 @@
 .dx-switch.dx-rtl .dx-switch-handle {
   float: right;
   margin-left: 0;
-  margin-right: -14px;
+  margin-right: -16px;
 }
 .dx-rtl .dx-switch .dx-switch-container,
 .dx-switch.dx-rtl .dx-switch-container {
@@ -3594,7 +3594,7 @@
   padding-right: 0;
 }
 .dx-searchbox .dx-icon-search {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   position: absolute;
   top: 50%;
   margin-top: -17px;
@@ -3659,7 +3659,7 @@
 .dx-dropdowneditor-icon {
   border: 1px solid transparent;
   color: #333;
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 32px;
   height: 100%;
   font-size: 18px;
@@ -3781,7 +3781,7 @@
   transform: rotate(0);
   border: none;
   opacity: 1;
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 18px;
   height: 18px;
   background-position: 0px 0px;
@@ -3995,7 +3995,7 @@
   width: 33.4px;
 }
 .dx-list-item-after-bag .dx-list-reorder-handle {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 28.8px;
   height: 28.8px;
   background-position: 5px 5px;
@@ -4244,7 +4244,7 @@
   width: 38.4px;
 }
 .dx-device-mobile .dx-list-item-after-bag .dx-list-reorder-handle {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 28.8px;
   height: 28.8px;
   background-position: 5px 5px;
@@ -4367,14 +4367,14 @@
   border-radius: 4px;
 }
 .dx-numberbox-spin-up-icon {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   color: #333;
 }
 .dx-numberbox-spin-up-icon:before {
   content: "\f002";
 }
 .dx-numberbox-spin-down-icon {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   color: #333;
 }
 .dx-numberbox-spin-down-icon:before {
@@ -4528,7 +4528,7 @@
   padding: 10px;
 }
 .dx-datebox-calendar .dx-dropdowneditor-icon {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 32px;
   height: 100%;
   font-size: 18px;
@@ -4600,7 +4600,7 @@
   margin-left: 30px;
 }
 .dx-datebox-list .dx-dropdowneditor-icon {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 32px;
   height: 100%;
   font-size: 18px;
@@ -4966,7 +4966,7 @@
 .dx-overlay-wrapper {
   color: #333;
   font-weight: normal;
-  font-size: 14px;
+  font-size: 16px;
   font-family: 'Helvetica Neue', 'Segoe UI', Helvetica, Verdana, sans-serif;
   line-height: 1.35715;
 }
@@ -4980,7 +4980,7 @@
 }
 .dx-toast-content {
   color: #fff;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   line-height: 32px;
   padding: 10px;
@@ -5386,7 +5386,7 @@
   height: 28px;
 }
 .dx-slider-bar {
-  margin: 14px 7px;
+  margin: 16px 7px;
   height: 4px;
   background: #ddd;
   border-radius: 2px;
@@ -5406,12 +5406,12 @@
   bottom: -17px;
 }
 .dx-slider-label-position-top .dx-slider-label {
-  top: -14px;
+  top: -16px;
 }
 .dx-slider-handle {
-  margin-top: -14px;
+  margin-top: -16px;
   margin-right: -7px;
-  width: 14px;
+  width: 16px;
   height: 28px;
   border: 1px solid #fff;
   background-color: #337ab7;
@@ -5496,7 +5496,7 @@
   color: #fff;
 }
 .dx-gallery .dx-gallery-nav-button-prev {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-gallery .dx-gallery-nav-button-prev:before {
   content: "\f012";
@@ -5510,7 +5510,7 @@
   margin-left: 0;
 }
 .dx-gallery .dx-gallery-nav-button-next {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-gallery .dx-gallery-nav-button-next:before {
   content: "\f010";
@@ -5564,7 +5564,7 @@
   padding: 7px 9px 8px 34px;
 }
 .dx-lookup-arrow {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 34px;
   color: #333;
   font-size: 18px;
@@ -5632,8 +5632,8 @@
   left: 38px;
 }
 .dx-lookup-validation-message {
-  font-size: 14px;
-  line-height: 14px;
+  font-size: 16px;
+  line-height: 16px;
   padding: 13px 20px 12px;
   margin-bottom: 20px;
   margin-left: -20px;
@@ -5649,7 +5649,7 @@
 }
 .dx-lookup-search-wrapper {
   padding: 20px;
-  padding-bottom: 14px;
+  padding-bottom: 16px;
 }
 .dx-popup-content.dx-lookup-invalid {
   padding-top: 0;
@@ -6111,7 +6111,7 @@
 }
 .dx-accordion-item-body {
   padding: 8px 12px 22px;
-  font-size: 14px;
+  font-size: 16px;
 }
 .dx-rtl .dx-accordion-item-title:before {
   margin-left: 0;
@@ -6199,13 +6199,13 @@
   padding: 9px 13px;
 }
 .dx-pager .dx-pages .dx-prev-button {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-pager .dx-pages .dx-prev-button:before {
   content: "\f012";
 }
 .dx-pager .dx-pages .dx-next-button {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-pager .dx-pages .dx-next-button:before {
   content: "\f010";
@@ -6357,7 +6357,7 @@
 }
 .dx-datagrid.dx-context-menu .dx-menu-items-container .dx-icon-context-menu-sort-asc,
 .dx-datagrid-container.dx-context-menu .dx-menu-items-container .dx-icon-context-menu-sort-asc {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 16px;
   height: 16px;
   background-position: 0px 0px;
@@ -6373,7 +6373,7 @@
 }
 .dx-datagrid.dx-context-menu .dx-menu-items-container .dx-icon-context-menu-sort-desc,
 .dx-datagrid-container.dx-context-menu .dx-menu-items-container .dx-icon-context-menu-sort-desc {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 16px;
   height: 16px;
   background-position: 0px 0px;
@@ -6389,7 +6389,7 @@
 }
 .dx-datagrid .dx-icon-filter-operation-equals,
 .dx-datagrid-container .dx-icon-filter-operation-equals {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-datagrid .dx-icon-filter-operation-equals:before,
 .dx-datagrid-container .dx-icon-filter-operation-equals:before {
@@ -6397,7 +6397,7 @@
 }
 .dx-datagrid .dx-icon-filter-operation-default,
 .dx-datagrid-container .dx-icon-filter-operation-default {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 12px;
   height: 12px;
   background-position: 0px 0px;
@@ -6413,7 +6413,7 @@
 }
 .dx-datagrid .dx-icon-filter-operation-not-equals,
 .dx-datagrid-container .dx-icon-filter-operation-not-equals {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-datagrid .dx-icon-filter-operation-not-equals:before,
 .dx-datagrid-container .dx-icon-filter-operation-not-equals:before {
@@ -6421,7 +6421,7 @@
 }
 .dx-datagrid .dx-icon-filter-operation-less,
 .dx-datagrid-container .dx-icon-filter-operation-less {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-datagrid .dx-icon-filter-operation-less:before,
 .dx-datagrid-container .dx-icon-filter-operation-less:before {
@@ -6429,7 +6429,7 @@
 }
 .dx-datagrid .dx-icon-filter-operation-less-equal,
 .dx-datagrid-container .dx-icon-filter-operation-less-equal {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-datagrid .dx-icon-filter-operation-less-equal:before,
 .dx-datagrid-container .dx-icon-filter-operation-less-equal:before {
@@ -6437,7 +6437,7 @@
 }
 .dx-datagrid .dx-icon-filter-operation-greater,
 .dx-datagrid-container .dx-icon-filter-operation-greater {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-datagrid .dx-icon-filter-operation-greater:before,
 .dx-datagrid-container .dx-icon-filter-operation-greater:before {
@@ -6445,7 +6445,7 @@
 }
 .dx-datagrid .dx-icon-filter-operation-greater-equal,
 .dx-datagrid-container .dx-icon-filter-operation-greater-equal {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-datagrid .dx-icon-filter-operation-greater-equal:before,
 .dx-datagrid-container .dx-icon-filter-operation-greater-equal:before {
@@ -6453,7 +6453,7 @@
 }
 .dx-datagrid .dx-icon-filter-operation-contains,
 .dx-datagrid-container .dx-icon-filter-operation-contains {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-datagrid .dx-icon-filter-operation-contains:before,
 .dx-datagrid-container .dx-icon-filter-operation-contains:before {
@@ -6461,7 +6461,7 @@
 }
 .dx-datagrid .dx-icon-filter-operation-not-contains,
 .dx-datagrid-container .dx-icon-filter-operation-not-contains {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-datagrid .dx-icon-filter-operation-not-contains:before,
 .dx-datagrid-container .dx-icon-filter-operation-not-contains:before {
@@ -6469,7 +6469,7 @@
 }
 .dx-datagrid .dx-icon-filter-operation-starts-with,
 .dx-datagrid-container .dx-icon-filter-operation-starts-with {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-datagrid .dx-icon-filter-operation-starts-with:before,
 .dx-datagrid-container .dx-icon-filter-operation-starts-with:before {
@@ -6477,7 +6477,7 @@
 }
 .dx-datagrid .dx-icon-filter-operation-ends-with,
 .dx-datagrid-container .dx-icon-filter-operation-ends-with {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-datagrid .dx-icon-filter-operation-ends-with:before,
 .dx-datagrid-container .dx-icon-filter-operation-ends-with:before {
@@ -6485,7 +6485,7 @@
 }
 .dx-datagrid .dx-icon-filter-operation-between,
 .dx-datagrid-container .dx-icon-filter-operation-between {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-datagrid .dx-icon-filter-operation-between:before,
 .dx-datagrid-container .dx-icon-filter-operation-between:before {
@@ -6514,15 +6514,15 @@
 .dx-datagrid .dx-error-row .dx-closebutton {
   float: right;
   margin: 9px;
-  font: 14px/1 DXIcons;
-  width: 14px;
-  height: 14px;
+  font: 16px/1 DXIcons;
+  width: 16px;
+  height: 16px;
   background-position: 0px 0px;
-  background-size: 14px 14px;
+  background-size: 16px 16px;
   padding: 0px;
-  font-size: 14px;
+  font-size: 16px;
   text-align: center;
-  line-height: 14px;
+  line-height: 16px;
 }
 .dx-datagrid .dx-error-row .dx-closebutton:before {
   content: "\f00a";
@@ -6855,7 +6855,7 @@
   color: #fff;
 }
 .dx-icon-column-chooser {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 18px;
   height: 18px;
   background-position: 0px 0px;
@@ -6869,7 +6869,7 @@
   content: "\f04d";
 }
 .dx-datagrid-addrow-button .dx-icon-edit-button-addrow {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 18px;
   height: 18px;
   background-position: 0px 0px;
@@ -6883,7 +6883,7 @@
   content: "\f00b";
 }
 .dx-datagrid-cancel-button .dx-icon-edit-button-cancel {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 18px;
   height: 18px;
   background-position: 0px 0px;
@@ -6897,7 +6897,7 @@
   content: "\f04c";
 }
 .dx-datagrid-save-button .dx-icon-edit-button-save {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 18px;
   height: 18px;
   background-position: 0px 0px;
@@ -6911,7 +6911,7 @@
   content: "\f041";
 }
 .dx-apply-button .dx-icon-apply-filter {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 18px;
   height: 18px;
   background-position: 0px 0px;
@@ -6925,7 +6925,7 @@
   content: "\f050";
 }
 .dx-datagrid-export-button .dx-icon-export-to {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 18px;
   height: 18px;
   background-position: 0px 0px;
@@ -6939,7 +6939,7 @@
   content: "\f05f";
 }
 .dx-datagrid-export-button .dx-icon-export-excel-button {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 18px;
   height: 18px;
   background-position: 0px 0px;
@@ -7171,7 +7171,7 @@
   width: 100%;
 }
 .dx-toolbar-menu-section .dx-datagrid-checkbox-size .dx-checkbox-container {
-  padding: 14px;
+  padding: 16px;
 }
 .dx-toolbar-menu-section .dx-datagrid-checkbox-size .dx-checkbox-text {
   padding-left: 34px;
@@ -7212,7 +7212,7 @@
   padding-left: 0;
 }
 .dx-datagrid-group-panel {
-  font-size: 14px;
+  font-size: 16px;
   -ms-touch-action: pinch-zoom;
       touch-action: pinch-zoom;
 }
@@ -7255,7 +7255,7 @@
   border-bottom-color: #ddd;
 }
 .dx-datagrid-group-opened {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 18px;
   height: 18px;
   background-position: 0px 0px;
@@ -7270,7 +7270,7 @@
   content: "\f001";
 }
 .dx-datagrid-group-closed {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 18px;
   height: 18px;
   background-position: 0px 0px;
@@ -7324,7 +7324,7 @@
   margin-top: 10px;
 }
 .dx-pivotgrid .dx-expand-icon-container {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-pivotgrid .dx-expand-icon-container:before {
   content: "\f04e";
@@ -7333,7 +7333,7 @@
   visibility: hidden;
 }
 .dx-pivotgrid .dx-pivotgrid-collapsed .dx-expand {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   font-size: 18px;
   text-align: center;
   line-height: 18px;
@@ -7352,7 +7352,7 @@
   margin-left: -9px;
 }
 .dx-pivotgrid .dx-pivotgrid-expanded .dx-expand {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   font-size: 18px;
   text-align: center;
   line-height: 18px;
@@ -7386,7 +7386,7 @@
 }
 .dx-treelist.dx-context-menu .dx-menu-items-container .dx-icon-context-menu-sort-asc,
 .dx-treelist-container.dx-context-menu .dx-menu-items-container .dx-icon-context-menu-sort-asc {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 16px;
   height: 16px;
   background-position: 0px 0px;
@@ -7402,7 +7402,7 @@
 }
 .dx-treelist.dx-context-menu .dx-menu-items-container .dx-icon-context-menu-sort-desc,
 .dx-treelist-container.dx-context-menu .dx-menu-items-container .dx-icon-context-menu-sort-desc {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 16px;
   height: 16px;
   background-position: 0px 0px;
@@ -7418,7 +7418,7 @@
 }
 .dx-treelist .dx-icon-filter-operation-equals,
 .dx-treelist-container .dx-icon-filter-operation-equals {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-treelist .dx-icon-filter-operation-equals:before,
 .dx-treelist-container .dx-icon-filter-operation-equals:before {
@@ -7426,7 +7426,7 @@
 }
 .dx-treelist .dx-icon-filter-operation-default,
 .dx-treelist-container .dx-icon-filter-operation-default {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 12px;
   height: 12px;
   background-position: 0px 0px;
@@ -7442,7 +7442,7 @@
 }
 .dx-treelist .dx-icon-filter-operation-not-equals,
 .dx-treelist-container .dx-icon-filter-operation-not-equals {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-treelist .dx-icon-filter-operation-not-equals:before,
 .dx-treelist-container .dx-icon-filter-operation-not-equals:before {
@@ -7450,7 +7450,7 @@
 }
 .dx-treelist .dx-icon-filter-operation-less,
 .dx-treelist-container .dx-icon-filter-operation-less {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-treelist .dx-icon-filter-operation-less:before,
 .dx-treelist-container .dx-icon-filter-operation-less:before {
@@ -7458,7 +7458,7 @@
 }
 .dx-treelist .dx-icon-filter-operation-less-equal,
 .dx-treelist-container .dx-icon-filter-operation-less-equal {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-treelist .dx-icon-filter-operation-less-equal:before,
 .dx-treelist-container .dx-icon-filter-operation-less-equal:before {
@@ -7466,7 +7466,7 @@
 }
 .dx-treelist .dx-icon-filter-operation-greater,
 .dx-treelist-container .dx-icon-filter-operation-greater {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-treelist .dx-icon-filter-operation-greater:before,
 .dx-treelist-container .dx-icon-filter-operation-greater:before {
@@ -7474,7 +7474,7 @@
 }
 .dx-treelist .dx-icon-filter-operation-greater-equal,
 .dx-treelist-container .dx-icon-filter-operation-greater-equal {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-treelist .dx-icon-filter-operation-greater-equal:before,
 .dx-treelist-container .dx-icon-filter-operation-greater-equal:before {
@@ -7482,7 +7482,7 @@
 }
 .dx-treelist .dx-icon-filter-operation-contains,
 .dx-treelist-container .dx-icon-filter-operation-contains {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-treelist .dx-icon-filter-operation-contains:before,
 .dx-treelist-container .dx-icon-filter-operation-contains:before {
@@ -7490,7 +7490,7 @@
 }
 .dx-treelist .dx-icon-filter-operation-not-contains,
 .dx-treelist-container .dx-icon-filter-operation-not-contains {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-treelist .dx-icon-filter-operation-not-contains:before,
 .dx-treelist-container .dx-icon-filter-operation-not-contains:before {
@@ -7498,7 +7498,7 @@
 }
 .dx-treelist .dx-icon-filter-operation-starts-with,
 .dx-treelist-container .dx-icon-filter-operation-starts-with {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-treelist .dx-icon-filter-operation-starts-with:before,
 .dx-treelist-container .dx-icon-filter-operation-starts-with:before {
@@ -7506,7 +7506,7 @@
 }
 .dx-treelist .dx-icon-filter-operation-ends-with,
 .dx-treelist-container .dx-icon-filter-operation-ends-with {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-treelist .dx-icon-filter-operation-ends-with:before,
 .dx-treelist-container .dx-icon-filter-operation-ends-with:before {
@@ -7514,7 +7514,7 @@
 }
 .dx-treelist .dx-icon-filter-operation-between,
 .dx-treelist-container .dx-icon-filter-operation-between {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-treelist .dx-icon-filter-operation-between:before,
 .dx-treelist-container .dx-icon-filter-operation-between:before {
@@ -7543,15 +7543,15 @@
 .dx-treelist .dx-error-row .dx-closebutton {
   float: right;
   margin: 9px;
-  font: 14px/1 DXIcons;
-  width: 14px;
-  height: 14px;
+  font: 16px/1 DXIcons;
+  width: 16px;
+  height: 16px;
   background-position: 0px 0px;
-  background-size: 14px 14px;
+  background-size: 16px 16px;
   padding: 0px;
-  font-size: 14px;
+  font-size: 16px;
   text-align: center;
-  line-height: 14px;
+  line-height: 16px;
 }
 .dx-treelist .dx-error-row .dx-closebutton:before {
   content: "\f00a";
@@ -7884,7 +7884,7 @@
   color: #fff;
 }
 .dx-icon-column-chooser {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 18px;
   height: 18px;
   background-position: 0px 0px;
@@ -7898,7 +7898,7 @@
   content: "\f04d";
 }
 .dx-treelist-addrow-button .dx-icon-edit-button-addrow {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 18px;
   height: 18px;
   background-position: 0px 0px;
@@ -7912,7 +7912,7 @@
   content: "\f00b";
 }
 .dx-treelist-cancel-button .dx-icon-edit-button-cancel {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 18px;
   height: 18px;
   background-position: 0px 0px;
@@ -7926,7 +7926,7 @@
   content: "\f04c";
 }
 .dx-treelist-save-button .dx-icon-edit-button-save {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 18px;
   height: 18px;
   background-position: 0px 0px;
@@ -7940,7 +7940,7 @@
   content: "\f041";
 }
 .dx-apply-button .dx-icon-apply-filter {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 18px;
   height: 18px;
   background-position: 0px 0px;
@@ -7954,7 +7954,7 @@
   content: "\f050";
 }
 .dx-treelist-export-button .dx-icon-export-to {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 18px;
   height: 18px;
   background-position: 0px 0px;
@@ -7968,7 +7968,7 @@
   content: "\f05f";
 }
 .dx-treelist-export-button .dx-icon-export-excel-button {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   width: 18px;
   height: 18px;
   background-position: 0px 0px;
@@ -8200,7 +8200,7 @@
   width: 100%;
 }
 .dx-toolbar-menu-section .dx-treelist-checkbox-size .dx-checkbox-container {
-  padding: 14px;
+  padding: 16px;
 }
 .dx-toolbar-menu-section .dx-treelist-checkbox-size .dx-checkbox-text {
   padding-left: 34px;
@@ -8244,8 +8244,8 @@
   position: relative;
   display: inline-block;
   color: #959595;
-  width: 14px;
-  font: 14px/1 DXIcons;
+  width: 16px;
+  font: 16px/1 DXIcons;
 }
 .dx-treelist-rowsview .dx-treelist-empty-space:before {
   content: "\f04e";
@@ -8254,7 +8254,7 @@
   visibility: hidden;
 }
 .dx-treelist-rowsview .dx-treelist-expanded span {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   font-size: 18px;
   text-align: center;
   line-height: 18px;
@@ -8278,7 +8278,7 @@
   margin-top: -8px;
 }
 .dx-treelist-rowsview .dx-treelist-collapsed span {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   font-size: 18px;
   text-align: center;
   line-height: 18px;
@@ -8396,7 +8396,7 @@
 .dx-menu-base {
   color: #333;
   font-weight: normal;
-  font-size: 14px;
+  font-size: 16px;
   font-family: 'Helvetica Neue', 'Segoe UI', Helvetica, Verdana, sans-serif;
   line-height: 1.35715;
 }
@@ -8474,7 +8474,7 @@
   padding: 0 19px 5px 5px;
 }
 .dx-menu .dx-menu-horizontal .dx-menu-item-popout {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   font-size: 18px;
   text-align: center;
   line-height: 18px;
@@ -8492,7 +8492,7 @@
   margin-left: -9px;
 }
 .dx-menu .dx-menu-vertical .dx-menu-item-popout {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   font-size: 18px;
   text-align: center;
   line-height: 18px;
@@ -8552,7 +8552,7 @@
   box-shadow: 0 2px 2px rgba(0, 0, 0, 0.15);
 }
 .dx-context-menu .dx-menu-item-popout {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   font-size: 18px;
   text-align: center;
   line-height: 18px;
@@ -8803,8 +8803,8 @@
 .dx-treeview-node-loadindicator {
   top: 8px;
   left: -1px;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
 }
 .dx-treeview.dx-rtl.dx-treeview-border-visible .dx-treeview-select-all-item {
   padding-left: 0;
@@ -8909,7 +8909,7 @@
   color: #333;
 }
 .dx-treeview-toggle-item-visibility {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   font-size: 22px;
   text-align: center;
   line-height: 22px;
@@ -8932,7 +8932,7 @@
   margin-left: -11px;
 }
 .dx-treeview-toggle-item-visibility.dx-treeview-toggle-item-visibility-opened {
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
   font-size: 22px;
   text-align: center;
   line-height: 22px;
@@ -8952,7 +8952,7 @@
 .dx-field {
   color: #333;
   font-weight: normal;
-  font-size: 14px;
+  font-size: 16px;
   font-family: 'Helvetica Neue', 'Segoe UI', Helvetica, Verdana, sans-serif;
   line-height: 1.35715;
 }
@@ -9169,13 +9169,13 @@
 .dx-fileuploader-dragover .dx-fileuploader-input {
   display: block;
   width: 100%;
-  padding: 14px 3px;
+  padding: 16px 3px;
   margin-bottom: 1px;
   -webkit-box-sizing: content-box;
   box-sizing: content-box;
 }
 .dx-fileuploader-dragover .dx-fileuploader-input-label {
-  padding: 14px 9px;
+  padding: 16px 9px;
 }
 .dx-fileuploader-file-status-message,
 .dx-fileuploader-file-size {
@@ -9386,7 +9386,7 @@
   color: #63a0d4;
   position: absolute;
   z-index: 1000;
-  margin-top: -14px;
+  margin-top: -16px;
   margin-left: -12px;
   text-shadow: rgba(255, 255, 255, 0.1) 1px 0px 0px;
 }
@@ -9398,7 +9398,7 @@
 .dx-scheduler-work-space-day .dx-scheduler-date-time-indicator {
   margin-left: 100px;
   height: 1px;
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-scheduler-work-space-week .dx-scheduler-date-time-indicator:before,
 .dx-scheduler-work-space-work-week .dx-scheduler-date-time-indicator:before,
@@ -9452,7 +9452,7 @@
 .dx-scheduler-work-space-work-week.dx-rtl .dx-scheduler-date-time-indicator,
 .dx-scheduler-work-space-day.dx-rtl .dx-scheduler-date-time-indicator {
   margin-left: 0;
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-scheduler-work-space-week.dx-rtl .dx-scheduler-date-time-indicator:before,
 .dx-scheduler-work-space-work-week.dx-rtl .dx-scheduler-date-time-indicator:before,
@@ -9552,13 +9552,13 @@
 .dx-scheduler-timeline .dx-scheduler-date-time-indicator {
   width: 1px;
   top: 0;
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-scheduler-timeline .dx-scheduler-date-time-indicator:before {
   content: "\f001";
 }
 .dx-scheduler-timeline .dx-scheduler-date-time-indicator:before {
-  margin-left: -14px;
+  margin-left: -16px;
   margin-top: -12px;
 }
 .dx-scheduler-timeline .dx-scheduler-date-time-shader {
@@ -10681,7 +10681,7 @@
 }
 .dx-scheduler-small .dx-scheduler-time-panel {
   width: 50px;
-  font-size: 14px;
+  font-size: 16px;
 }
 .dx-scheduler-time-panel-cell {
   color: #333;
@@ -10850,7 +10850,7 @@
   position: absolute;
   top: 3px;
   right: 5px;
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-scheduler-appointment .dx-scheduler-appointment-reduced-icon:before {
   content: "\f00e";
@@ -10858,7 +10858,7 @@
 .dx-rtl .dx-scheduler-appointment .dx-scheduler-appointment-reduced-icon {
   right: auto;
   left: 3px;
-  font: 14px/1 DXIcons;
+  font: 16px/1 DXIcons;
 }
 .dx-rtl .dx-scheduler-appointment .dx-scheduler-appointment-reduced-icon:before {
   content: "\f011";
@@ -11373,7 +11373,7 @@
 }
 .dx-scheduler-small .dx-scheduler-agenda .dx-scheduler-group-header {
   width: 40px;
-  font-size: 14px;
+  font-size: 16px;
 }
 .dx-scheduler-agenda .dx-scheduler-group-header[rowspan='2'],
 .dx-scheduler-agenda .dx-scheduler-group-header[rowspan='3'] {
@@ -12162,7 +12162,7 @@
 .dx-scheduler-all-day-title {
   height: 75px;
   line-height: 75px;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: bold;
   top: 56px;
 }
@@ -12532,7 +12532,7 @@
   border-radius: 4px 0 0 4px;
 }
 .dx-scheduler-view-switcher.dx-tabs {
-  font-size: 14px;
+  font-size: 16px;
 }
 .dx-scheduler-view-switcher.dx-tabs .dx-tab:not(.dx-tab-selected):not(.dx-state-hover) {
   background: none;
@@ -12567,7 +12567,7 @@
   border-bottom: 1px solid rgba(221, 221, 221, 0.6);
 }
 .dx-scheduler-header-panel .dx-scheduler-group-row:not(:first-child) .dx-scheduler-group-header {
-  font-size: 14px;
+  font-size: 16px;
   color: #333;
 }
 .dx-scheduler-header-panel .dx-scheduler-group-header {

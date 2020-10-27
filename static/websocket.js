@@ -24,6 +24,9 @@ function WebSocket_Open(page) {
 		}
         if ((document.getElementById("lineargauge-kmsector") !== null)) {
 			$("#lineargauge-kmsector").dxLinearGauge('instance').option("animation.duration", SAMPLE_TIME);
+			if ((document.getElementById("box-twocolumn") !== null)) {
+				resizeAndPosition();
+			}
 		}
 		DevExpress.ui.notify("WebSocket geöffnet", "success");
     }
@@ -45,34 +48,38 @@ function WebSocket_Open(page) {
         var values = message.split(':');
         mylog('Empfangene Nachricht: >'+message+'<');
         if (values[0] == "data") { 
-			if (document.getElementById("dashboard") !== null) {
-				
-				// Tacho
+			// T, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN
+
+			// Tacho
+			if (document.getElementById("circulargauge-speed") !== null) {
 				speedGauge = $('#circulargauge-speed').dxCircularGauge('instance');
 				// Die aktuelle Geschwindigkeit ist der Hauptwert, ...
 				speedGauge.value(values[3]);
 				// ... die Durchschnittsgeschwindigkeit der Nebenwert des Tachos 
 				speedGauge.subvalues([values[4]]);
-				
 				// Vorgegebene  Durchschnittsgeschwindigkeit TODO
 				var AVG_KMH_PRESET = 90.0;
-				
-				// Odometer
-				document.getElementById("km_total").innerHTML = values[5];
-				document.getElementById("km_sector").innerHTML = values[6];
-
-				// Linearanzeige
+			} 
+			// Odometer
+			if (document.getElementById("odometer-kmtotal") !== null) {
+				document.getElementById("odometer-kmtotal").innerHTML = values[5];
+			} 
+			if (document.getElementById("odometer-kmsector") !== null) {
+				document.getElementById("odometer-kmsector").innerHTML = values[6];
+			// Linearanzeige
+			} 
+			if (document.getElementById("lineargauge-kmsector") !== null) {
 				kmSectorPreset = values[7];
-				kmSectorToBeDriven = values[8];
+				kmLeftInSector = values[8];
 				setKmSector(values[9]);
-			} else if (document.getElementById("settings") !== null) {
-				// Linearanzeige
-				kmSectorPreset = values[7];
-				kmSectorToBeDriven = values[8];
-				setKmSector(values[9]);
-			} else {
-				DevExpress.ui.notify("Weder Dashboard noch Settings gefunden!", "error");
-			}
+			} 
+			// Textboxen
+			if (document.getElementById("textbox-sector") !== null) {
+				$("#textbox-sector").dxTextBox('instance').option("value", formatDistance(values[6]));
+			} 
+			if (document.getElementById("textbox-sectorpreset") !== null) {
+				$("#textbox-sectorpreset").dxTextBox('instance').option("value", formatDistance(values[7]));
+			} 
 		} else {
 			// values[0] = text, values[1] = type ("info", "warning", "error" or "success"), 
 			DevExpress.ui.notify(values[0], values[1]);

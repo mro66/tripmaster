@@ -5,7 +5,7 @@ $(function(){
 		var settingsTabPanel = $("#tabPanelContainer").dxTabPanel({
 			deferRendering: false,
 			height: function() {
-				return window.innerHeight - 16;
+				return window.innerHeight;
 			},
 			loop: true,
 			items: [{
@@ -25,10 +25,13 @@ $(function(){
 		var resetSectorButton = $("#button-resetsector").dxButton({
 			type: "danger",
 			text: "RESET",
-		   onClick: function(data) {
-				WebSocket_Send('ResetSector');
-				resetSectorForm();
-			 },
+		    onClick: function(data) {
+				WebSocket_Send('resetSector');
+				sectorPresetTextBox.reset();
+				sectorKmSelectBox.reset();
+				sector100mSelectBox.reset();
+				sectorReverseSwitch.reset();
+			},
 		}).dxButton("instance");   
 	
 		var sectorKmSelectBox = $("#selectbox-sectorkm").dxSelectBox({
@@ -53,8 +56,13 @@ $(function(){
 					style: "float: left"
 				},
 			onValueChanged: function(data) {
-				setSectorButton.option("disabled", false);
-				setSectorButton.option("text", "Etappe: "+getSectorLength()+" km");
+				if (getSectorLength() > 0.0) {
+					setSectorButton.option("disabled", false);
+					setSectorButton.option("text", "Etappe: "+getSectorLength()+" km");
+				} else {
+					setSectorButton.option("text", "Etappe einstellen");
+					setSectorButton.option("disabled", true);
+				}
 			},
 		}).dxSelectBox("instance");
 
@@ -76,8 +84,14 @@ $(function(){
 			elementAttr: {
 				style: "float: left"
 			},
-			onValueChanged: function(data) {
-				setSectorButton.option("text", "Etappe: "+getSectorLength()+" km");
+			onValueChanged: function(e) {
+				if (getSectorLength() > 0.0) {
+					setSectorButton.option("disabled", false);
+					setSectorButton.option("text", "Etappe: "+getSectorLength()+" km");
+				} else {
+					setSectorButton.option("text", "Etappe einstellen");
+					setSectorButton.option("disabled", true);
+				}
 			},
 		}).dxSelectBox("instance");
 
@@ -87,23 +101,66 @@ $(function(){
 			disabled: true,
 			onClick: function(data) {
 				WebSocket_Send('setSectorLength:'+getSectorLength());
-				resetSectorForm();
+				sectorKmSelectBox.reset();
+				sector100mSelectBox.reset();
+				sectorReverseSwitch.reset();
 			},
 		}).dxButton("instance");   
 
-		function resetSectorForm() {
-			sectorKmSelectBox.reset();
-			sector100mSelectBox.reset();
-			setSectorButton.option("text", "Etappe einstellen");
-			setSectorButton.option("disabled", true);
-		};
-			
 		function getSectorLength() {
-			var km_int = parseInt(sectorKmSelectBox.option("value"));
+			var km_int = (sectorKmSelectBox.option("value") == null) ? 0 : parseInt(sectorKmSelectBox.option("value"));
 			var km_frac = (sector100mSelectBox.option("value") == null) ? 0 : parseInt(sector100mSelectBox.option("value"));
 			var sectorLength = km_int + km_frac/1000;
 			return Number.parseFloat(sectorLength).toFixed(1);
 		};
+
+		// Zwei Spalten Layout
+		
+		$(".box-twocolumn").dxBox({
+			direction: "row",
+			width: "100%",
+			crossAlign: "start",
+		});
+	
+		var sectorPresetTextBox = $("#textbox-sectorpreset").dxTextBox({
+			value: "0.0 km",
+			readOnly: true,
+			width: 110,
+		}).dxTextBox("instance");
+
+		var sectorTextBox = $("#textbox-sector").dxTextBox({
+			value: "",
+			readOnly: true,
+			width: 110,
+		}).dxTextBox("instance");
+
+		var sectorReverseSwitch = $("#switch-sectorreverse").dxSwitch({
+			switchedOffText: "Nein",
+			switchedOnText: "Ja",
+			width: 110,
+			value: SECTOR_REVERSE,
+			onValueChanged: function(e) {
+				WebSocket_Send("toggleSectorReverse");
+				if (e.value == false) {
+					sectorTextBox.option("elementAttr.style", "border: 1px #f4f4f4 solid")
+				} else {
+					sectorTextBox.option("elementAttr.style", "border: 1px #d9534f solid")						
+				}
+			},
+			onInitialized: function(e) {
+				if (!SECTOR_REVERSE) {
+					sectorTextBox.option("elementAttr.style", "border: 1px #f4f4f4 solid")
+				} else {
+					sectorTextBox.option("elementAttr.style", "border: 1px #d9534f solid")						
+				}
+			},
+		}).dxSwitch("instance");
+		
+		$("#radio-group-sectorreverse").dxRadioGroup({
+			items: yesno,
+			value: yesno[1],
+			layout: "horizontal"
+		});
 
 	// Tab glpTab
 	
@@ -155,16 +212,16 @@ $(function(){
 				//setSectorButton.option("text", "Etappe: "+getSectorLength()+" km");
 			},
 		}).dxSelectBox("instance");
-	// Tab Setup
-	
-	
-	// Footer
 
-		var sectionNumberBox = $("#numberbox-section").dxNumberBox({
-			min: -100, max: 100,
-			value: 0,
-			width: "20%",
-		}).dxNumberBox("instance");
-	
+	// Tab Setup
+
+		$("#radio-group-stoptripmaster").dxRadioGroup({
+			items: yesno,
+			value: yesno[0],
+			layout: "horizontal"
+		});
 });
 
+var yesno = ["ja", "nein"];
+var onoff = ["an", "aus"];
+var plusminus = ["+", "-"];

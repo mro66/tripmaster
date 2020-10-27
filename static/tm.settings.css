@@ -1,17 +1,53 @@
+
 /* TabPanel */
-.dx-tab {
-	font-size: 1.2em;
+.dx-tab, .dx-switch {
+	font-size: 5vw;
 }
 
 /* Button */
-
-.dx-button {
+.dx-button, .dx-viewport .dx-field-value:not(.dx-switch):not(.dx-checkbox):not(.dx-button),
+.dx-viewport .dx-field-label {
     float: none;
     width: 100%;
 }
 
-.dx-viewport .dx-field-value:not(.dx-switch):not(.dx-checkbox):not(.dx-button),
-.dx-viewport .dx-field-label {
-    float: none;
-    width: 100%;
+/* TextBox */
+.dx-textbox-red {
+	border: 1px #d9534f solid ;
+}
+.dx-textbox-black {
+	border: 1px blue solid;
+}
+
+/* Switch */
+#switch-sectorreverse {
+	float: left;
+	width: 100%;
+}
+.dx-switch-container {
+    height: 43px;
+	border-radius: 4px;
+	border-color: #f4f4f4;
+}
+.dx-switch-handle {
+    height: 37px;
+	flex-basis: 22px;
+}
+.dx-switch-on, .dx-switch-off {  
+	font-size: 22px;
+	font-weight: normal;
+	padding-top: 8px;
+}
+.dx-switch-on {
+	padding-right: 0px;
+}
+.dx-switch-off {
+	padding-left: 0px;
+}
+.dx-switch-on-value .dx-switch-handle:before {
+    background-color: #d9534f;
+}
+.dx-switch-handle:before {
+    background-color: #5cb85c;
+	border-radius: 10px;
 }

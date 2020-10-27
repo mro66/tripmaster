@@ -44,6 +44,8 @@ KM_TOTAL = 0.0
 KM_SECTOR = 0.0
 # Vorgegebene Etappenlänge
 KM_SECTOR_PRESET = 0.0
+# Rückwärtszählen beim Verfahren
+SECTOR_REVERSE = 1
 
 #-------------------------------------------------------------------
 
@@ -60,20 +62,20 @@ def printDEBUG(message):
         print(message)
 
 def getRPM():
-    global UMIN, T, KM_TOTAL, KM_SECTOR, KM_SECTOR_PRESET, AVG_KMH
+    global UMIN, T, KM_TOTAL, KM_SECTOR, KM_SECTOR_PRESET, SECTOR_REVERSE, AVG_KMH
     # UMIN ermitteln
     # UMIN = int(UMIN_READER.RPM() + 0.5)
     #... ohne Sensor
-    UMIN = 1000 #1000 + math.sin((T * 5)/180 * math.pi) * 1000
+    UMIN = 1000 + math.sin((T * 5)/180 * math.pi) * 1000
     # Messzeitpunkt
     T += SAMPLE_TIME
     # Geschwindigkeit in Meter pro Sekunde
     MS = UMIN / 60 * U
     # Geschwindigkeit in Kilometer pro Stunde
     KMH = MS * 3.6
-    # Zurückgelegte Kilometer - gesamt und Etappe
+    # Zurückgelegte Kilometer - gesamt und Etappe (Rückwärtszählen beim Verfahren)
     KM_TOTAL += MS * SAMPLE_TIME / 1000
-    KM_SECTOR += MS * SAMPLE_TIME / 1000
+    KM_SECTOR += MS * SAMPLE_TIME / 1000 * SECTOR_REVERSE
     # % zurückgelegte Strecke in der Etappe
     FRAC_SECTOR_DRIVEN = 0
     if KM_SECTOR_PRESET > 0:
@@ -146,7 +148,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             messageToAllClients(self.wsClients, "Tripmaster gestartet!:success")
     # the client sent the message
     def on_message(self, message):
-        global theMaster, KM_SECTOR, KM_SECTOR_PRESET
+        global theMaster, KM_SECTOR, KM_SECTOR_PRESET, SECTOR_REVERSE
         printDEBUG("Message from WebIf: >>>"+message+"<<<")
         message = message.strip()
         messagesplit = message.split(':')
@@ -156,13 +158,19 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         if value == "dummy":
             value = "0"
 
-        if command == "ResetSector":
+        if command == "resetSector":
             KM_SECTOR = 0.0
             KM_SECTOR_PRESET = 0.0
             messageToAllClients(self.wsClients, "Etappe zurückgesetzt!:success")
         elif command == "setSectorLength":
             KM_SECTOR_PRESET = float(value)
             messageToAllClients(self.wsClients, "Etappe auf "+value+" km gesetzt!:success")
+        elif command == "toggleSectorReverse":
+            SECTOR_REVERSE = SECTOR_REVERSE * -1
+            if SECTOR_REVERSE == -1:
+                messageToAllClients(self.wsClients, "Verfahren! Zähle Etappe rückwärts:warning")
+            else:
+                messageToAllClients(self.wsClients, "Zähle Etappe wieder normal:info")
         elif command == "pauseMaster":
             if theMaster is not None:
                 for index, timer in enumerate(timers):
@@ -207,7 +215,7 @@ class DashboardHandler(tornado.web.RequestHandler):
         self.render(
             "dashboard.html",
             debug = DEBUG,
-            sample_time = int(SAMPLE_TIME * 1000) # "{:.1f}".format(SAMPLE_TIME),
+            sample_time = int(SAMPLE_TIME * 1000)
         )
 
 class SettingsHandler(tornado.web.RequestHandler):
@@ -217,7 +225,8 @@ class SettingsHandler(tornado.web.RequestHandler):
         self.render(
             "settings.html",
             debug = DEBUG,
-            sample_time = int(SAMPLE_TIME * 1000) # "{:.1f}".format(SAMPLE_TIME),
+            sample_time = int(SAMPLE_TIME * 1000),
+            sector_reverse = SECTOR_REVERSE
         )
 
 # deliver static files to page

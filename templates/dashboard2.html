@@ -35,24 +35,49 @@
 <body onload="WebSocket_Open('dashboard')" class="dx-viewport demo-container">
 	<div id="button-reloadpage"></div>
 	
-	<span class="main">
 	<div id="odometer-kmtotal" class="odometer"></div>
 	<div id="odometer-kmsector"></div>
     
-	<div id="box-twocolumn" onClick="fullScreen(); ">
-        <div class="tm-background" data-options="dxItem: {ratio: 2}">
-			<div id="circulargauge-speed" onClick="WebSocket_Send('pauseMaster')"></div>
+	<div id="box-twocolumn" class="main" onClick="showScreensize()">
+        <div class=" demo-dark" data-options="dxItem: {ratio: 2}">
+			<div id="circulargauge-speed" onClick="fullScreen(); WebSocket_Send('pauseMaster')"></div>
         </div>
-        <div class="tm-background" data-options="dxItem: {ratio: 1}">
+        <div class="demo-light" data-options="dxItem: {ratio: 1}">
 			<div id="lineargauge-kmsector"></div>
         </div>
     </div>
-	</span>
-	
 	<script>
-		window.addEventListener("resize", resizeAndPosition);
+		window.addEventListener("resize", resizeLinearGauge);
 		var odoKmTotal = document.getElementById("odometer-kmtotal");
 		var odoKmSector = document.getElementById("odometer-kmsector");
+		function resizeLinearGauge() {
+			$("#lineargauge-kmsector").dxLinearGauge('instance').option("size.height", window.innerHeight);
+			// Odometer
+			//top ...
+			// kmsector
+			var halfOdoHeight = odoKmSector.clientHeight / 2;
+			odoKmSector.style.top = window.innerHeight / 2.5 - halfOdoHeight + "px";
+			// kmtotal
+			halfOdoHeight = odoKmTotal.clientHeight / 2;
+			odoKmTotal.style.top = window.innerHeight / 1.5 + halfOdoHeight + "px";
+			// ... und left
+			// kmsector
+			var halfOdoWidth = odoKmSector.clientWidth / 2;
+			odoKmSector.style.left = (window.innerWidth /3 ) - halfOdoWidth + "px";
+			odoKmSector.style.visibility = "visible";
+			// kmtotal
+			halfOdoWidth = odoKmTotal.clientWidth / 2;
+			odoKmTotal.style.left = (window.innerWidth /3 ) - halfOdoWidth + "px";
+			odoKmTotal.style.visibility = "visible";
+		};
+		function fullScreen() {
+			if (screenfull.enabled) {
+				screenfull.request();
+			} 
+		};
+		function showScreensize() {
+			DevExpress.ui.notify("Breite: "+window.innerWidth+", Höhe: "+window.innerHeight, "info");
+		};
 		// odometer-kmsector
 		od = new Odometer({
 		  el: odoKmSector,
