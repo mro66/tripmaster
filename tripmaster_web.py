@@ -52,13 +52,14 @@ TYRE_SIZE = config.getint("Settings", "Radumfang") / 100
 AVG_KMH = 0.0
 # Vorgegebene  Durchschnittsgeschwindigkeit
 AVG_KMH_PRESET = 0.0
-# Zurückgelegte Kilometer - gesamt und Abschnitt
+# Zurückgelegte Kilometer - gesamt, Rallye und Abschnitt
 KM_TOTAL = 0.0
+KM_RALLYE = 0.0
 KM_SECTOR = 0.0
 # Vorgegebene Abschnittlänge
 KM_SECTOR_PRESET = 0.0
 # Rückwärtszählen beim Verfahren
-SECTOR_REVERSE = 1
+REVERSE = 1
 
 #-------------------------------------------------------------------
 
@@ -75,20 +76,21 @@ def printDEBUG(message):
         print(message)
 
 def getRPM():
-    global UMIN, T, KM_TOTAL, KM_SECTOR, KM_SECTOR_PRESET, SECTOR_REVERSE, AVG_KMH
+    global UMIN, T, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, REVERSE, AVG_KMH
     # UMIN ermitteln
     # UMIN = int(UMIN_READER.RPM() + 0.5)
     #... ohne Sensor
-    UMIN = 1000 + math.sin((T * 5)/180 * math.pi) * 1000
+    UMIN = 1000 #+ math.sin((T * 5)/180 * math.pi) * 1000
     # Messzeitpunkt
     T += SAMPLE_TIME
     # Geschwindigkeit in Meter pro Sekunde
     MS = UMIN / 60 * TYRE_SIZE
     # Geschwindigkeit in Kilometer pro Stunde
     KMH = MS * 3.6
-    # Zurückgelegte Kilometer - gesamt und Abschnitt (Rückwärtszählen beim Umdrehen)
+    # Zurückgelegte Kilometer - Gesamt, Rallye und Abschnitt (Rückwärtszählen beim Umdrehen außer bei Gesamt)
     KM_TOTAL += MS * SAMPLE_TIME / 1000
-    KM_SECTOR += MS * SAMPLE_TIME / 1000 * SECTOR_REVERSE
+    KM_RALLYE += MS * SAMPLE_TIME / 1000 * REVERSE
+    KM_SECTOR += MS * SAMPLE_TIME / 1000 * REVERSE
     # % zurückgelegte Strecke im Abschnitt
     FRAC_SECTOR_DRIVEN = 0
     if KM_SECTOR_PRESET > 0:
@@ -97,9 +99,9 @@ def getRPM():
     KM_SECTOR_TO_BE_DRIVEN = max(KM_SECTOR_PRESET - KM_SECTOR, 0) #0.005)
         
     if T > 0.0:
-        # Durchschnittliche Geschwindigkeit in Kilometer pro Stunde
-        AVG_KMH = KM_TOTAL * 1000 / T * 3.6
-    return "data:{0:0.1f}:{1:0.1f}:{2:0.1f}:{3:0.1f}:{4:0.2f}:{5:0.2f}:{6:0.2f}:{7:0.2f}:{8:}".format(T, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN)
+        # Durchschnittliche Geschwindigkeit in Kilometer pro Stunde im Abschnitt
+        AVG_KMH = KM_SECTOR * 1000 / T * 3.6
+    return "data:{0:0.1f}:{1:0.1f}:{2:0.1f}:{3:0.1f}:{4:0.2f}:{5:0.2f}:{6:0.2f}:{7:0.2f}:{8:0.2f}:{9:}".format(T, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN)
 
 #-------------------------------------------------------------------
 
@@ -142,7 +144,7 @@ def startTheMaster(client):
         timed.start()
         timers.append(timed)
         theMaster = client
-        messageToAllClients(client.wsClients, "Tripmaster gestartet!:success")
+        messageToAllClients(client.wsClients, "Tripmaster gestartet!:success:masterStarted")
     
 ### WebSocket server tornado <-> WebInterface
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
@@ -166,7 +168,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             startTheMaster(self)
     # the client sent a message
     def on_message(self, message):
-        global theMaster, T, KM_TOTAL, KM_SECTOR, KM_SECTOR_PRESET, SECTOR_REVERSE, TYRE_SIZE
+        global theMaster, T, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, REVERSE, TYRE_SIZE
         printDEBUG("Message from WebIf: >>>"+message+"<<<")
         # command:param
         message = message.strip()
@@ -195,19 +197,20 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         elif command == "setSectorLength":
             KM_SECTOR_PRESET = float(param)
             messageToAllClients(self.wsClients, "Abschnitt auf "+locale.format("%.2f", KM_SECTOR_PRESET)+" km gesetzt!:success")
-        elif command == "toggleSectorReverse":
-            SECTOR_REVERSE = SECTOR_REVERSE * -1
-            if SECTOR_REVERSE == -1:
-                messageToAllClients(self.wsClients, "Verfahren! Abschnittzähler rückwärts:warning")
+        elif command == "toggleReverse":
+            REVERSE = REVERSE * -1
+            if REVERSE == -1:
+                messageToAllClients(self.wsClients, "Verfahren! km-Zähler rückwärts:warning")
             else:
-                messageToAllClients(self.wsClients, "Abschnittzähler wieder normal:success")
+                messageToAllClients(self.wsClients, "km-Zähler wieder normal:success")
         # Abschnittsteuerung
         elif command == "resetTripmaster":
             T = 0.0
             KM_TOTAL = 0.0
+            KM_RALLYE = 0.0
             KM_SECTOR = 0.0
             KM_SECTOR_PRESET = 0.0
-            SECTOR_REVERSE = 1
+            REVERSE = 1
             messageToAllClients(self.wsClients, "Tripmaster zurückgesetzt!:success")
         # Parameterverwaltung
         elif command in parameters:
@@ -265,14 +268,14 @@ class DashboardHandler(tornado.web.RequestHandler):
             "dashboard.html",
             debug = DEBUG,
             sample_time = int(SAMPLE_TIME * 1000),
-            sector_reverse = max(SECTOR_REVERSE, 0),
+            sector_reverse = max(REVERSE, 0),
         )
 
 class SettingsHandler(tornado.web.RequestHandler):
     #called every time someone sends a GET HTTP request
     @tornado.web.asynchronous
     def get(self):
-        if SECTOR_REVERSE == 1:
+        if REVERSE == 1:
             sector_reverse = False
         else:
             sector_reverse = True

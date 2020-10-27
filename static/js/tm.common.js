@@ -2,11 +2,6 @@ var kmLeftInSector = 0;
 var kmSectorPreset = 0;
 var windowDiagonal = Math.sqrt(Math.pow(window.innerHeight, 2) + Math.pow(window.innerWidth, 2))/1000;
 
-var audioElement = document.createElement('audio');
-audioElement.setAttribute('src', '/static/Wine_Glass.ogg');
-audioElement.muted = true;
-var played = false;
-    
 $(function(){
 
     // Reload nach Abbruch der WebSocket Verbindung
@@ -31,10 +26,11 @@ $(function(){
 			geometry: {
 				orientation: "vertical"
 			},
-			height: "100%",
-			width: "100%",
-			value: 0,
-			subvalues: [],
+			size: {
+				height: "100%",
+				width: "100%",
+			},
+            subvalues: [],
 			subvalueIndicator: {
 				type: "textCloud",
 				horizontalOrientation: "right",
@@ -48,7 +44,7 @@ $(function(){
 					customizeText: function (e) {
 						if (e.value == 100) {
 							return formatNumber(kmSectorPreset) + " km &#10003;";
-						} else  {
+						} else {
 							return "-" + formatDistance(kmLeftInSector);
 						}
 					}
@@ -66,28 +62,13 @@ $(function(){
 					},
 				},
 			},
-			size: {
-				height: "100%",
-			},
-			onOptionChanged: function (e) {
-				if (e.value == 100) {
-					if (played == false) {
-						audioElement.muted = false;
-						played = true;
-						audioElement.play();
-					}
-				} else {
-					played = false;
-				}
-			},
 		}).dxLinearGauge("instance");
 		
 });
 
-// Farbverlauf der Nebenwerte der Linearen Anzeige
-
+// Farbverlauf der Linearen Anzeige (leider deaktiviert, da bei einem Farbwechsel die Anzeige immer zuerst auf 0 springt :-(
 	function setKmSector(fracSectorDriven) {
-		var kmsectorLinearGauge = $("#lineargauge-kmsector").dxLinearGauge('instance');
+        fracSectorDriven = parseInt(fracSectorDriven);
 		var colorConst = 153;
 		var breakConst = 75;
 		var redValue = colorConst;
@@ -96,17 +77,25 @@ $(function(){
 			redValue = colorConst - (fracSectorDriven - breakConst) * colorConst / (100 - breakConst);
 			greenValue = colorConst;
 		};
-		kmsectorLinearGauge.option("subvalueIndicator.color", "rgb(" + redValue + "," + greenValue + ",0)");
-		kmsectorLinearGauge.option("valueIndicator.color", "rgb(" + redValue + "," + greenValue + ",0)");
+        rgbColor = "rgb(" + redValue + "," + greenValue + ",0)";
+        var subValues = [];
 		if (fracSectorDriven > 0) {
-			kmsectorLinearGauge.option("subvalues", [fracSectorDriven]);
-		} else {
-			kmsectorLinearGauge.option("subvalues", []);
+			subValues = [fracSectorDriven];
 		};
-		kmsectorLinearGauge.option("value", fracSectorDriven);
+		var kmSectorLinearGauge = $("#lineargauge-kmsector").dxLinearGauge('instance');
+        kmSectorLinearGauge.option({
+			value: fracSectorDriven,
+            valueIndicator: {
+				color: "rgb(" + redValue + "," + greenValue + ",0)",
+            },
+            subvalues: subValues,
+			subvalueIndicator: {
+				color: "rgb(" + redValue + "," + greenValue + ",0)",
+            },            
+        });
 	};
 
-// Formatierung von Entfernungsangaben: unter 1 km in Metern, darüber in Kilometer mit einer Nachkommastelle	
+// Formatierung von Entfernungsangaben: unter 1 km in Metern, darüber in Kilometer mit zwei Nachkommastellen
 	
 	function formatDistance(distance) {
 		if (Math.abs(distance) < 1) {
@@ -115,8 +104,18 @@ $(function(){
 			return formatNumber(distance) + " km";
 		}
 	};
+	
+// ... dasselbe rückgängig
 
-// Formatierung von Zahlen mit einer Nachkommastelle
+	function unformatDistance(distance) {
+		if (distance.includes(',')) {
+			return parseFloat(distance.replace(",", "."));
+		} else {
+			return parseInt(distance) / 1000;
+		}
+	};
+
+// Formatierung von Zahlen mit zwei Nachkommastellen
 
 	function formatNumber(value) {
 		return parseFloat(value).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})

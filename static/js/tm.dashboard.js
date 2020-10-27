@@ -142,3 +142,9 @@ function resizeAndPosition() {
 	
 };
 
+function resetSector() {
+	document.getElementById("odometer-kmsector").innerHTML = 0;
+	kmSectorLinearGauge.option("value", 0);
+	kmSectorLinearGauge.option("subvalues", []);
+	WebSocket_Send('resetSector');
+};

@@ -47,55 +47,66 @@ function WebSocket_Open(page) {
 		var message = evt.data;
         var values = message.split(':');
         if (values[0] == "data") {
-			// 1, 2,    3,   4        5,        6,         7,                8,                      9 
-			// T, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN
-
 			// mylog(message);
+			// 1, 2,    3,   4        5,        6,         7,         8,                9,                      10 
+			// T, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN
+			KMH = values[3]; AVG_KMH = values[4]; KM_TOTAL = values[5]; KM_RALLYE = values[6]; KM_SECTOR = values[7];
+			KM_SECTOR_PRESET = values[8]; KM_SECTOR_TO_BE_DRIVEN = values[9]; FRAC_SECTOR_DRIVEN = values[10];
 			// Tacho
 			if (document.getElementById("circulargauge-speed") !== null) {
 				speedGauge = $('#circulargauge-speed').dxCircularGauge('instance');
 				// Die aktuelle Geschwindigkeit ist der Hauptwert, ...
-				speedGauge.value(values[3]);
+				speedGauge.value(KMH);
 				// ... die Durchschnittsgeschwindigkeit der Nebenwert des Tachos 
-				speedGauge.subvalues([values[4]]);
+				speedGauge.subvalues([AVG_KMH]);
 				// Vorgegebene  Durchschnittsgeschwindigkeit TODO
 				var AVG_KMH_PRESET = 90.0;
 			} 
 			// Odometer, mit , als Dezimaltrennzeichen
 			if (document.getElementById("odometer-kmtotal") !== null) {
-				document.getElementById("odometer-kmtotal").innerHTML = parseFloat(values[5]).toLocaleString('de-DE');
+				document.getElementById("odometer-kmtotal").innerHTML = parseFloat(KM_RALLYE).toLocaleString('de-DE');
 			} 
 			if (document.getElementById("odometer-kmsector") !== null) {
-				document.getElementById("odometer-kmsector").innerHTML = parseFloat(values[6]).toLocaleString('de-DE');
+				document.getElementById("odometer-kmsector").innerHTML = parseFloat(KM_SECTOR).toLocaleString('de-DE');
 			// Linearanzeige: restliche km im Abschnitt
 			} 
 			if (document.getElementById("lineargauge-kmsector") !== null) {
-				kmSectorPreset = values[7];
-				kmLeftInSector = values[8];
-				setKmSector(values[9]);
-			} 
-			// Textboxen
-			// Länge des Abschnitts
+				kmSectorPreset = KM_SECTOR_PRESET;
+				kmLeftInSector = KM_SECTOR_TO_BE_DRIVEN;
+				$("#lineargauge-kmsector").dxLinearGauge('instance').option("value", FRAC_SECTOR_DRIVEN);
+				if (FRAC_SECTOR_DRIVEN > 0) { subvalues = [FRAC_SECTOR_DRIVEN]; } else { subvalues = []};
+				$("#lineargauge-kmsector").dxLinearGauge('instance').option("subvalues", subvalues);
+            } 
+			// Entfernungstextboxen
+			// Vorgabe des Abschnitts
 			if (document.getElementById("textbox-sectorpreset") !== null) {
-				$("#textbox-sectorpreset").dxTextBox('instance').option("value", formatDistance(values[7]));
+				$("#textbox-sectorpreset").dxTextBox('instance').option("value", formatDistance(KM_SECTOR_PRESET));
 			} 
-			// Strecke seit Reset
-			if (document.getElementById("textbox-sector") !== null) {
-				$("#textbox-sector").dxTextBox('instance').option("value", formatDistance(values[6]));
+			// Abschnitt
+			if (document.getElementById("textbox-sectorcounter") !== null) {
+				$("#textbox-sectorcounter").dxTextBox('instance').option("value", formatDistance(KM_SECTOR));
+			} 
+			// Rallye
+			if (document.getElementById("textbox-rallyecounter") !== null) {
+				$("#textbox-rallyecounter").dxTextBox('instance').option("value", formatDistance(KM_RALLYE));
+			} 
+			// Gesamt
+			if (document.getElementById("textbox-totalcounter") !== null) {
+				$("#textbox-totalcounter").dxTextBox('instance').option("value", formatDistance(KM_TOTAL));
 			} 
 		} else {
 			mylog('<-: '+message);
-			// values[0] = text
-			// values[1] = type ("info", "warning", "error" or "success")
-			// values[2] = command
-			// values[3] = parameter
-			// values[4] = value
-			if (values.length == 5) {
-				if (document.getElementById("numberbox-tyre-size") !== null) {
-					$("#numberbox-tyre-size").dxNumberBox('instance').opion("value", parseFloat(values[4]));
+		
+			TEXT = values[0];
+			TYPE = values[1]; // ("info", "warning", "error" or "success")
+			COMMAND = values[2];
+			
+			if (values.length == 3) {
+				if ((COMMAND = "masterStarted") && (document.getElementById("switch-pausetripmaster") !== null)) {
+					$("#switch-pausetripmaster").dxSwitch('instance').option("value", false);
 				}
 			};
-			DevExpress.ui.notify(values[0], values[1]);
+			DevExpress.ui.notify(TEXT, TYPE);
 		}
     }
 }

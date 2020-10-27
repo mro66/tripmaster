@@ -1,8 +1,12 @@
+var audioElement = document.createElement('audio');
+audioElement.setAttribute('src', '/static/Wine_Glass.ogg');
+var played = false;
+    
 $(function(){
 
 	// Das TabPanel im oberen Teil der ContentBox
 	
-		var settingsTabPanel = $("#tabPanelContainer").dxTabPanel({
+		 $("#tabPanelContainer").dxTabPanel({
 			deferRendering: false,
 			height: function(e) {
 				return window.innerHeight;
@@ -19,23 +23,24 @@ $(function(){
 				"title": 'Setup',
 				template: $("#setupTab"),
 			}],
-		}).dxTabPanel("instance");
+		});
 
 	// Tab abschnittTab
-
-		var resetSectorButton = $("#button-resetsector").dxButton({
+        
+		$("#button-resetsector").dxButton({
 			type: "danger",
 			text: "Zähler zurücksetzen",
 		    onClick: function(e) {
-				sectorPresetTextBox.option("value", "-,-- km");
 				// sector1000mNumberbox.reset();
 				// sector100mNumberbox.reset();
-				sectorReverseSwitch.option("value", false);
-				mylog(audioElement.muted);
-				audioElement.play();
+				$("#lineargauge-kmsector").dxLinearGauge('instance').option("value", 0);
+				$("#lineargauge-kmsector").dxLinearGauge('instance').option("subvalues", []);
+				sectorPresetTextbox.option("value", "-,-- km");
+				sectorCounterTextbox.option("value", formatDistance(0));
+				reverseSwitch.option("value", false);
 				WebSocket_Send('resetSector');
 			},
-		}).dxButton("instance");   
+		});   
 	
 		var sector1000mNumberbox = $("#numberbox-sector1000m").dxNumberBox({
 			min: 0, max: 12,
@@ -84,7 +89,7 @@ $(function(){
 				WebSocket_Send('setSectorLength:'+getSectorLength());
 				sector1000mNumberbox.reset();
 				sector100mNumberbox.reset();
-				sectorReverseSwitch.option("value", false);
+				reverseSwitch.option("value", false);
 			},
 		}).dxButton("instance");   
 
@@ -112,7 +117,7 @@ $(function(){
 			crossAlign: "start",
 		});
 	
-		var sectorPresetTextBox = $("#textbox-sectorpreset").dxTextBox({
+		var sectorPresetTextbox = $("#textbox-sectorpreset").dxTextBox({
 			readOnly: true,
 			width: 110,
 			value: "-,-- km",
@@ -123,26 +128,40 @@ $(function(){
 			},
 		}).dxTextBox("instance");
 
-		var sectorTextBox = $("#textbox-sector").dxTextBox({
+		var sectorCounterTextbox = $("#textbox-sectorcounter").dxTextBox({
 			readOnly: true,
 			width: 110,
+			value: formatDistance(0),
+			onValueChanged: function(e) {
+				sectorCounter2Textbox.option("value", e.value);
+				if (enableSoundSwitch.option("value")) {
+					actValue = unformatDistance(e.value);
+					prevValue = unformatDistance(e.previousValue);
+					presetValue = unformatDistance(sectorPresetTextbox.option("value"));
+					if ((actValue >= presetValue) && (prevValue < presetValue)) {
+						// Wenn nicht vom User aktiviert, wird "Uncaught (in promise) DOMException" geworfen
+						audioElement.play().catch(function(error) { });
+					}
+				}
+			},
 		}).dxTextBox("instance");
 
-        var sectorReverseSwitch = $("#switch-sectorreverse").dxSwitch({
+        var reverseSwitch = $("#switch-reverse").dxSwitch({
 			onValueChanged: function(e) {
-				WebSocket_Send("toggleSectorReverse");
+				WebSocket_Send("toggleReverse");
 				if (e.value === true) {
-					sectorTextBox.option("elementAttr.style", "border: 1px #d9534f solid")						
+					// Wenn reverse, dann roter Text
+					$("#textbox-sectorcounter").find(".dx-texteditor-input").css("color", "#d9534f");					
 				} else {
-					sectorTextBox.option("elementAttr.style", "border: 1px #f4f4f4 solid")
+					$("#textbox-sectorcounter").find(".dx-texteditor-input").css("color", "");					
 				}
 			},
 			onContentReady: function(e) {
-				e.component.option("value", (SECTOR_REVERSE === false));
-				if (SECTOR_REVERSE === false) {
-					sectorTextBox.option("elementAttr.style", "border: 1px #d9534f solid")						
+				e.component.option("value", (REVERSE === false));
+				if (REVERSE === false) {
+					$("#textbox-sectorcounter").find(".dx-texteditor-input").css("color", "#d9534f");					
 				} else {
-					sectorTextBox.option("elementAttr.style", "border: 1px #f4f4f4 solid")
+					$("#textbox-sectorcounter").find(".dx-texteditor-input").css("color", "");					
 				}
 			},
         }).dxSwitch("instance");
@@ -206,7 +225,17 @@ $(function(){
 			},
         });
 
-		var tyreSizeNumberBox = $("#numberbox-tyre-size").dxNumberBox({
+        var enableSoundSwitch = $("#switch-enablesound").dxSwitch({
+            value: false,
+			onValueChanged: function(e) {
+                if (e.value === true) {
+                    // Wenn nicht vom User aktiviert, wird "Uncaught (in promise) DOMException" geworfen
+                    audioElement.play().catch(function(error) { });
+                } 
+			},
+        }).dxSwitch("instance");
+        
+		var tyreSizeNumberBox = $("#numberbox-tyresize").dxNumberBox({
 			min: 0, max: 200,
 			value: TYRE_SIZE,
 			format: "#0 cm",
@@ -216,7 +245,7 @@ $(function(){
 			},
 		}).dxNumberBox("instance");
 		
-		var setTyreSizeButton = $("#button-set-tyre-size").dxButton({
+		var setTyreSizeButton = $("#button-settyresize").dxButton({
 			icon: "save",
 			width: "25%",
 			disabled: true,
@@ -238,6 +267,9 @@ $(function(){
 				confirmDialogResetTripmaster().show().done(function (dialogResult) {
 					if (dialogResult) {
 						WebSocket_Send('resetTripmaster');
+						sectorCounter2Textbox.option("value", formatDistance(0));
+						rallyeCounterTextbox.option("value", formatDistance(0));
+						totalCounterTextbox.option("value", formatDistance(0));
 					}
 				});
 			},
@@ -254,4 +286,19 @@ $(function(){
 			});
 		};
 
+		var sectorCounter2Textbox = $("#textbox-sectorcounter2").dxTextBox({
+			readOnly: true,
+			width: "100%",
+		}).dxTextBox("instance");
+		
+		var rallyeCounterTextbox = $("#textbox-rallyecounter").dxTextBox({
+			readOnly: true,
+			width: "100%",
+		}).dxTextBox("instance");
+		
+		var totalCounterTextbox = $("#textbox-totalcounter").dxTextBox({
+			readOnly: true,
+			width: "100%",
+		}).dxTextBox("instance");
+		
 });

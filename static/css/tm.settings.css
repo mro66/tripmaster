@@ -19,6 +19,9 @@
 .dx-textbox-red {
 	border: 1px #d9534f solid ;
 }
+.dx-texteditor.dx-state-readonly {
+    border-color: #ddd;
+}
 
 /* Switch */
 
