@@ -1,11 +1,20 @@
 #!/usr/bin/env python3
+
 from __future__ import print_function
+from datetime import datetime
+from logging.handlers import RotatingFileHandler
+from tornado.options import options
 import configparser
 import gpsd
+import io
 import locale
+import logging
 import math
 import os.path
-import threading
+import pytz
+import subprocess
+import sys
+import threading    
 import tornado.web
 import tornado.websocket
 import tornado.httpserver
@@ -15,6 +24,28 @@ import tornado.ioloop
 # Einstellungen des Tripmasters
 # Komma als Dezimaltrennzeichen
 locale.setlocale(locale.LC_ALL, "de_DE.UTF-8")
+# Zeitzonen
+tz_utc = pytz.timezone('UTC')
+tz_berlin = pytz.timezone('Europe/Berlin')  
+
+# Loggereinstellungen
+logging.basicConfig(filename="/home/pi/tripmaster/tripmaster.log", format="%(asctime)s.%(msecs)03d - %(levelname)s - %(message)s", datefmt="%d.%m.%Y %H:%M:%S", level=logging.WARNING)
+
+logger = logging.getLogger('Tripmaster')
+logger.setLevel(logging.DEBUG)
+logger.debug("Tornado gestartet")
+
+class StreamToLog(io.IOBase):
+    def write(self, s):
+        error = True
+        if not s == "\n":
+            if error:
+                logger.error(s.strip())
+            else:
+                logger.info(s)
+
+sys.stderr = StreamToLog()
+sys.stdout = StreamToLog()
 
 # Konfigurationseditor
 config = configparser.RawConfigParser()
@@ -25,27 +56,41 @@ config.read(configFileName)
 # aktive Konfiguration
 ACTIVE_CONFIG = config.get("Settings", "aktiv")
 
+# Gestartet?
+IS_STARTED = False
+# Zeichnet auf?
+IS_RECORDING = False
+# Hat Antriebswellensensor?
+HAS_SENSORS = False
+# Zeit ist synchronisiert?
+IS_TIME_SYNC = False
+
 # Importe - für VM kommentieren
 import pigpio
 from read_RPM import reader
 import RPi.GPIO as GPIO
 # Einrichten der BCM GPIO Nummerierung - für VM kommentieren
 GPIO.setmode(GPIO.BCM)
+# GPIO Pins der Sensoren
+GPIO_PIN_1 = 17 # weiß
+GPIO_PIN_2 = 18 # blau
+# Setup als input
+GPIO.setup(GPIO_PIN_1, GPIO.IN)
+GPIO.setup(GPIO_PIN_2, GPIO.IN)
 
 # Verbindung zu pigpio
 pi = None
 # Die UMIN_READER
 UMIN_READER_1 = None
 UMIN_READER_2 = None
-# GPIO Pins der Sensoren
-GPIO_PIN_1 = 17 # weiß
-GPIO_PIN_2 = 18 # blau
 # Impulse pro Umdrehung
 PULSES_PER_REV = 1.0
 
 # Verbindung zum GPS Deamon
 gpsd.connect()
 
+# index
+INDEX = 0
 # Messen alle ... Sekunden
 SAMPLE_TIME = 1.0
 # Messzeitpunkt gesamt und Etappe
@@ -98,20 +143,14 @@ COUNTDOWN = 0
 
 DEBUG = 1
 websocketPort = 7070
-theMaster = None
 
 #-------------------------------------------------------------------
-
-# Schreibt eine Debug Message in die Tornado Konsole
-def printDEBUG(message):
-    if DEBUG:
-        print(message)
 
 # Schreibt Nachrichten an alle Clients
 def messageToAllClients(clients, message):
     for index, client in enumerate(clients):
         if client:
-            client.write_message( message )
+            client.write_message(message)
 
 #-------------------------------------------------------------------
 ### Parse request from client
@@ -135,30 +174,105 @@ def WebRequestHandler(requestlist):
  
     return returnlist
 
+def syncTime(GPS_CURRENT):
+    global IS_TIME_SYNC
+    if (len(GPS_CURRENT.time) == 24):
+        naive = datetime.strptime(GPS_CURRENT.time, '%Y-%m-%dT%H:%M:%S.%fZ')
+        utc = tz_utc.localize(naive)
+        local = utc.astimezone(tz_berlin)
+        subprocess.call("sudo date -u -s '"+str(local)+"' > /dev/null 2>&1", shell=True)
+        IS_TIME_SYNC = True
+
 def getData():
-    global N_SENSORS, T, T_SECTOR, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, REVERSE, AVG_KMH, AVG_KMH_PRESET
+    global HAS_SENSORS, N_SENSORS, INDEX, T_SECTOR, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, REVERSE, AVG_KMH, AVG_KMH_PRESET
     global KM_TOTAL_GPS, KM_RALLYE_GPS, KM_SECTOR_GPS, LAT_PREV, LON_PREV
     
-    # Antriebswellensensor(en)
-    
-    # UMIN ermitteln - für VM kommentieren
-    UMIN = int(UMIN_READER_1.RPM() + 0.5)
-    if N_SENSORS > 1:
-        UMIN += int(UMIN_READER_2.RPM() + 0.5)
-        UMIN = UMIN / 2    
-    #... ohne Sensor
-    # UMIN = 2000 + math.sin((T * 5)/180 * math.pi) * 1000
-    # Messzeitpunkt gesamt und Etappe
-    T += SAMPLE_TIME
-    T_SECTOR += SAMPLE_TIME
-    # Geschwindigkeit in Meter pro Sekunde
-    MS = UMIN / TRANSMISSION_RATIO / 60 * TYRE_SIZE
+    # Ein 0 V Potential an einem der GPIO Pins aktiviert die Antriebswellensensoren
+    if ((GPIO.input(GPIO_PIN_1) == 0) or (GPIO.input(GPIO_PIN_2) == 0)) and not HAS_SENSORS:
+        HAS_SENSORS = True
+        logger.debug("Antriebswellensensor(en) automatisch aktiviert!")
+        
+    # Index hochzählen
+    INDEX += 1
     # Geschwindigkeit in Kilometer pro Stunde
-    KMH = MS * 3.6
-    # Zurückgelegte Kilometer - Gesamt, Rallye und Etappe (Rückwärtszählen beim Umdrehen außer bei Gesamt)
-    KM_TOTAL += MS * SAMPLE_TIME / 1000
-    KM_RALLYE += MS * SAMPLE_TIME / 1000 * REVERSE
-    KM_SECTOR += MS * SAMPLE_TIME / 1000 * REVERSE
+    KMH = 0.0
+
+    #GPS
+    
+    # Aktuelle Position
+    GPS_CURRENT = gpsd.get_current()
+    # Aktuelle Zeit
+    TIME = datetime.now()
+    
+    # Alle 10 Durchläufe Zeit synchronisieren
+    if (INDEX % 10 == 0):
+        syncTime(GPS_CURRENT) 
+
+    # Gefahrene Distanz (berechnet aus Geokoordinaten)
+    DIST = 0.0
+    
+    # Ein 3D Fix ist notwendig, sonst zu ungenau
+    if GPS_CURRENT.mode >= 3:
+
+        # KMH_GPS = GPS_CURRENT.speed() * 3.6 - gibt auf einmal nur noch 0.0 zurück
+        if (GPS_CURRENT.hspeed > 1.0) and IS_RECORDING:
+            KMH = GPS_CURRENT.hspeed * 3.6
+
+        KMH_GPS = KMH
+
+        LAT = GPS_CURRENT.lat
+        LON = GPS_CURRENT.lon
+        if (LAT_PREV is not None) and (LON_PREV is not None) and (KMH_GPS > 0.0) and IS_RECORDING:
+            DIST = calcGPSdistance(LAT_PREV, LAT, LON_PREV, LON)
+            
+        # DEBUG
+        # MS = 20
+        # KMH_GPS = MS * 3.6
+        # DIST = MS * SAMPLE_TIME / 1000
+        # KMH = KMH_GPS
+            
+        LAT_PREV = LAT
+        LON_PREV = LON
+        KM_TOTAL += DIST
+        KM_TOTAL_GPS = KM_TOTAL
+        KM_RALLYE += DIST * REVERSE
+        KM_RALLYE_GPS = KM_RALLYE
+        KM_SECTOR += DIST * REVERSE
+        KM_SECTOR_GPS = KM_SECTOR
+    else:
+        KMH_GPS = 0.0
+        LAT = 0.0
+        LON = 0.0
+
+    # Antriebswellensensor(en)
+
+    # Umdrehungen der Antriebswelle(n) pro Minute
+    UMIN = 0.0
+
+    if HAS_SENSORS:
+    
+        # UMIN ermitteln - für VM kommentieren
+        UMIN = int(UMIN_READER_1.RPM() + 0.5)
+        if N_SENSORS > 1:
+            UMIN += int(UMIN_READER_2.RPM() + 0.5)
+            UMIN = UMIN / 2    
+        #... ohne Sensor
+        # UMIN = 2000 + math.sin((T * 5)/180 * math.pi) * 1000
+        # Geschwindigkeit in Meter pro Sekunde
+        if IS_RECORDING:
+            MS = UMIN / TRANSMISSION_RATIO / 60 * TYRE_SIZE
+        
+        # Geschwindigkeit in Kilometer pro Stunde
+        KMH = MS * 3.6
+        # Zurückgelegte Kilometer - Gesamt, Rallye und Etappe (Rückwärtszählen beim Umdrehen außer bei Gesamt)
+        KM_TOTAL += MS * SAMPLE_TIME / 1000
+        KM_RALLYE += MS * SAMPLE_TIME / 1000 * REVERSE
+        KM_SECTOR += MS * SAMPLE_TIME / 1000 * REVERSE
+
+    # Messzeitpunkte Etappe
+    if IS_RECORDING:
+        T_SECTOR += SAMPLE_TIME
+
     # % zurückgelegte Strecke in der Etappe
     FRAC_SECTOR_DRIVEN = 0
     if KM_SECTOR_PRESET > 0:
@@ -166,48 +280,25 @@ def getData():
     # noch zurückzulegende Strecke in der Etappe (mit der 0.005 wird der Wert 0 in der TextCloud vermieden)
     KM_SECTOR_TO_BE_DRIVEN = max(KM_SECTOR_PRESET - KM_SECTOR, 0) #0.005)
         
+    # Abweichung der durchschnitlichen Geschwindigkeit von der Vorgabe
+    DEV_AVG_KMH = 0.0
+    
     if T_SECTOR > 0.0:
         # Durchschnittliche Geschwindigkeit in Kilometer pro Stunde in der Etappe
         AVG_KMH = KM_SECTOR * 1000 / T_SECTOR * 3.6
-        # Abweichung der durchschnitlichen Geschwindigkeit von der Vorgabe
-        DEV_AVG_KMH = 0.0
         if AVG_KMH_PRESET > 0.0:
             DEV_AVG_KMH = AVG_KMH - AVG_KMH_PRESET
     
-    #GPS
-    
-    # Aktuelle Position
-    GPS_CURRENT = gpsd.get_current()
+    if IS_RECORDING:
+        # Alle 5 Durchläufe Geodaten abspeichern
+        if (INDEX % 5 == 0) and IS_TIME_SYNC:    
+            geostring = "{0:%d.%m.%Y %H:%M:%S};{1:};{2:};{3:0.1f};{4:0.2f};{5:0.2f};{6:0.2f};{7:0.1f};{8:0.2f};{9:0.2f};{10:0.2f}\n".format(TIME, LAT, LON, KMH, KM_TOTAL, KM_RALLYE, KM_SECTOR, KMH_GPS, KM_TOTAL_GPS, KM_RALLYE_GPS, KM_SECTOR_GPS)
+            with open('/home/pi/tripmaster/geofile.csv', 'a+') as datafile:
+                datafile.write(geostring) 
+        
 
-    DIST = 0.0
-    
-    # Mindestens ein 2D Fix ist notwendig
-    if GPS_CURRENT.mode >= 2:
-        # KMH_GPS = GPS_CURRENT.speed() * 3.6
-        KMH_GPS = GPS_CURRENT.hspeed
-        if KMH_GPS < 1.0:
-            KMH_GPS = 0.0
-        else:
-            KMH_GPS *= 3.6
-        LAT = GPS_CURRENT.lat
-        LON = GPS_CURRENT.lon
-        if (LAT_PREV is not None) and (LON_PREV is not None) and (KMH_GPS > 0.0):
-            DIST = calcGPSdistance(LAT_PREV, LAT, LON_PREV, LON)
-        LAT_PREV = LAT
-        LON_PREV = LON
-        KM_TOTAL_GPS += DIST
-        KM_RALLYE_GPS += DIST * REVERSE
-        KM_SECTOR_GPS += DIST * REVERSE
-    else:
-        KMH_GPS = 0.0
-        LAT = 0.0
-        LON = 0.0
-    
-    datastring = "data:{0:0.1f}:{1:0.1f}:{2:0.1f}:{3:0.1f}:{4:0.2f}:{5:0.2f}:{6:0.2f}:{7:0.2f}:{8:0.2f}:{9:}:{10:0.1f}:{11:0.1f}:{12:}:{13:}:{14:0.2f}:{15:0.2f}:{16:0.2f}".format(T, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN, DEV_AVG_KMH, KMH_GPS, LAT, LON, KM_TOTAL_GPS, KM_RALLYE_GPS, KM_SECTOR_GPS)
-    
-    with open('/home/pi/tripmaster/datafile.csv', 'a+') as datafile:
-        datafile.write(datastring.replace(":", ";").replace(".", ",") + "\n") 
-    
+    datastring = "data:{0:}:{1:0.1f}:{2:0.1f}:{3:0.1f}:{4:0.2f}:{5:0.2f}:{6:0.2f}:{7:0.2f}:{8:0.2f}:{9:}:{10:0.1f}:{11:}:{12:}:{13:}:{14:}".format(INDEX, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN, DEV_AVG_KMH, GPS_CURRENT.mode, LAT, LON, int(HAS_SENSORS))
+
     return datastring
 
 def calcGPSdistance(phi1, phi2, lambda1, lambda2):
@@ -219,18 +310,30 @@ def calcGPSdistance(phi1, phi2, lambda1, lambda2):
     y = (p2-p1)
     return math.sqrt(x*x + y*y) * 6371
 
-def startTheMaster(client):
-    timed = threading.Timer(SAMPLE_TIME, pushSensorData, [client.wsClients, "getData", "{:.1f}".format(SAMPLE_TIME)] )
+def startTripmaster(client):
+    global IS_STARTED
+    IS_STARTED = True
+    timed = threading.Timer(SAMPLE_TIME, pushSpeedData, [client.wsClients, "getData", "{:.1f}".format(SAMPLE_TIME)] )
     timed.start()
     timers.append(timed)
-    messageToAllClients(client.wsClients, "Tripmaster gestartet!:success:masterStarted")
+    messageToAllClients(client.wsClients, "Tripmaster gestartet!:success")
+    messageToAllClients(client.wsClients, "is_started:" + str(int(IS_STARTED)))
     
-def pushSensorData(clients, what, when):
+def stopTripmaster(client):
+    global IS_STARTED
+    for index, timer in enumerate(timers):
+        if timer:
+            timer.cancel()
+    IS_STARTED = False
+    messageToAllClients(client.wsClients, "Tripmaster gestoppt!:warning")
+    messageToAllClients(client.wsClients, "is_started:" + str(int(IS_STARTED)))
+    
+def pushSpeedData(clients, what, when):
     what = str(what)
     when = float(when)
     message = WebRequestHandler(what.splitlines());
     messageToAllClients(clients, message)
-    timed = threading.Timer( when, pushSensorData, [clients, what, when] )
+    timed = threading.Timer( when, pushSpeedData, [clients, what, when] )
     timed.start()
     timers.append(timed)
 
@@ -257,31 +360,36 @@ def pushRegtestData(clients, what, when):
 
 ### WebSocket server tornado <-> WebInterface
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
+    global IS_STARTED
     # Array der WebSocket Clients
     wsClients = []
+
     # Client verbunden
     def check_origin(self, origin):
         return True   
+
     def open(self, page):
-        global theMaster, pi, UMIN_READER_1, UMIN_READER_2
+        global IS_STARTED, pi, UMIN_READER_1, UMIN_READER_2
         self.stream.set_nodelay(True)
-        
         # Jeder WebSocket Client wird dem Array wsClients hinzugefügt
         self.wsClients.append(self)
-        if theMaster is None:
+        # Die ID
+        self.id = "Client #" + str(self.wsClients.index(self) + 1) + " (" + page + ")"
+        # Wenn es der erste Client ist, UMIN_READER starten
+        if len(self.wsClients) == 1:
             # Verbinden mit pigpio - für VM kommentieren
             pi = pigpio.pi()
             # UMIN_READER starten - für VM kommentieren
             UMIN_READER_1 = reader(pi, GPIO_PIN_1, PULSES_PER_REV)
             UMIN_READER_2 = reader(pi, GPIO_PIN_2, PULSES_PER_REV)
-            
-            theMaster = self
-            startTheMaster(theMaster)
-        printDEBUG("Anzahl verbundener WebSocket Client: " + str(len(self.wsClients)))
+            startTripmaster(self)
+            logger.debug("Erster WebSocket Client verbunden")
+        logger.debug("Anzahl verbundener WebSocket Clients: " + str(len(self.wsClients)))
+
     # the client sent a message
     def on_message(self, message):
-        global theMaster, T, T_SECTOR, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, REVERSE, ACTIVE_CONFIG, COUNTDOWN, AVG_KMH_PRESET
-        printDEBUG("Message from WebIf: >>>"+message+"<<<")
+        global IS_STARTED, IS_RECORDING, T, T_SECTOR, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, REVERSE, ACTIVE_CONFIG, COUNTDOWN, AVG_KMH_PRESET
+        logger.debug("Nachricht " + self.id + ": " + message + "")
         # command:param
         message = message.strip()
         messagesplit = message.split(":")
@@ -291,24 +399,33 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         if param == "dummy":
             param = "0"
 
-        # Master Start und Pause
-        if command == "startMaster":
-            if theMaster is None:
-                theMaster = self
-                startTheMaster(theMaster)
-        elif command == "pauseMaster":
-            if theMaster is not None:
-                for index, timer in enumerate(timers):
-                    if timer:
-                        timer.cancel()
-                theMaster = None
-                messageToAllClients(self.wsClients, "Tripmaster pausiert:warning")
+        # Master: Start und Stop
+        if command == "toggleTripmaster":
+            if IS_STARTED == False:
+                startTripmaster(self)
+            else:
+                stopTripmaster(self)
+        # Aufzeichnung: Start und Pause
+        elif command == "toggleRecording":
+            if IS_RECORDING == False:
+                if IS_TIME_SYNC:
+                    IS_RECORDING = True
+                    messageToAllClients(self.wsClients, "Aufzeichung gestartet!:success")
+                else:
+                    messageToAllClients(self.wsClients, "Zeit noch nicht synchronisiert!:error")
+            else:
+                IS_RECORDING = False
+                messageToAllClients(self.wsClients, "Aufzeichung gestoppt!:warning")
+            messageToAllClients(self.wsClients, "is_recording:" + str(int(IS_RECORDING)))
         # Etappensteuerung
         elif command == "resetSector":
-            T_SECTOR = 0.0
-            KM_SECTOR = 0.0
-            KM_SECTOR_PRESET = 0.0
-            messageToAllClients(self.wsClients, "Etappenzähler auf Null!:success")
+            if IS_STARTED == True:
+                T_SECTOR = 0.0
+                KM_SECTOR = 0.0
+                KM_SECTOR_PRESET = 0.0
+                messageToAllClients(self.wsClients, "Etappenzähler auf Null!:success")
+            else:
+                messageToAllClients(self.wsClients, "Tripmaster noch nicht gestartet!:warning")
         elif command == "setSectorLength":
             KM_SECTOR_PRESET = float(param)
             messageToAllClients(self.wsClients, "Etappe auf "+locale.format("%.2f", KM_SECTOR_PRESET)+" km gesetzt!:success")
@@ -364,22 +481,21 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         
     # Client getrennt
     def on_close(self):
-        global theMaster
-        if self is theMaster:
-            print("Ich, der Master, bin gestoppt")
-            theMaster = None
-        else:
-            print("Ich, ein weiterer Client, bin gestoppt")
-        # UMIN_READER stoppen - für VM kommentieren
-        if UMIN_READER_1 is not None:
-            UMIN_READER_1.cancel()
-        if UMIN_READER_2 is not None:
-            UMIN_READER_2.cancel()
-        # Verbindung mit pigpio beenden - für VM kommentieren
-        pi.stop()
-        
+        # Aus der Liste laufender Clients entfernen
         self.wsClients.remove(self)
-        printDEBUG("Ein WebSocket Client getrennt. Anzahl noch laufender Clients: " + str(len(self.wsClients)))
+    
+        if len(self.wsClients) == 0:
+            # UMIN_READER stoppen - für VM kommentieren
+            UMIN_READER_1.cancel()
+            UMIN_READER_2.cancel()
+            # Verbindung mit pigpio beenden - für VM kommentieren
+            pi.stop()
+            
+            # Tripmaster stoppen
+            stopTripmaster(self)
+            logger.debug("Letzter WebSocket Client getrennt")
+        
+        logger.debug("Anzahl verbundener Clients: " + str(len(self.wsClients)))
 
 #-------------------------------------------------------------------
 
@@ -394,8 +510,8 @@ class Web_Application(tornado.web.Application):
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
-            debug=DEBUG,
-            autoescape=None
+            debug = DEBUG,
+            autoescape = None
         )
         tornado.web.Application.__init__(self, handlers, **settings)
 
@@ -423,7 +539,6 @@ class SettingsHandler(tornado.web.RequestHandler):
             debug = DEBUG,
             sample_time = int(SAMPLE_TIME * 1000),
             sector_reverse = sector_reverse,
-            
             active_config = ACTIVE_CONFIG,
         )
 
@@ -445,6 +560,7 @@ class StaticHandler(tornado.web.RequestHandler):
 
 try:
     timers = list()
+    options.logging = None
     ws_app = tornado.web.Application([(r"/(.*)", WebSocketHandler),])
     ws_server = tornado.httpserver.HTTPServer(ws_app, ssl_options={
         "certfile": "/home/pi/tripmaster/certs/servercert.pem",
@@ -462,4 +578,4 @@ except (KeyboardInterrupt, SystemExit):
     for index, timer in enumerate(timers):
         if timer:
             timer.cancel()
-    print("\nQuit\n")
+    logger.debug("Tornado beendet")

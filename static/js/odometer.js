@@ -50,13 +50,13 @@
 
   DIGIT_FORMAT = "(d),dd";
 
-  NUMBER_OF_DIGITS = 5;
+  NUMBER_OF_DIGITS = 4;
 
   FORMAT_PARSER = /^\(?([^)]*)\)?(?:(.)(d+))?$/;
 
   FRAMERATE = 30;
 
-  DURATION = 3000;
+  DURATION = 0; // 3000;
 
   COUNT_FRAMERATE = 20;
 

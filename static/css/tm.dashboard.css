@@ -1,32 +1,90 @@
 /* Circular gauge */
 #circulargauge-speed {
-	position: relative;
+    position: relative;
     height: 100%;
     width: 100%;
-	z-index: 10;
+    z-index: 10;
 }
 
 /* Odometer */
 #odometer-kmtotal, #odometer-kmsector {
-	font-size: 4.5vw;
-	position: absolute;
-	visibility: hidden;
+    font-size: 5vw;
+    position: absolute;
+    visibility: hidden;
     z-index: 0;
 }
 
+#right-sector {
+	justify-content: center;
+}
+
+.dx-button-has-icon .dx-icon {
+    font-size: 5vw;
+    color: inherit;
+    width: auto;
+    height: auto;
+}
+
+.dx-icon.fas.fa-circle{
+    font-size: 4vw;
+}
+
+.status-indicator {
+    position: absolute;
+    font-family: 'Tripmaster Font';
+    font-size: 4vw;
+    color: lightgray;
+    /* text-shadow: 0 -1px 1px #666666, 0 1px 1px #FFFFFF;    visibility: hidden; */
+}
+
+.statusbutton {
+    margin: 1vw;
+    width: 12vw;
+    height: 12vw;
+    border-radius: 50%;
+    outline: none;
+    text-shadow: hsla(0,0%,40%,.5) 0 -1px 0, hsla(0,0%,100%,.6) 0 2px 1px;
+    background-color: hsl(0,0%,90%);
+    box-shadow: inset hsla(0,0%,15%,  1) 0  0px 0px 4px, /* border */
+                inset hsla(0,0%,15%, .8) 0 -1px 5px 4px, /* soft SD */
+                inset hsla(0,0%,0%, .25) 0 -1px 0px 7px, /* bottom SD */
+                inset hsla(0,0%,100%,.7) 0  2px 1px 7px; /* top HL */
+    transition: color .2s;
+    background-image: -webkit-repeating-linear-gradient(left, hsla(0,0%,100%,0) 0%, hsla(0,0%,100%,0)   6%, hsla(0,0%,100%, .1) 7.5%),
+                      -webkit-repeating-linear-gradient(left, hsla(0,0%,  0%,0) 0%, hsla(0,0%,  0%,0)   4%, hsla(0,0%,  0%,.03) 4.5%),
+                      -webkit-repeating-linear-gradient(left, hsla(0,0%,100%,0) 0%, hsla(0,0%,100%,0) 1.2%, hsla(0,0%,100%,.15) 2.2%),
+                      linear-gradient(180deg, hsl(0,0%,78%)  0%, 
+                      hsl(0,0%,90%) 47%, 
+                      hsl(0,0%,78%) 53%,
+                      hsl(0,0%,70%)100%);
+}
+
+.statusbutton:active {
+  text-shadow: hsla(208,56%,20%,.3) 0 -1px 0, hsl(208,56%,85%) 0 2px 1px, hsla(200,56%,80%,1) 0 0 5px, hsla(208,56%,50%,.6) 0 0 20px;
+  box-shadow: 
+    inset hsla(208,56%,30%,  1) 0  0px 0px 4px, /* border */
+    inset hsla(208,56%,15%, .4) 0 -1px 5px 4px, /* soft SD */
+    inset hsla(208,56%,20%,.25) 0 -1px 0px 7px, /* bottom SD */
+    inset hsla(208,56%,100%,.7) 0  2px 1px 7px, /* top HL */
+    
+    hsla(208,56%,75%, .8) 0  0px 3px 2px, /* outer SD */
+    hsla(208,28%,40%, .25) 0 -5px 6px 4px, /* outer SD */
+    hsla(2,47%,95%,   1) 0  5px 6px 4px; /* outer HL */
+}
+   
 /* Countdown */
 .main, #regtest {
     height: 100%;
-    width: 100%;	
+    width: 100%;    
 }
 
 #textbox-regtestseconds {
-	border-color: Ivory;
+    border-color: Ivory;
 }
 
 .dx-widget input {
-	font-family: 'Tripmaster Font';
-	font-size: 7.5vw;
-	text-align: center;
-	background-color: Ivory;
+    font-family: 'Tripmaster Font';
+    font-size: 7.5vw;
+    text-align: center;
+    background-color: Ivory;
 }

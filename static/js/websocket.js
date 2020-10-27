@@ -50,29 +50,30 @@ function WebSocket_Open(page) {
         var values = message.split(':');
         if (values[0] == "data") {
 			mylog(message);
-	// 1, 2,    3,   4        5,        6,         7,         8,                9,                      10,                 11,          12,      13,  14
-	// T, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN, DEV_AVG_KMH, KMH_GPS, LAT, LON
+	// 1,     2,    3,   4        5,        6,         7,         8,                9,                      10,                 11,          12,       13,  14
+	// INDEX, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN, DEV_AVG_KMH, GPS_MODE, LAT, LON
+	// 15
+	// HAS_SENSORS
 			KMH = values[3]; AVG_KMH = values[4]; KM_TOTAL = values[5]; KM_RALLYE = values[6]; KM_SECTOR = values[7];
 			KM_SECTOR_PRESET = values[8]; KM_SECTOR_TO_BE_DRIVEN = values[9]; FRAC_SECTOR_DRIVEN = values[10]; DEV_AVG_KMH = values[11];
-			KMH_GPS = values[12]; LAT = values[13]; LON = values[14]; KM_TOTAL_GPS = values[15]; KM_RALLYE_GPS = values[16]; KM_SECTOR_GPS = values[17];
+			GPS_MODE = values[12]; LAT = values[13]; LON = values[14]; HAS_SENSORS = values[15];
 			// Tacho
-			aktKMH = KMH;
-			if (aktKMH == 0.0) aktKMH = KMH_GPS;
 			if (document.getElementById("circulargauge-speed") !== null) {
 				speedGauge = $('#circulargauge-speed').dxCircularGauge('instance');
 				// Die aktuelle Geschwindigkeit ist der Hauptwert, ...
-				speedGauge.value(aktKMH);
+				speedGauge.value(KMH);
 				// ... die Durchschnittsgeschwindigkeit der Nebenwert des Tachos 
 				speedGauge.subvalues([AVG_KMH]);
 			} 
 			// Odometer, mit , als Dezimaltrennzeichen
 			if (document.getElementById("odometer-kmtotal") !== null) {
-				document.getElementById("odometer-kmtotal").innerHTML = parseFloat(KM_RALLYE_GPS).toLocaleString('de-DE');
+				KM_RALLYE_TRUNC = Math.trunc(KM_RALLYE * 10) / 10;
+				document.getElementById("odometer-kmtotal").innerHTML = parseFloat(KM_RALLYE_TRUNC).toLocaleString('de-DE');
 			} 
 			if (document.getElementById("odometer-kmsector") !== null) {
-				document.getElementById("odometer-kmsector").innerHTML = parseFloat(KM_SECTOR_GPS).toLocaleString('de-DE');
-			// Linearanzeige: restliche km in der Etappe
+				document.getElementById("odometer-kmsector").innerHTML = parseFloat(KM_SECTOR).toLocaleString('de-DE');
 			} 
+			// Linearanzeige: restliche km in der Etappe
 			if (document.getElementById("lineargauge-kmsector") !== null) {
 				kmSectorPreset = KM_SECTOR_PRESET;
 				kmLeftInSector = KM_SECTOR_TO_BE_DRIVEN;
@@ -80,6 +81,41 @@ function WebSocket_Open(page) {
 				if (FRAC_SECTOR_DRIVEN > 0) { subvalues = [FRAC_SECTOR_DRIVEN]; } else { subvalues = []};
 				$("#lineargauge-kmsector").dxLinearGauge('instance').option("subvalues", subvalues);
             } 
+            // Statusanzeige: GPS
+			if (document.getElementById("status-gps") !== null) {
+				switch(parseInt(GPS_MODE)) {
+					case 0:
+						fontColor = "lightgray";
+						break;
+					case 1:
+						fontColor = "var(--tm-red)";
+						break;
+					case 2:
+						fontColor = "var(--tm-yellow)";
+						break;
+					case 3:
+						fontColor = "var(--tm-green)";
+						break;
+					default:
+						fontColor = "Ivory";
+				};
+                document.getElementById("status-gps").style.color = fontColor;
+            }
+            // Statusanzeige: Radsensor
+			if (document.getElementById("status-tyre") !== null) {
+
+				switch(parseInt(HAS_SENSORS)) {
+					case 0:
+						fontColor = "lightgray";
+						break;
+					case 1:
+						fontColor = "var(--tm-green)";
+						break;
+					default:
+						fontColor = "Ivory";
+				};
+                document.getElementById("status-tyre").style.color = fontColor;
+			}
 			// Entfernungstextboxen
 			// Vorgegebene Etappenlänge
 			if (document.getElementById("textbox-sectorpreset") !== null) {
@@ -103,6 +139,28 @@ function WebSocket_Open(page) {
 				devAvgSpeed.value(DEV_AVG_KMH);
 				devAvgSpeed.subvalues([DEV_AVG_KMH]);
 			} 
+		} else if (values[0] == "is_started") {
+			// mylog(message);
+			// TODO: Tripmaster komplett starten/stoppen
+		} else if (values[0] == "is_recording") {
+			// mylog(message);
+			var recpaused = values[1]==0?true:false;
+			if (document.getElementById("switch-stoptripmaster") !== null) {
+				$("#switch-stoptripmaster").dxSwitch('instance').option("value", recpaused);
+			};
+			if (document.getElementById("status-information") !== null) {
+				if(recpaused) {
+					$("#button-togglerecording").dxButton('instance').option("icon", "fas fa-circle");
+					$("#button-togglerecording").dxButton('instance').option("elementAttr", {"style": "color: var(--tm-red)"});
+				} else {
+					$("#button-togglerecording").dxButton('instance').option("icon", "fas fa-pause-circle");
+					$("#button-togglerecording").dxButton('instance').option("elementAttr", {"style": "color: var(--tm-yellow)"});
+				}
+			};
+			// Tacho
+			if (recpaused && document.getElementById("circulargauge-speed") !== null) {
+				$('#circulargauge-speed').dxCircularGauge('instance').value(0);
+			};
 		} else if (values[0] == "countdown") {
 			// mylog(message);
 			var countdown = values[1]
@@ -133,9 +191,6 @@ function WebSocket_Open(page) {
 			COMMAND = values[2];
 			
 			if (values.length == 3) {
-				if ((COMMAND == "masterStarted") && (document.getElementById("switch-pausetripmaster") !== null)) {
-					$("#switch-pausetripmaster").dxSwitch('instance').option("value", false);
-				};
 				if (document.getElementById("multiview-dashboard") !== null) {
 					if (COMMAND == "regTestStarted") {
 						$("#multiview-dashboard").dxMultiView('instance').option("selectedIndex", 1);

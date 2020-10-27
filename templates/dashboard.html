@@ -9,6 +9,7 @@
 	<link rel="stylesheet" type="text/css" href="/static/css/dx.common.css" />
 	<link rel="stylesheet" type="text/css" href="/static/css/dx.light.css" />
     <link rel="dx-theme" data-theme="generic.light" href="/static/css/dx.light.css" />
+	<link rel="stylesheet" href="/static/css/fontawesome.5.8.2.all.min.css"/>
 	<link rel="stylesheet" href="/static/css/odometer-theme-car.css" />
     <link rel="stylesheet" type="text/css" href="/static/css/tm.common.css" />
     <link rel="stylesheet" type="text/css" href="/static/css/tm.dashboard.css" />
@@ -38,23 +39,43 @@
 	
 	<div id="multiview-dashboard" class="main tm-background">
 		<script id="mv-sector" type="text/html">
-			<div id="sector-box" class="twocolumn-box" onClick="resetSector();">
-				<div data-options="dxItem: {ratio: 3}">
-					<div id="circulargauge-speed"></div>
+			<div id="sector-box" class="twocolumn-box">
+				<div data-options="dxItem: {ratio: 2}">
+                    <div id="status-gps" class="status-indicator">
+                        <i class="fas fa-satellite-dish"></i>
+                    </div>
+                    <div id="status-tyre" class="status-indicator">
+                        <i class="fab fa-galactic-republic"></i>
+                    </div>
+					<div id="circulargauge-speed"  onClick="WebSocket_Send('resetSector');"></div>
 				</div>
 				<div data-options="dxItem: {ratio: 1}" id="right-sector">
 					<div id="lineargauge-kmsector"></div>
+					<div id="status-information">
+						<div class="flex-row space-evenly">
+							<div id="button-togglerecording"></div>
+						</div>
+						<div class="flex-row space-evenly">
+							<div id="button-roundabout"></div>
+						</div>
+						<div class="flex-row space-evenly">
+							<div id="button-townsign"></div>
+						</div>
+						<div class="flex-row space-evenly">
+							<div id="button-checkpoint"></div>
+						</div>
+					</div>
 				</div>
 			</div>
-			<div id="odometer-kmsector"></div>
 			<div id="odometer-kmtotal"></div>
+			<div id="odometer-kmsector"></div>
 			<script>
-				new Odometer({
-				  el: document.getElementById("odometer-kmsector"),
-				  digits: 4,
-				});
-				new Odometer({
+				kmtotal = new Odometer({
 				  el: document.getElementById("odometer-kmtotal"),
+				  format: "(d),d",
+				});
+				kmsector = new Odometer({
+				  el: document.getElementById("odometer-kmsector"),
 				});
 			</script>
 		</script>

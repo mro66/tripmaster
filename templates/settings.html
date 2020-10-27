@@ -9,6 +9,7 @@
 	<link rel="stylesheet" type="text/css" href="/static/css/dx.common.css" />
 	<link rel="stylesheet" type="text/css" href="/static/css/dx.light.css" />
     <link rel="dx-theme" data-theme="generic.light" href="/static/css/dx.light.css" />
+	<link rel="stylesheet" href="/static/css/fontawesome.5.8.2.all.min.css"/>
 
     <link rel="stylesheet" type="text/css" href="/static/css/tm.common.css" />
     <link rel="stylesheet" type="text/css" href="/static/css/tm.settings.css" />
@@ -18,7 +19,6 @@
     <script src="/static/js/tm.common.js"></script>
 
     <script src="/static/js/websocket.js"></script>
-    <script src="/static/js/screenfull.min.js"></script>
     <script>
 		var DEBUG = {{ debug }};
 		var SAMPLE_TIME = {{ sample_time }};
@@ -149,9 +149,9 @@
 		<script id="tab-setup" type="text/html">
 			<div class="dx-fieldset tm-background-input" style="padding: 20px 10px; margin: 10px 10px;">
 				<div class="dx-field flex-row">
-					<div class="dx-field-label">Pausieren</div>
+					<div class="dx-field-label">Anhalten</div>
 					<div class="dx-field-value">
-						<div id="switch-pausetripmaster"></div>
+						<div id="switch-stoptripmaster"></div>
 					</div>
 				</div>
 				<div class="dx-field flex-row">

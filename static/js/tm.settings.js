@@ -12,13 +12,19 @@ $(function(){
 			loop: true,
 			selectedIndex: 0,
 			items: [{
-				"title": 'Etappe',
+				// Etappe
+				"title": [],
+				icon: "fas fa-route",
 				template: $("#tab-sector"),
 			}, {
-				"title": 'GLP',
+				// GLP
+				"title": [],
+				icon: "fas fa-stopwatch",
 				template: $("#tab-regtest"),
 			}, {
-				"title": 'Setup',
+				// Settings
+				"title": [],
+				icon: "fas fa-cogs",
 				template: $("#tab-setup"),
 			}],
 			onSelectionChanged: function(e) {
@@ -492,16 +498,12 @@ $(function(){
 
 	// Tab Setup
 
-        $("#switch-pausetripmaster").dxSwitch({
+        $("#switch-stoptripmaster").dxSwitch({
             value: false,
 			onValueChanged: function(e) {
 				// e.event ist undefined bei programmatischem valueChange
 				if(e.event !== undefined) {
-					if (e.value === true) {
-						WebSocket_Send('pauseMaster');
-					} else {
-						WebSocket_Send('startMaster');
-					}
+					WebSocket_Send('toggleTripmaster');
 				}
 			},
         });

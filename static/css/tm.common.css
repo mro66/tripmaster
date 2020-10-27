@@ -35,6 +35,11 @@ html, body {
 	align-items: center;
 }
 
+.space-evenly {
+	justify-content: space-evenly;
+}
+	
+
 .flex-row-stretch {
 	display: flex;
 	align-items: stretch;

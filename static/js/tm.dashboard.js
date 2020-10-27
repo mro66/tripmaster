@@ -45,27 +45,27 @@ $(function(){
             endValue: 150,
             tick: {
                 color: "gray",
-                length: 15 * windowDiagonal,
-                width: 4 * windowDiagonal,
+                length: 20 * windowDiagonal,
+                width: 5 * windowDiagonal,
             },
             tickInterval: 10,
             minorTick: {
                 color: "Ivory",
                 visible: true,
-                length: 10 * windowDiagonal,
-				width: 1 * windowDiagonal,
+                length: 15 * windowDiagonal,
+				width: 2 * windowDiagonal,
             },
             minorTickInterval: 2,
             orientation: "inside",
             label: {
-        		font: {color: "gray", size: "4vw", family: "Tripmaster Font" },
-                indentFromTick: -20 * windowDiagonal,
+        		font: {color: "gray", size: "4.5vw", family: "Tripmaster Font" },
+                indentFromTick: -25 * windowDiagonal,
            }
         },
         rangeContainer: {
             backgroundColor: "black",
-            offset: 10 * windowDiagonal,
-            width: 10 * windowDiagonal,
+            offset: 15 * windowDiagonal,
+            width: 15 * windowDiagonal,
         },
         value: 0,
         valueIndicator: {
@@ -74,7 +74,7 @@ $(function(){
             secondFraction: 0.5,
             secondColor: "gray",
             offset: 0,
-            width: 5 * windowDiagonal,
+            width: 7 * windowDiagonal,
             indentFromCenter: 25 * windowDiagonal,
             spindleGapSize: 20 * windowDiagonal,
             spindleSize: 50 * windowDiagonal,
@@ -83,13 +83,16 @@ $(function(){
         subvalueIndicator: {
 			type: "triangleMarker",
             offset: -5 * windowDiagonal,
-			length: 14 * windowDiagonal,
-			width: 13 * windowDiagonal,
+			length: 20 * windowDiagonal,
+			width: 20 * windowDiagonal,
         },
 		redrawOnResize: true,
     });
 
 	$("#lineargauge-kmsector").dxLinearGauge($.extend(true, {}, linearGaugeOptions, {
+		elementAttr: {
+			style: "display:none",
+		},
 		size: {
 			height: window.innerHeight,
 		},
@@ -119,6 +122,57 @@ $(function(){
 		},
 	}));
 		
+	// Gemeinsame Optionen der Statusbuttons
+	var buttonOptions = {
+		elementAttr: {
+			class: "statusbutton",
+			style: "color: lightgray",
+		},
+		focusStateEnabled: false,
+		hoverStateEnabled: false,
+	};
+	
+	$("#button-togglerecording").dxButton($.extend(true, {}, buttonOptions, {
+		icon: "fas fa-circle",
+		elementAttr: {
+			style: "color: var(--tm-red);",
+            class: "statusbutton small",
+		},
+		onClick: function(e) {
+			WebSocket_Send('toggleRecording');
+		},
+	})); 
+
+	var roundaboutButton = $("#button-roundabout").dxButton($.extend(true, {}, buttonOptions, {
+		icon: "fas fa-sync",
+		elementAttr: {
+			style: "color: var(--tm-blue)",
+		},
+		onClick: function(e) {
+			mynotify("Kreisverkehr Button gedrückt");
+		},
+	})).dxButton("instance"); 
+
+	var roundaboutButton = $("#button-townsign").dxButton($.extend(true, {}, buttonOptions, {
+		icon: "fas fa-sign",
+		elementAttr: {
+			style: "color: var(--tm-yellow)",
+		},
+		onClick: function(e) {
+			mynotify("Ortseingangs Button gedrückt");
+		},
+	})).dxButton("instance"); 
+
+	var checkpointButton = $("#button-checkpoint").dxButton($.extend(true, {}, buttonOptions, {
+		icon: "fas fa-map-marker-alt",
+		elementAttr: {
+			style: "color: var(--tm-green)",
+		},
+		onClick: function(e) {
+			mynotify("Ortseingangs Button gedrückt");
+		},
+	})).dxButton("instance"); 
+
 	$("#circulargauge-devavgspeed").dxCircularGauge({
 		animation: {
 			enabled: true,
@@ -129,7 +183,7 @@ $(function(){
 			endAngle: 30
 		},
 		size: {
-			height: window.innerHeight * 0.7
+			height: window.innerHeight,
 		},
 		scale: {
 			startValue: -25,
@@ -246,34 +300,36 @@ function resizeAndPosition() {
 	// kmSectorLinearGauge.option("size.height", window.innerHeight);
 	// kmSectorLinearGauge.render();
 	
-	// Odometer an der Mitte des Tachos ausrichten
+	var x = parseFloat(document.getElementsByClassName("dxg-spindle-hole")[0].getAttribute('cx'));
+	var y = parseFloat(document.getElementsByClassName("dxg-spindle-hole")[0].getAttribute('cy'));
+	var spindleSize = parseFloat(speedCircularGauge.option("valueIndicator.spindleSize"));
+    
+	// Elemente an der Mitte des Tachos ausrichten
 	var odoKmTotal = document.getElementById("odometer-kmtotal");
 	var odoKmSector = document.getElementById("odometer-kmsector");
+	var statusGPS = document.getElementById("status-gps");
+	var statusTyre = document.getElementById("status-tyre");
 	
 	//top ...
-	// kmsector
-	var x = document.getElementsByClassName("dxg-spindle-hole")[0].getAttribute('cx');
-	var y = document.getElementsByClassName("dxg-spindle-hole")[0].getAttribute('cy');
-	var spindleSize = speedCircularGauge.option("valueIndicator.spindleSize");
-	odoKmSector.style.top = parseFloat(y) - parseFloat(spindleSize) - parseFloat(odoKmSector.clientHeight) + "px";
 	// kmtotal
-	odoKmTotal.style.top = parseFloat(y) + parseFloat(spindleSize) + "px";
+	odoKmTotal.style.top = y - spindleSize - parseFloat(odoKmTotal.clientHeight) + "px";
+	// kmsector
+	odoKmSector.style.top = y + spindleSize + "px";
+    // gps
+    statusGPS.style.top = y - statusGPS.clientHeight / 2 + "px";
+    // tyre
+    statusTyre.style.top = y - statusTyre.clientHeight / 2 + "px";
 	// ... und left
-	// kmsector
-	var halfOdoWidth = odoKmSector.clientWidth / 2;
-	odoKmSector.style.left = parseFloat(x) - parseFloat(halfOdoWidth) + "px";
-	odoKmSector.style.visibility = "visible";
 	// kmtotal
-	halfOdoWidth = odoKmTotal.clientWidth / 2;
-	odoKmTotal.style.left = parseFloat(x) - parseFloat(halfOdoWidth) + "px";
+	odoKmTotal.style.left = x - odoKmTotal.clientWidth / 2 + "px";
 	odoKmTotal.style.visibility = "visible";
-	
-};
-
-function resetSector() {
-	document.getElementById("odometer-kmsector").innerHTML = 0;
-	var kmSectorLinearGauge = $("#lineargauge-kmsector").dxLinearGauge('instance');
-	kmSectorLinearGauge.option("value", 0);
-	kmSectorLinearGauge.option("subvalues", []);
-	WebSocket_Send('resetSector');
+	// kmsector
+	odoKmSector.style.left = x - odoKmSector.clientWidth / 2 + "px";
+	odoKmSector.style.visibility = "visible";
+    // gps
+    statusGPS.style.left = x - statusGPS.clientWidth / 2 - spindleSize * 2 + "px";
+    statusGPS.style.visibility = "visible";
+    // tyre
+    statusTyre.style.left = x - statusTyre.clientWidth / 2 + spindleSize * 2 + "px";
+	statusTyre.style.visibility = "visible";
 };
