@@ -216,26 +216,26 @@ class SECTION:
         newstage.km    = 0.0
         rallye.subsection.append(newstage)
         newstage.id    = rallye.subsection.index(newstage)
-        logger.debug("   Etappe " + str(newstage.id) + " gestartet: " + locale.format("%.2f", lon) + "/" + locale.format("%.2f", lat))
+        logger.debug("   Etappe " + str(newstage.id) + " gestartet: " + locale.format_string("%.2f", lon) + "/" + locale.format_string("%.2f", lat))
         newstage.setPoint(lon, lat, "stage", "stage_start")
         return newstage
 
     def endStage(self, lon, lat):
         self.start = 0
         self.setPoint(lon, lat, "stage", "stage_finish")
-        logger.debug("   Etappe " + str(self.id) + " gestoppt:  " + locale.format("%.2f", lon) + "/" + locale.format("%.2f", lat))       
+        logger.debug("   Etappe " + str(self.id) + " gestoppt:  " + locale.format_string("%.2f", lon) + "/" + locale.format_string("%.2f", lat))       
 
     def startSector(self, stage, lon, lat):
         newsector = SECTION()
         stage.subsection.append(newsector)
         newsector.id = stage.subsection.index(newsector)
         newsector.setPoint(lon, lat)
-        logger.debug("Abschnitt " + str(newsector.id) + " gestartet: " + locale.format("%.2f", lon) + "/" + locale.format("%.2f", lat))
+        logger.debug("Abschnitt " + str(newsector.id) + " gestartet: " + locale.format_string("%.2f", lon) + "/" + locale.format_string("%.2f", lat))
         return newsector
 
     def endSector(self, lon, lat):
         self.setPoint(lon, lat)
-        logger.debug("Abschnitt " + str(self.id) + " gestoppt:  " + locale.format("%.2f", lon) + "/" + locale.format("%.2f", lat))
+        logger.debug("Abschnitt " + str(self.id) + " gestoppt:  " + locale.format_string("%.2f", lon) + "/" + locale.format_string("%.2f", lat))
 
     def setPoint(self, lon, lat, type = None, subtype = None):
         # Bounding Box von Deutschland: (5.98865807458, 47.3024876979, 15.0169958839, 54.983104153)),
@@ -251,7 +251,7 @@ class SECTION:
                 self.points.append(newPoint)
                 newPoint.id = self.points.index(newPoint)
                 # if DEBUG and (type is None):
-                    # logger.debug("Trackpunkt " + str(newPoint.id) + ": " + locale.format("%.4f", lon) + "/" + locale.format("%.4f", lat))
+                    # logger.debug("Trackpunkt " + str(newPoint.id) + ": " + locale.format_string("%.4f", lon) + "/" + locale.format_string("%.4f", lat))
             pickleData()
             return newPoint.id
 
@@ -331,12 +331,12 @@ def saveKMZ(rallye):
         sf = KML.newfolder(name="Etappe " + str(stage.id+1))            
         for p in stage.points:
             # 'name' ist der label, 'description' erscheint darunter
-            newpoint = sf.newpoint(coords = [(p.lon, p.lat)], name = POINTS[p.subtype].name, description = "Länge: " + locale.format("%.2f", stage.km)+" km")
+            newpoint = sf.newpoint(coords = [(p.lon, p.lat)], name = POINTS[p.subtype].name, description = "Länge: " + locale.format_string("%.2f", stage.km)+" km")
             newpoint.style = styles[p.subtype]
         
         f = sf.newfolder(name="Abschnitte")
         for sector in stage.subsection:
-            newtrack = f.newlinestring(name = "Abschnitt "+str(sector.id+1), description = "Länge: " + locale.format("%.2f", sector.km)+" km")
+            newtrack = f.newlinestring(name = "Abschnitt "+str(sector.id+1), description = "Länge: " + locale.format_string("%.2f", sector.km)+" km")
             newtrack.style = styles["track"+str(sector.id % 2)]
             for p in sector.points:
                 newtrack.coords.addcoordinates([(p.lon, p.lat)])
@@ -439,7 +439,7 @@ def getData():
 
     # Aktuelle GPS Position
     GPS_CURRENT = gpsd.get_current()
-
+    
     # Alle 10 Durchläufe Zeit synchronisieren
     if (INDEX % 10 == 0) or (IS_TIME_SYNC == None):
         IS_TIME_SYNC = syncTime(GPS_CURRENT)
@@ -542,6 +542,9 @@ def getData():
             STAGE_TIMETOFINISH = STAGE.finish - int(datetime.timestamp(datetime.now()))
             STAGE_FRACTIME = round((1 - STAGE_TIMETOFINISH / STAGE.getDuration()) * 100)
     else:
+        # Wenn Etappe nicht läuft, zurücksetzen von Etappen- und Abschnittstrecke 
+        STAGE.km = 0.0
+        SECTOR.km = 0.0
         if STAGE.start > 0:
             STAGE_TIMETOSTART = STAGE.start - int(datetime.timestamp(datetime.now()))
     
@@ -778,7 +781,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         elif command == "setSectorLength":
             SECTOR.preset = float(param)
             if float(param) > 0.0:
-                messageToAllClients(self.wsClients, "Abschnitt auf "+locale.format("%.2f", SECTOR.preset)+" km gesetzt!:success:sectorLengthset")
+                messageToAllClients(self.wsClients, "Abschnitt auf "+locale.format_string("%.2f", SECTOR.preset)+" km gesetzt!:success:sectorLengthset")
             else:
                 messageToAllClients(self.wsClients, "Vorgabe zurückgesetzt:success:sectorLengthreset")
 

@@ -3,6 +3,21 @@ DevExpress.localization.loadMessages({
     de: { "Yes": "Ja", "No": "Nein", "Cancel": "Abbrechen" }
 });
 
+// Ab Chrome 84 (Juli 2020) wird die Wake Lock API unterstützt
+async function requestWakeLock(){
+    if ('wakeLock' in navigator) {
+        console.debug('Wake Lock API wird unterstützt');
+          try {
+            await navigator.wakeLock.request('screen')
+          } catch (err) {
+            console.error(`${err.name}, ${err.message}`);
+          }
+    }   
+}
+// Bildschirm nicht ausschalten
+requestWakeLock();
+
+
 // Globale Variable
 var kmLeftInSector = 0;
 var kmSectorPreset = 0;
@@ -152,3 +167,4 @@ $(function(){
     function mynotify(msg) {
         DevExpress.ui.notify(msg, "info");
     };
+    

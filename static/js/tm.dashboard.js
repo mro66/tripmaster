@@ -1,6 +1,7 @@
 // Bildschirmdimension zum Skalieren
 // var windowDiagonal = Math.sqrt(Math.pow(window.innerHeight, 2) + Math.pow(window.innerWidth, 2))/1000;
 var vmin = Math.sqrt(Math.pow(window.innerHeight, 2))/550;
+var vmin1 = 1 / vmin;
 var AVG_KMH_PRESET = 0;
 var audioClick = document.createElement('audio');
 audioClick.setAttribute('src', '/static/Click.ogg');
@@ -100,7 +101,7 @@ $(function(){
                 font: {
                     family: "Tripmaster Font",
                     color: "var(--tm-digit)",
-                    size: 30,
+                    size: 25*vmin, // 30,
                 },
                 indentFromTick: -20,
             },
@@ -108,7 +109,7 @@ $(function(){
             tickInterval: 10,
             tick: {
                 color: "var(--tm-digit)",
-                length: 16,
+                length: 16*vmin, // 16,
                 width: 4
                 },
         },
@@ -118,17 +119,17 @@ $(function(){
             font: {
                 family: "Tripmaster Font",
                 color: "var(--tm-digit)",
-                size: 30,
+                size: 25*vmin, // 30,
             },
         },
         valueIndicator: {
             color: "var(--tm-digit)",
-            indentFromCenter: 120,
+            indentFromCenter: 120*vmin1, // 120,
             spindleGapSize: 0,
             spindleSize: 0,
             offset: 0,
             type: "triangleNeedle",
-            width: 10
+            width: 10*vmin, // 10,
         },
     });
 
