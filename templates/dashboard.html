@@ -21,7 +21,8 @@
     <script>
 		var DEBUG = {{ debug }};
 		var SAMPLE_TIME = {{ sample_time }};
-		window.jQuery || document.write(decodeURIComponent('%3Cscript src="js/jquery.min.js"%3E%3C/script%3E'))
+		var SECTOR_REVERSE = {{ sector_reverse }};
+		window.jQuery || document.write(decodeURIComponent('%3Cscript src="static/jquery.min.js"%3E%3C/script%3E'))
 	</script>
 	<style>
 	.odometer.odometer-auto-theme.odometer-animating-up .odometer-ribbon-inner, .odometer.odometer-theme-car.odometer-animating-up .odometer-ribbon-inner {
@@ -36,15 +37,15 @@
 	<div id="button-reloadpage"></div>
 	
 	<span class="main">
-	<div id="odometer-kmtotal" class="odometer"></div>
 	<div id="odometer-kmsector"></div>
+	<div id="odometer-kmtotal" class="odometer"></div>
     
-	<div id="box-twocolumn" onClick="fullScreen(); ">
+	<div id="box-twocolumn">
         <div class="tm-background" data-options="dxItem: {ratio: 2}">
-			<div id="circulargauge-speed" onClick="WebSocket_Send('pauseMaster')"></div>
+			<div id="circulargauge-speed" onClick="fullScreen();"></div>
         </div>
         <div class="tm-background" data-options="dxItem: {ratio: 1}">
-			<div id="lineargauge-kmsector"></div>
+			<div id="lineargauge-kmsector" onClick="WebSocket_Send('resetSector');"></div>
         </div>
     </div>
 	</span>

@@ -48,7 +48,7 @@
 
   FORMAT_MARK_HTML = '<span class="odometer-formatting-mark"></span>';
 
-  DIGIT_FORMAT = "(d).dd";
+  DIGIT_FORMAT = "(d),dd";
 
   NUMBER_OF_DIGITS = 5;
 

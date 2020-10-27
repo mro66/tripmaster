@@ -2,6 +2,9 @@ var kmLeftInSector = 0;
 var kmSectorPreset = 0;
 var windowDiagonal = Math.sqrt(Math.pow(window.innerHeight, 2) + Math.pow(window.innerWidth, 2))/1000;
 
+var yesno = ["ja", "nein"];
+var onoff = ["an", "aus"];
+
 $(function(){
 
     // Reload nach Abbruch der WebSocket Verbindung
@@ -11,7 +14,7 @@ $(function(){
 			type: "danger",
 			visible: false,
 			width: "90%",
-			onClick: function(data) {
+			onClick: function(self) {
 			   location.reload();
 			 },
 		});   
@@ -26,6 +29,7 @@ $(function(){
 			geometry: {
 				orientation: "vertical"
 			},
+			height: "100%",
 			value: 0,
 			subvalues: [],
 			subvalueIndicator: {
@@ -38,9 +42,9 @@ $(function(){
 						size: "5vw",
 						color: "Ivory",
 					},
-					customizeText: function (e) {
-						if (e.value == 100) {
-							return Number.parseFloat(kmSectorPreset).toFixed(1) + " km &#10003;";
+					customizeText: function (self) {
+						if (self.value == 100) {
+							return formatNumber(kmSectorPreset) + " km &#10003;";
 						} else  {
 							return "-" + formatDistance(kmLeftInSector);
 						}
@@ -50,8 +54,8 @@ $(function(){
 			scale: {
 				tickInterval: 20,
 				label: {
-					customizeText: function (e) {
-						return e.value+" %";
+					customizeText: function (self) {
+						return self.value+" %";
 					},
 					font: {
 						size: "6vw",
@@ -90,10 +94,22 @@ $(function(){
 
 // Formatierung von Entfernungsangaben: unter 1 km in Metern, darüber in Kilometer mit einer Nachkommastelle	
 	
-	function formatDistance(valDistance) {
-		if (valDistance < 1) {
-			return (valDistance * 1000) + " m";
+	function formatDistance(distance) {
+		if (Math.abs(distance) < 1) {
+			return (distance * 1000) + " m";
 		} else {
-			return Number.parseFloat(valDistance).toFixed(1) + " km";
+			return formatNumber(distance) + " km";
 		}
+	};
+
+// Formatierung von Zahlen mit einer Nachkommastelle
+
+	function formatNumber(value) {
+		return parseFloat(value).toLocaleString('de-DE', {minimumFractionDigits: 1, maximumFractionDigits: 1})
+	}
+
+// DEBUG
+
+	function debugmsg (msg) {
+		DevExpress.ui.notify(msg, "info");
 	};

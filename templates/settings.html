@@ -15,11 +15,13 @@
     <script src="/static/tm.settings.js"></script>
     <script src="/static/tm.common.js"></script>
     <script src="/static/websocket.js"></script>
-	<script>window.jQuery || document.write(decodeURIComponent('%3Cscript src="js/jquery.min.js"%3E%3C/script%3E'))</script>
     <script>
 		var DEBUG = {{ debug }};
 		var SAMPLE_TIME = {{ sample_time }};
-		var SECTOR_REVERSE = ({{ sector_reverse }} == -1);
+		var SECTOR_REVERSE = {{ sector_reverse }};
+		window.jQuery || document.write(decodeURIComponent('%3Cscript src="static/jquery.min.js"%3E%3C/script%3E'))
+		
+		var TYRE_SIZE = {{ tyre_size }};
 	</script>
 </head>
 <body onload="WebSocket_Open('settings')" class="dx-viewport">
@@ -33,7 +35,7 @@
 							<div id="button-resetsector"></div>
 						</div>
 					</div>
-					<div class="dx-field">
+					<div class="dx-field flex-row">
 						<div class="dx-field-value">
 							<div id="selectbox-sectorkm"></div>
 						</div>
@@ -63,8 +65,7 @@
 						</div>
 						<div class="dx-field-label">Umkehren</div>
 						<div class="dx-field-value">
-							<div id="radio-group-sectorreverse" class="demo-light"></div>
-							<!-- <div id="switch-sectorreverse"></div> -->
+							<div id="radio-group-sectorreverse"></div>
 						</div>
 					</div>
 				</div>
@@ -72,7 +73,7 @@
 
 			<script id="glpTab" type="text/html">
 				<div class="dx-fieldset">
-					<div class="dx-field">
+					<div class="dx-field flex-row">
 						<div class="dx-field-value">
 							<div id="selectbox-glpkm"></div>
 						</div>
@@ -85,9 +86,23 @@
 			
 			<script id="setupTab" type="text/html">
 				<div class="dx-fieldset">
-					<div class="dx-field-label demo-dark">Tripmaster</div>
-					<div class="dx-field-value">
-						<!-- <div id="radio-group-stoptripmaster" class="demo-light"></div> -->
+					<div class="dx-field flex-row">
+						<div class="dx-field-label">Pausieren</div>
+						<div class="dx-field-value">
+							<div id="radio-group-pausetripmaster"></div>
+						</div>
+					</div>
+					<div class="dx-field flex-row">
+						<div class="dx-field-label">Radumfang</div>
+						<div class="dx-field-value flex-row-stretch">
+							<div id="numberbox-tyre-size"></div>
+							<div id="button-set-tyre-size"></div>
+						</div>
+					</div>
+					<div class="dx-field" id="reset-tripmaster">
+						<div class="dx-field-value">
+							<div id="button-reset-tripmaster"></div>
+						</div>
 					</div>
 				</div>
 			</script>

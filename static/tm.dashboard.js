@@ -35,7 +35,7 @@ $(function(){
         rangeContainer: {
             backgroundColor: "black",
         },
-        value: 75,
+        value: 0,
         valueIndicator: {
             type: "twoColorNeedle",
             color: "black",
@@ -141,7 +141,7 @@ function resizeAndPosition() {
 
 function fullScreen() {
 	if (screenfull.enabled) {
-		screenfull.request();
+		screenfull.toggle();
 		// screen.orientation.lock("landscape-secondary");
 	} 
 };

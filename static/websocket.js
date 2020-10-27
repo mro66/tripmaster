@@ -46,10 +46,10 @@ function WebSocket_Open(page) {
     ws.onmessage = function(evt) {
 		var message = evt.data;
         var values = message.split(':');
-        mylog('Empfangene Nachricht: >'+message+'<');
         if (values[0] == "data") { 
 			// T, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN
 
+			// mylog('<- '+message);
 			// Tacho
 			if (document.getElementById("circulargauge-speed") !== null) {
 				speedGauge = $('#circulargauge-speed').dxCircularGauge('instance');
@@ -60,13 +60,13 @@ function WebSocket_Open(page) {
 				// Vorgegebene  Durchschnittsgeschwindigkeit TODO
 				var AVG_KMH_PRESET = 90.0;
 			} 
-			// Odometer
+			// Odometer, mit , als Dezimaltrennzeichen
 			if (document.getElementById("odometer-kmtotal") !== null) {
-				document.getElementById("odometer-kmtotal").innerHTML = values[5];
+				document.getElementById("odometer-kmtotal").innerHTML = parseFloat(values[5]).toLocaleString('de-DE');
 			} 
 			if (document.getElementById("odometer-kmsector") !== null) {
-				document.getElementById("odometer-kmsector").innerHTML = values[6];
-			// Linearanzeige
+				document.getElementById("odometer-kmsector").innerHTML = parseFloat(values[6]).toLocaleString('de-DE');
+			// Linearanzeige: restliche km in der Etappe
 			} 
 			if (document.getElementById("lineargauge-kmsector") !== null) {
 				kmSectorPreset = values[7];
@@ -74,14 +74,34 @@ function WebSocket_Open(page) {
 				setKmSector(values[9]);
 			} 
 			// Textboxen
-			if (document.getElementById("textbox-sector") !== null) {
-				$("#textbox-sector").dxTextBox('instance').option("value", formatDistance(values[6]));
-			} 
+			// Länge der Etappe
 			if (document.getElementById("textbox-sectorpreset") !== null) {
 				$("#textbox-sectorpreset").dxTextBox('instance').option("value", formatDistance(values[7]));
 			} 
+			// Strecke seit Reset
+			if (document.getElementById("textbox-sector") !== null) {
+				$("#textbox-sector").dxTextBox('instance').option("value", formatDistance(values[6]));
+			} 
 		} else {
-			// values[0] = text, values[1] = type ("info", "warning", "error" or "success"), 
+			mylog('<-: '+message);
+			// values[0] = text
+			// values[1] = type ("info", "warning", "error" or "success")
+			// values[2] = command
+			// values[3] = parameter
+			// values[4] = value
+			if (values.length == 3) {
+				if (document.getElementById("radio-group-pausetripmaster") !== null) {
+					if (values[2] === "masterStart") {
+						$("#radio-group-pausetripmaster").dxRadioGroup('instance').option("value", yesno[1]);
+					} else if (values[2] === "masterPause") {
+						$("#radio-group-pausetripmaster").dxRadioGroup('instance').option("value", yesno[0]);
+					}
+				}
+			} else if (values.length == 5) {
+				if (document.getElementById("numberbox-tyre-size") !== null) {
+					$("#numberbox-tyre-size").dxNumberBox('instance').opion("value", parseFloat(values[4]));
+				}
+			};
 			DevExpress.ui.notify(values[0], values[1]);
 		}
     }
@@ -90,7 +110,7 @@ function WebSocket_Open(page) {
 function WebSocket_Send(data) {
     if (ws_status == "opened") {
         ws.send(data);
-        mylog('Gesendete Nachricht: >>>'+data+'<<<');
+        mylog('->: '+data);
     }
 }
 

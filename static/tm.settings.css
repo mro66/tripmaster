@@ -1,6 +1,6 @@
 
 /* TabPanel */
-.dx-tab, .dx-switch {
+.dx-tab, .dx-switch, .dx-field-label {
 	font-size: 5vw;
 }
 
@@ -19,35 +19,29 @@
 	border: 1px blue solid;
 }
 
-/* Switch */
-#switch-sectorreverse {
-	float: left;
-	width: 100%;
+/* Setup Tab */
+
+.setupTab .dx-field-label {
+	font-size: 6vw;
 }
-.dx-switch-container {
-    height: 43px;
-	border-radius: 4px;
-	border-color: #f4f4f4;
+
+.flex-row {
+	display: flex;
+	align-items: center;
 }
-.dx-switch-handle {
-    height: 37px;
-	flex-basis: 22px;
+
+.flex-row-stretch {
+	display: flex;
+	align-items: stretch;
+	justify-content: space-between;
 }
-.dx-switch-on, .dx-switch-off {  
-	font-size: 22px;
-	font-weight: normal;
-	padding-top: 8px;
+
+.flex-column {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
 }
-.dx-switch-on {
-	padding-right: 0px;
-}
-.dx-switch-off {
-	padding-left: 0px;
-}
-.dx-switch-on-value .dx-switch-handle:before {
-    background-color: #d9534f;
-}
-.dx-switch-handle:before {
-    background-color: #5cb85c;
-	border-radius: 10px;
+
+#reset-tripmaster {
+	margin-top: 30px;
 }
