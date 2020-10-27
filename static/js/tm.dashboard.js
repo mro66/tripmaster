@@ -19,9 +19,12 @@ $(function(){
 		}],
         onSelectionChanged: function(e) {
 			if (e.component.option("selectedIndex")==1) {
-				$("#lineargauge-kmsector").appendTo("#right-regtest");
+                // document.getElementById("lineargauge-kmsector").style.display = "block";
+                // document.getElementById("status-information").style.display = "block";
+				// $("#lineargauge-kmsector").appendTo("#right-regtest");
 			} else {
-				$("#lineargauge-kmsector").appendTo("#right-sector");
+				// $("#lineargauge-kmsector").appendTo("#right-sector");
+                // document.getElementById("lineargauge-kmsector").style.display = "none";
 			}
         }
     });
@@ -89,12 +92,14 @@ $(function(){
 		redrawOnResize: true,
     });
 
+ 
 	$("#lineargauge-kmsector").dxLinearGauge($.extend(true, {}, linearGaugeOptions, {
 		elementAttr: {
-			style: "display:none",
+            // style: "display: block",
 		},
 		size: {
 			height: window.innerHeight,
+            width: function(e) { return e.element.width(); },
 		},
 		rangeContainer: {
 			width: 5 * windowDiagonal,
@@ -169,9 +174,10 @@ $(function(){
 			style: "color: var(--tm-green)",
 		},
 		onClick: function(e) {
-			mynotify("Ortseingangs Button gedrückt");
+			mynotify("OK Button gedrückt");
 		},
 	})).dxButton("instance"); 
+
 
 	$("#circulargauge-devavgspeed").dxCircularGauge({
 		animation: {
@@ -183,7 +189,7 @@ $(function(){
 			endAngle: 30
 		},
 		size: {
-			height: window.innerHeight,
+			height: window.innerHeight * 0.7,
 		},
 		scale: {
 			startValue: -25,
@@ -332,4 +338,9 @@ function resizeAndPosition() {
     // tyre
     statusTyre.style.left = x - statusTyre.clientWidth / 2 + spindleSize * 2 + "px";
 	statusTyre.style.visibility = "visible";
+    
+    // document.getElementById("lineargauge-kmsector").style.display = "none";
+    // document.getElementById("status-information").style.display = "";
+    
+    
 };

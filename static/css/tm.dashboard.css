@@ -31,10 +31,11 @@
 
 .status-indicator {
     position: absolute;
+    visibility: hidden;
     font-family: 'Tripmaster Font';
     font-size: 4vw;
     color: lightgray;
-    /* text-shadow: 0 -1px 1px #666666, 0 1px 1px #FFFFFF;    visibility: hidden; */
+    /* text-shadow: 0 -1px 1px #666666, 0 1px 1px #FFFFFF;*/
 }
 
 .statusbutton {
