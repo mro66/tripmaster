@@ -31,7 +31,7 @@ $(function(){
         containerBackgroundColor: "Ivory",
 		animation: {
             enabled: true,
-            easing: "linear"
+            easing: "linear",
         },
 		scale: {
             startValue: 0, 

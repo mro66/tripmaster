@@ -169,10 +169,6 @@ TRACK_GREEN = simplekml.Style()
 TRACK_GREEN.linestyle.width = 5
 TRACK_GREEN.linestyle.color = "ff5cb85c"
 
-STAGE_START_STYLE = simplekml.Style()
-STAGE_START_STYLE.iconstyle.icon.href = KML.addfile(tripmasterPath+"/static/kmz/checkered_flag_green.gif")
-STAGE_FINISH_STYLE = simplekml.Style()
-STAGE_FINISH_STYLE.iconstyle.icon.href = KML.addfile(tripmasterPath+"/static/kmz/checkered_flag_red.gif")
 ROUNDABOUT_STYLE = simplekml.Style()
 ROUNDABOUT_STYLE.iconstyle.icon.href = KML.addfile(tripmasterPath+"/static/kmz/roundabout.gif")
 ROUNDABOUT_DISABLED_STYLE = simplekml.Style()
@@ -187,8 +183,6 @@ CHECKPOINT_DISABLED_STYLE = simplekml.Style()
 CHECKPOINT_DISABLED_STYLE.iconstyle.icon.href = KML.addfile(tripmasterPath+"/static/kmz/checkpoint_disabled.gif")
 
 STYLES = {
-    "stage_start": STAGE_START_STYLE,
-    "stage_finish": STAGE_FINISH_STYLE,
     "roundabout": ROUNDABOUT_STYLE,
     "roundabout_disabled": ROUNDABOUT_DISABLED_STYLE,
     "townsign": TOWNSIGN_STYLE,
@@ -205,6 +199,43 @@ TYPES = {
     "stampcheck": "Stempelkontrolle",
     "mutecheck": "Stummer Wächter",
     }
+
+class POINT:
+    def __init__(self, name, icon, iconcolor, mapicon = ""):
+        self.name = name
+        self.icon = icon
+        self.iconcolor = "var(--tm-" + iconcolor + ")"
+        self.mapicon = mapicon       
+        enabledIcon = tripmasterPath + "/static/kmz/" + self.mapicon + ".gif"
+        disabledIcon = tripmasterPath + "/static/kmz/" + self.mapicon + "_disabled.gif"
+        if os.path.exists(enabledIcon):
+            self.style = simplekml.Style()
+            self.style.iconstyle.icon.href = KML.addfile(enabledIcon)
+        if os.path.exists(disabledIcon):
+            self.disabledstyle = simplekml.Style()
+            self.disabledstyle.iconstyle.icon.href = KML.addfile(disabledIcon)
+        
+POINTS = {
+    # Etappenstart und -ziel
+    "stage_start": POINT("Start Etappe", "fas fa-flag-checkered", "red", "checkered_flag_start"),
+    "stage_finish": POINT("Ende Etappe", "fas fa-flag-checkered", "green", "checkered_flag_finish"),
+    
+    # Checkpoints
+    "null": POINT("Keine", "fas fa-minus", "red"),
+    "roundabout": POINT("Kreisverkehr", "fas fa-sync", "blue", "roundabout"),
+    "townsign": POINT("Ortsschild", "fas fa-sign", "yellow", "townsign"),
+    "stampcheck": POINT("Stempelkontrolle", "fas fa-stamp", "red", "stampcheck"),
+    "mutecheck": POINT("Stummer Wächter", "fas fa-neuter", "green", "mutecheck"),
+    "checkpoint": POINT("Sonstiges", "fas fa-map-marker-alt", "green", "checkpoint"),
+
+    # Countpoints
+    # "null": POINT("Keine", "Keine", "fas fa-minus", "red"),
+    # "roundabout": POINT("Kreisverkehr", "fas fa-sync", "blue", "roundabout"),
+    "countpoint": POINT("Sonstiges", "fas fa-hashtag", "blue", "countpoint"),
+    }
+print("---")
+print(POINTS["mutecheck"].style)
+print(POINTS["mutecheck"].name) 
 
 STAGE_NO = 0
 STAGE_START = None
@@ -241,7 +272,7 @@ def initStage(LON, LAT):
     SECTOR_NO = 0
     logger.debug("initStage")
     initSector(LON, LAT)
-    setPoint(FOLDERS["stage"], STYLES["stage_start"], LON, LAT, "", "Start Etappe")
+    setPoint(FOLDERS["stage"], POINTS["stage_start"].style, LON, LAT, "", POINTS["stage_start"].name)
 
 # Abschnitt initialisieren
 def initSector(LON, LAT):
@@ -571,7 +602,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                     messageToAllClients(self.wsClients, "Etappe gestartet!:success")
                 else:
                     STAGE_STARTED = False
-                    setPoint(FOLDERS["stage"], STYLES["stage_finish"], currentPos.lon, currentPos.lat, "", "Ende Etappe")
+                    setPoint(FOLDERS["stage"], POINTS["stage_finish"].style, currentPos.lon, currentPos.lat, "", POINTS["stage_finish"].name)
                     messageToAllClients(self.wsClients, "Etappe beendet!:warning")
             else:
                 messageToAllClients(self.wsClients, "GPS ungenau! Wiederholen:error")
@@ -610,14 +641,14 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         elif (command == "countpoint") or (command == "checkpoint"):
             currentPos = getGPS();
             if currentPos is not None:
-                NEWPOINT = setPoint(FOLDERS[command], STYLES[param], currentPos.lon, currentPos.lat, TYPES[param])
+                NEWPOINT = setPoint(FOLDERS[command], POINTS[param].style, currentPos.lon, currentPos.lat, POINTS[param].name)
                 if command == "countpoint":
                     self.COUNTPOINTS.append(NEWPOINT)
                     id = self.COUNTPOINTS.index(NEWPOINT)
                 elif command == "checkpoint":
                     self.CHECKPOINTS.append(NEWPOINT)
                     id = self.CHECKPOINTS.index(NEWPOINT)
-                messageToAllClients(self.wsClients, TYPES[param] + " registriert:success:" + command + "Registered#" + str(id) + "#" + TYPES[param] + "##1")
+                messageToAllClients(self.wsClients, POINTS[param].name + " registriert:success:" + command + "Registered#" + str(id) + "#" + POINTS[param].name + "##1")
             else:
                 messageToAllClients(self.wsClients, "GPS ungenau! Wiederholen:error")
 
