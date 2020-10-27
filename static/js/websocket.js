@@ -49,25 +49,28 @@ function WebSocket_Open(page) {
 		var message = evt.data;
         var values = message.split(':');
         if (values[0] == "data") {
-			// mylog(message);
-	// 1, 2,    3,   4        5,        6,         7,         8,                9,                      10                  11
-	// T, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN, DEV_AVG_KMH
+			mylog(message);
+	// 1, 2,    3,   4        5,        6,         7,         8,                9,                      10,                 11,          12,      13,  14
+	// T, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN, DEV_AVG_KMH, KMH_GPS, LAT, LON
 			KMH = values[3]; AVG_KMH = values[4]; KM_TOTAL = values[5]; KM_RALLYE = values[6]; KM_SECTOR = values[7];
 			KM_SECTOR_PRESET = values[8]; KM_SECTOR_TO_BE_DRIVEN = values[9]; FRAC_SECTOR_DRIVEN = values[10]; DEV_AVG_KMH = values[11];
+			KMH_GPS = values[12]; LAT = values[13]; LON = values[14]; KM_TOTAL_GPS = values[15]; KM_RALLYE_GPS = values[16]; KM_SECTOR_GPS = values[17];
 			// Tacho
+			aktKMH = KMH;
+			if (aktKMH == 0.0) aktKMH = KMH_GPS;
 			if (document.getElementById("circulargauge-speed") !== null) {
 				speedGauge = $('#circulargauge-speed').dxCircularGauge('instance');
 				// Die aktuelle Geschwindigkeit ist der Hauptwert, ...
-				speedGauge.value(KMH);
+				speedGauge.value(aktKMH);
 				// ... die Durchschnittsgeschwindigkeit der Nebenwert des Tachos 
 				speedGauge.subvalues([AVG_KMH]);
 			} 
 			// Odometer, mit , als Dezimaltrennzeichen
 			if (document.getElementById("odometer-kmtotal") !== null) {
-				document.getElementById("odometer-kmtotal").innerHTML = parseFloat(KM_RALLYE).toLocaleString('de-DE');
+				document.getElementById("odometer-kmtotal").innerHTML = parseFloat(KM_RALLYE_GPS).toLocaleString('de-DE');
 			} 
 			if (document.getElementById("odometer-kmsector") !== null) {
-				document.getElementById("odometer-kmsector").innerHTML = parseFloat(KM_SECTOR).toLocaleString('de-DE');
+				document.getElementById("odometer-kmsector").innerHTML = parseFloat(KM_SECTOR_GPS).toLocaleString('de-DE');
 			// Linearanzeige: restliche km in der Etappe
 			} 
 			if (document.getElementById("lineargauge-kmsector") !== null) {
@@ -112,10 +115,15 @@ function WebSocket_Open(page) {
 				AVG_KMH_PRESET = parseFloat(values[1]);
 				$('#circulargauge-devavgspeed').dxCircularGauge('instance').option("scale.label.customizeText", function(arg) {return formatSpeed(AVG_KMH_PRESET);});
 			} 
-		} else if (values[0] == "config") {
-			mylog(message);
-			if (document.getElementById("config") !== null) {
-				document.getElementById("config").innerHTML = values[1];
+		} else if (values[0] == "getConfig") {
+			// mylog(message);
+			var keyvalues = values[1].split('&');
+			if (document.getElementById("popup-editconfiguration") !== null) {
+				for (var i=0; i<keyvalues.length; i++) {
+					keyvalue = keyvalues[i].split('=');
+					document.getElementById("label-key"+i).innerHTML = keyvalue[0];
+					$("#textbox-key"+i).dxTextBox('instance').option("value", keyvalue[1]);
+				};
 			} 
 		} else {
 			// mylog('<-: '+message);
@@ -132,9 +140,14 @@ function WebSocket_Open(page) {
 					if (COMMAND == "regTestStarted") {
 						$("#multiview-dashboard").dxMultiView('instance').option("selectedIndex", 1);
 					} else if (COMMAND == "regTestStopped") {
-						AVG_KMH_PRESET = 0;
-						$('#circulargauge-devavgspeed').dxCircularGauge('instance').option("scale.label.customizeText", function(arg) {return formatSpeed(AVG_KMH_PRESET);});
-						setTimeout(function() {$("#multiview-dashboard").dxMultiView('instance').option("selectedIndex", 0)}, 2000);
+						setTimeout(function() 
+							{
+								$("#multiview-dashboard").dxMultiView('instance').option("selectedIndex", 0);
+								AVG_KMH_PRESET = 0;
+								$('#circulargauge-devavgspeed').dxCircularGauge('instance').option("scale.label.customizeText", function(arg) {
+									return formatSpeed(AVG_KMH_PRESET);
+								});
+							}, 2000);
 					}
 				};
 			};

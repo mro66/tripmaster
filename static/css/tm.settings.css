@@ -27,6 +27,14 @@ wird von mobilen Browsern ignoriert...
     width: 100%;
 }
 
+#button-saveconfiguration {
+	margin: 30px 0px;
+}
+
+#button-resetconfiguration {
+	margin: 0px;
+}
+
 /* TextBox */
 .dx-textbox-red {
 	border: 1px var(--tm-red) solid ;

@@ -212,7 +212,6 @@ $(function(){
 		},
 		// redrawOnResize: true,
 		onOptionChanged: function(e) {
-			mylog(document.querySelectorAll('#circulargauge-devavgspeed .dxg-text'));
 			var subValueIndicator = document.querySelectorAll('#circulargauge-devavgspeed .dxg-subvalue-indicator')[0];
 			var valueIndicator = document.querySelectorAll('#circulargauge-devavgspeed .dxg-value-indicator')[0];
 			var valueIndicatorText = document.querySelectorAll('#circulargauge-devavgspeed .dxg-text')[0];

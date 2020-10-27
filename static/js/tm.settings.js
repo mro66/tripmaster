@@ -516,7 +516,7 @@ $(function(){
 			},
         }).dxSwitch("instance");
         
-		$("#selectbox-configuration").dxSelectBox({
+		var configurationSelectBox = $("#selectbox-configuration").dxSelectBox({
 			dataSource: [
 				"Jaguar",
 				"Audi",
@@ -524,10 +524,97 @@ $(function(){
 			],
 			value: ACTIVE_CONFIG,
 			onValueChanged: function(e) {
-				WebSocket_Send('Konfiguration:'+e.component.option("value"));
+				WebSocket_Send('changeConfig:'+e.component.option("value"));
 			}
-		});
+		}).dxSelectBox("instance");
 				
+		$("#button-editconfiguration").dxButton({
+			icon: "edit",
+			width: "25%",
+			disabled: false,
+			onClick: function(e) { 
+				$("#popup-editconfiguration").dxPopup("show");
+			},
+		});
+
+		var editConfigurationPopup = $("#popup-editconfiguration").dxPopup({
+			showTitle: true,
+			showCloseButton: true,
+			dragEnabled: false,
+			closeOnOutsideClick: true,
+			onShown: function (e) {
+				e.component.option("title", "Konfiguration '" + configurationSelectBox.option("value") + "'");
+				$("#textbox-key0").dxTextBox($.extend(true, {}, inputTextBoxOptions, {
+					mask: "x",
+					maskRules: {"x": /[12]/}
+				}));
+				$("#textbox-key1").dxTextBox($.extend(true, {}, inputTextBoxOptions, {
+					mask: "xxx",
+					maskRules: {"x": /[0-9]/}
+				}));
+				$("#textbox-key2").dxTextBox($.extend(true, {}, inputTextBoxOptions, {
+					mask: "xxxxxxxxxxxxxxxxxxxx",
+					maskRules: {"x": /[0-9 +-/*]/},
+				}));
+				WebSocket_Send('getConfig');
+				$("#button-saveconfiguration").dxButton({
+					icon: "save",
+					text: "Speichern",
+					type: "success",
+					disabled: true,
+					onClick: function(e) {
+						var writeConfig = '';
+						for (var i=0; i<3; i++) {
+							writeConfig += document.getElementById("label-key"+i).innerHTML + "=" +
+							$("#textbox-key"+i).dxTextBox('instance').option("value") + "&";
+						}
+						// letztes '&' löschen
+						writeConfig = writeConfig.substr(0, writeConfig.length-1);
+						WebSocket_Send('writeConfig:' + writeConfig);
+						editConfigurationPopup.hide();
+					},
+				});
+				$("#button-resetconfiguration").dxButton({
+					icon: "revert",
+					text: "Zurücksetzen",
+					type: "default",
+					onClick: function(e) {
+						WebSocket_Send('getConfig');
+						$("#button-saveconfiguration").dxButton("instance").option("disabled", true);
+					},
+				});
+			},
+		}).dxPopup("instance");
+
+		// Optionen der Eingabetextboxen
+		var inputTextBoxOptions = {
+			// 'value' muss definiert sein, sonst ist ein gelöschter Wert valide
+			value: "1",
+			maskInvalidMessage: "Unzulässiger Wert",
+			showClearButton: true,
+			onChange: function(e) {
+				var isAllValid = true;
+
+				try {
+					result = eval(e.component.option("value"));
+					if (typeof(result) == "undefined") {
+						e.component.option("isValid", false);
+					};
+				}
+				catch (error) {
+					e.component.focus();
+					e.component.option("isValid", false);
+					DevExpress.ui.notify("Keine auswertbare Anweisung", "error");
+				};
+
+				for (var i=0; i<3; i++) {
+					isAllValid = $("#textbox-key"+i).dxTextBox('instance').option("isValid");
+					if (!isAllValid) break;
+				}
+				$("#button-saveconfiguration").dxButton("instance").option("disabled", !isAllValid);
+			},
+		};
+		
 		$("#button-reset-tripmaster").dxButton({
 			text: "Tripmaster zurücksetzen",
 			type: "danger",

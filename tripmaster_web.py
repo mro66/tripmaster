@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 from __future__ import print_function
 import configparser
+import gpsd
 import locale
 import math
 import os.path
+import threading
 import tornado.web
 import tornado.websocket
 import tornado.httpserver
 import tornado.ioloop
-import threading
 
 #-------------------------------------------------------------------
 # Einstellungen des Tripmasters
@@ -25,45 +26,54 @@ config.read(configFileName)
 ACTIVE_CONFIG = config.get("Settings", "aktiv")
 
 # Importe - für VM kommentieren
-# import pigpio
-# from read_RPM import reader
-# import RPi.GPIO as GPIO
+import pigpio
+from read_RPM import reader
+import RPi.GPIO as GPIO
+# Einrichten der BCM GPIO Nummerierung - für VM kommentieren
+GPIO.setmode(GPIO.BCM)
 
-# Einrichten der BCM GPIO Nummerierung  - für VM kommentieren
-# GPIO.setmode(GPIO.BCM)
-
-# GPIO # des Reedkontakts
-REED_GPIO = 14
 # Verbindung zu pigpio
 pi = None
-# Der UMIN_READER
-UMIN_READER = None
+# Die UMIN_READER
+UMIN_READER_1 = None
+UMIN_READER_2 = None
+# GPIO Pins der Sensoren
+GPIO_PIN_1 = 17 # weiß
+GPIO_PIN_2 = 18 # blau
+# Impulse pro Umdrehung
+PULSES_PER_REV = 1.0
+
+# Verbindung zum GPS Deamon
+gpsd.connect()
 
 # Messen alle ... Sekunden
 SAMPLE_TIME = 1.0
 # Messzeitpunkt gesamt und Etappe
 T = 0.0
 T_SECTOR = 0.0
-# Umdrehungen pro Minute
-UMIN = 0.0
-MS = 0.0
+
 # Anzahl Sensoren
-N_SENSORS = 0
+N_SENSORS = 1
 # Übersetzung Abtriebswelle - Achswelle (z. B. Differenzial beim Jaguar)
-TRANSMISSION_RATIO = 0.0
+TRANSMISSION_RATIO = 1.0
 # Reifenumfang in m
-TYRE_SIZE = 0.0
+TYRE_SIZE = 2.0
 # Liest die Parameter der aktiven Konfiguration
-def readConfig():
+def setConfig():
     global N_SENSORS, TRANSMISSION_RATIO, TYRE_SIZE
     N_SENSORS = config.getint(ACTIVE_CONFIG, "Sensoren")
     TRANSMISSION_RATIO = eval(config.get(ACTIVE_CONFIG, "Übersetzung"))
     TYRE_SIZE = config.getint(ACTIVE_CONFIG, "Radumfang") / 100
-    ret = "Konfiguration - " + ACTIVE_CONFIG
+    
+setConfig()
+
+def getConfig():
+    ret = ''
     for (each_key, each_val) in config.items(ACTIVE_CONFIG):
-        ret += "<br>" + each_key + " - " + each_val
-    return ret
-readConfig()
+        ret += each_key + "=" + each_val + "&"
+    # das letzte Zeichen löschen
+    return ret[:-1]
+
 # Durchschnittsgeschwindigkeit in Kilometer pro Stunde
 AVG_KMH = 0.0
 # Vorgegebene  Durchschnittsgeschwindigkeit
@@ -72,6 +82,11 @@ AVG_KMH_PRESET = 0.0
 KM_TOTAL = 0.0
 KM_RALLYE = 0.0
 KM_SECTOR = 0.0
+LAT_PREV = None
+LON_PREV = None
+KM_TOTAL_GPS = 0.0
+KM_RALLYE_GPS = 0.0
+KM_SECTOR_GPS = 0.0
 # Vorgegebene Etappenlänge
 KM_SECTOR_PRESET = 0.0
 # Rückwärtszählen beim Verfahren
@@ -111,8 +126,8 @@ def WebRequestHandler(requestlist):
         param = requestsplit[1]
         if param == "dummy":
             param = "0"
-        if command == "RPM":
-            returnlist = getRPM()
+        if command == "getData":
+            returnlist = getData()
         if command == "regTest":
             global COUNTDOWN
             COUNTDOWN -= 1
@@ -120,12 +135,19 @@ def WebRequestHandler(requestlist):
  
     return returnlist
 
-def getRPM():
-    global UMIN, T, T_SECTOR, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, REVERSE, AVG_KMH, AVG_KMH_PRESET
-    # UMIN ermitteln
-    # UMIN = int(UMIN_READER.RPM() + 0.5)
+def getData():
+    global N_SENSORS, T, T_SECTOR, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, REVERSE, AVG_KMH, AVG_KMH_PRESET
+    global KM_TOTAL_GPS, KM_RALLYE_GPS, KM_SECTOR_GPS, LAT_PREV, LON_PREV
+    
+    # Antriebswellensensor(en)
+    
+    # UMIN ermitteln - für VM kommentieren
+    UMIN = int(UMIN_READER_1.RPM() + 0.5)
+    if N_SENSORS > 1:
+        UMIN += int(UMIN_READER_2.RPM() + 0.5)
+        UMIN = UMIN / 2    
     #... ohne Sensor
-    UMIN = 2000 + math.sin((T * 5)/180 * math.pi) * 1000
+    # UMIN = 2000 + math.sin((T * 5)/180 * math.pi) * 1000
     # Messzeitpunkt gesamt und Etappe
     T += SAMPLE_TIME
     T_SECTOR += SAMPLE_TIME
@@ -151,15 +173,57 @@ def getRPM():
         DEV_AVG_KMH = 0.0
         if AVG_KMH_PRESET > 0.0:
             DEV_AVG_KMH = AVG_KMH - AVG_KMH_PRESET
-    return "data:{0:0.1f}:{1:0.1f}:{2:0.1f}:{3:0.1f}:{4:0.2f}:{5:0.2f}:{6:0.2f}:{7:0.2f}:{8:0.2f}:{9:}:{10:0.1f}".format(T, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN, DEV_AVG_KMH)
+    
+    #GPS
+    
+    # Aktuelle Position
+    GPS_CURRENT = gpsd.get_current()
+
+    DIST = 0.0
+    
+    # Mindestens ein 2D Fix ist notwendig
+    if GPS_CURRENT.mode >= 2:
+        # KMH_GPS = GPS_CURRENT.speed() * 3.6
+        KMH_GPS = GPS_CURRENT.hspeed
+        if KMH_GPS < 1.0:
+            KMH_GPS = 0.0
+        else:
+            KMH_GPS *= 3.6
+        LAT = GPS_CURRENT.lat
+        LON = GPS_CURRENT.lon
+        if (LAT_PREV is not None) and (LON_PREV is not None) and (KMH_GPS > 0.0):
+            DIST = calcGPSdistance(LAT_PREV, LAT, LON_PREV, LON)
+        LAT_PREV = LAT
+        LON_PREV = LON
+        KM_TOTAL_GPS += DIST
+        KM_RALLYE_GPS += DIST * REVERSE
+        KM_SECTOR_GPS += DIST * REVERSE
+    else:
+        KMH_GPS = 0.0
+        LAT = 0.0
+        LON = 0.0
+    
+    datastring = "data:{0:0.1f}:{1:0.1f}:{2:0.1f}:{3:0.1f}:{4:0.2f}:{5:0.2f}:{6:0.2f}:{7:0.2f}:{8:0.2f}:{9:}:{10:0.1f}:{11:0.1f}:{12:}:{13:}:{14:0.2f}:{15:0.2f}:{16:0.2f}".format(T, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN, DEV_AVG_KMH, KMH_GPS, LAT, LON, KM_TOTAL_GPS, KM_RALLYE_GPS, KM_SECTOR_GPS)
+    
+    with open('/home/pi/tripmaster/datafile.csv', 'a+') as datafile:
+        datafile.write(datastring.replace(":", ";").replace(".", ",") + "\n") 
+    
+    return datastring
+
+def calcGPSdistance(phi1, phi2, lambda1, lambda2):
+    p1 = math.radians(phi1)
+    p2 = math.radians(phi2)
+    l1 = math.radians(lambda1)
+    l2 = math.radians(lambda2)
+    x = (l2-l1) * math.cos((p1+p2)/2)
+    y = (p2-p1)
+    return math.sqrt(x*x + y*y) * 6371
 
 def startTheMaster(client):
-    timed = threading.Timer(SAMPLE_TIME, pushSensorData, [client.wsClients, "RPM", "{:.1f}".format(SAMPLE_TIME)] )
+    timed = threading.Timer(SAMPLE_TIME, pushSensorData, [client.wsClients, "getData", "{:.1f}".format(SAMPLE_TIME)] )
     timed.start()
     timers.append(timed)
     messageToAllClients(client.wsClients, "Tripmaster gestartet!:success:masterStarted")
-    messageToAllClients(client.wsClients,"config:" +readConfig())
-
     
 def pushSensorData(clients, what, when):
     what = str(what)
@@ -199,19 +263,21 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def check_origin(self, origin):
         return True   
     def open(self, page):
-        global theMaster, pi, UMIN_READER
-        printDEBUG("WebSocket Client verbunden")
+        global theMaster, pi, UMIN_READER_1, UMIN_READER_2
         self.stream.set_nodelay(True)
         
         # Jeder WebSocket Client wird dem Array wsClients hinzugefügt
         self.wsClients.append(self)
         if theMaster is None:
             # Verbinden mit pigpio - für VM kommentieren
-            # pi = pigpio.pi()
+            pi = pigpio.pi()
             # UMIN_READER starten - für VM kommentieren
-            # UMIN_READER = reader(pi, REED_GPIO)
+            UMIN_READER_1 = reader(pi, GPIO_PIN_1, PULSES_PER_REV)
+            UMIN_READER_2 = reader(pi, GPIO_PIN_2, PULSES_PER_REV)
+            
             theMaster = self
             startTheMaster(theMaster)
+        printDEBUG("Anzahl verbundener WebSocket Client: " + str(len(self.wsClients)))
     # the client sent a message
     def on_message(self, message):
         global theMaster, T, T_SECTOR, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, REVERSE, ACTIVE_CONFIG, COUNTDOWN, AVG_KMH_PRESET
@@ -274,35 +340,56 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             KM_SECTOR_PRESET = 0.0
             REVERSE = 1
             messageToAllClients(self.wsClients, "Tripmaster zurückgesetzt!:success")
-        elif command == "Konfiguration":
+        elif command == "changeConfig":
             ACTIVE_CONFIG = param
             config.set("Settings", "aktiv", ACTIVE_CONFIG)
             with open(configFileName, "w") as configfile:    # save
                 config.write(configfile)
-            self.write_message("config:" +readConfig())
-            self.write_message(command + " auf '"+ ACTIVE_CONFIG +"' gesetzt:success")
+            setConfig()
+            self.write_message("Neue Konfiguration - '"+ ACTIVE_CONFIG +"':success")
+        elif command == "getConfig":
+            self.write_message("getConfig:"+getConfig())
+        elif command == "writeConfig":
+            paramsplit = param.split("&")
+            for keyvalues in paramsplit:
+                keyvalue = keyvalues.split("=")
+                config.set(ACTIVE_CONFIG, keyvalue[0], keyvalue[1])
+            with open(configFileName, "w") as configfile:    # save
+                config.write(configfile)
+            setConfig()
+
+            self.write_message("Konfiguration '" + ACTIVE_CONFIG + "' gespeichert:success")
         else:
             self.write_message("Unbekannter Befehl: " + command)
         
     # Client getrennt
     def on_close(self):
+        global theMaster
+        if self is theMaster:
+            print("Ich, der Master, bin gestoppt")
+            theMaster = None
+        else:
+            print("Ich, ein weiterer Client, bin gestoppt")
         # UMIN_READER stoppen - für VM kommentieren
-        # UMIN_READER.cancel()
-        # Verbinden mit pigpio - für VM kommentieren
-        # pi.stop()
-        printDEBUG("WebSocket Client getrennt")
+        if UMIN_READER_1 is not None:
+            UMIN_READER_1.cancel()
+        if UMIN_READER_2 is not None:
+            UMIN_READER_2.cancel()
+        # Verbindung mit pigpio beenden - für VM kommentieren
+        pi.stop()
+        
         self.wsClients.remove(self)
+        printDEBUG("Ein WebSocket Client getrennt. Anzahl noch laufender Clients: " + str(len(self.wsClients)))
 
 #-------------------------------------------------------------------
 
 class Web_Application(tornado.web.Application):
     def __init__(self):
         handlers = [
-            (r"/", IndexHandler),
             (r"/dashboard.html", DashboardHandler),
             (r"/settings.html", SettingsHandler),
             (r"/static/(.*)", StaticHandler),
-            (r"/(favicon.ico)", StaticHandler, {"path": ""}),
+            (r"/(favicon.ico)", StaticHandler),
           ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
@@ -311,14 +398,6 @@ class Web_Application(tornado.web.Application):
             autoescape=None
         )
         tornado.web.Application.__init__(self, handlers, **settings)
-
-class IndexHandler(tornado.web.RequestHandler):
-    #called every time someone sends a GET HTTP request
-    @tornado.web.asynchronous
-    def get(self):
-        self.render(
-            "index.html"
-        )
 
 class DashboardHandler(tornado.web.RequestHandler):
     #called every time someone sends a GET HTTP request
