@@ -3,6 +3,8 @@
     --tm-yellow: #f0ad4e;
     --tm-green: #5cb85c;
     --tm-blue: #337ab7;
+    --tm-gray: #808080;
+    --tm-lightgray: #d3d3d3;
     --tm-digit: #eee0d3;
 }
 
@@ -16,12 +18,13 @@ html, body {
     height: 100%;
     padding: 0px;
     margin: 0px;
+    font-family: "Tripmaster Font";
 }
 
 #reloadpage {
     display: none;
     height: 100%;
-    font-size: 7vmax;
+    font-size: 12.4vmin;
     font-family: "Tripmaster Font";
     flex-direction: column;
     align-items: center;
@@ -29,7 +32,7 @@ html, body {
 }
 
 .dx-field-value .dx-widget, .dx-item, .dx-texteditor-input {
-    font-size: 4vmax;
+    font-size: 7.1vmin;
 }
 
 .tm-background {
@@ -37,7 +40,7 @@ html, body {
 }
 
 .dx-button-content .dx-icon {
-    font-size: 5vmax;
+    font-size: 8.8vmin;
     line-height: normal;
     color: inherit;
     width: auto;
@@ -45,20 +48,20 @@ html, body {
 }
 
 #reloadpage .dx-button-content .dx-icon {
-    font-size: 8vmax;
+    font-size: 14.1vmin;
 }
 
 .metal-button {
-    width: 12vmax;
-    height: 12vmax;
+    width: 21.2vmin;
+    height: 21.2vmin;
     border-radius: 50%;
     outline: none;
-    text-shadow: hsla(0,0%,40%,.5) 0 -0.1vmax 0, hsla(0,0%,100%,.6) 0 0.2vmax 0.1vmax;
+    text-shadow: hsla(0,0%,40%,.5) 0 -0.2vmin 0, hsla(0,0%,100%,.6) 0 0.4vmin 0.2vmin;
     background-color: hsl(0,0%,90%);
-    box-shadow: inset hsla(0,0%,15%,  1) 0  0 0 0.4vmax, /* border */
-                inset hsla(0,0%,15%, .8) 0 -0.1vmax 0.5vmax 0.4vmax, /* soft SD */
-                inset hsla(0,0%,0%, .25) 0 -0.1vmax 0 0.7vmax, /* bottom SD */
-                inset hsla(0,0%,100%,.7) 0  0.2vmax 0.1vmax 0.7vmax; /* top HL */
+    box-shadow: inset hsla(0,0%,15%,  1) 0  0 0 0.7vmin, /* border */
+                inset hsla(0,0%,15%, .8) 0 -0.2vmin 0.9vmin 0.7vmin, /* soft SD */
+                inset hsla(0,0%,0%, .25) 0 -0.2vmin 0 1.2vmin, /* bottom SD */
+                inset hsla(0,0%,100%,.7) 0  0.4vmin 0.2vmin 1.2vmin; /* top HL */
     transition: color .2s;
     background-image: -webkit-repeating-linear-gradient(left, hsla(0,0%,100%,0) 0%, hsla(0,0%,100%,0)   6%, hsla(0,0%,100%, .1) 7.5%),
                       -webkit-repeating-linear-gradient(left, hsla(0,0%,  0%,0) 0%, hsla(0,0%,  0%,0)   4%, hsla(0,0%,  0%,.03) 4.5%),
@@ -70,16 +73,16 @@ html, body {
 }
 
 .metal-button:active {
-  text-shadow: hsla(208,56%,20%,.3) 0 -0.1vmax 0, hsl(208,56%,85%) 0 0.2vmax 0.1vmax, hsla(200,56%,80%,1) 0 0 0.5vmax, hsla(208,56%,50%,.6) 0 0 2vmax;
+  text-shadow: hsla(208,56%,20%,.3) 0 -0.2vmin 0, hsl(208,56%,85%) 0 0.4vmin 0.2vmin, hsla(200,56%,80%,1) 0 0 0.9vmin, hsla(208,56%,50%,.6) 0 0 3.5vmin;
   box-shadow: 
-    inset hsla(208,56%,30%,  1) 0  0 0 0.4vmax, /* border */
-    inset hsla(208,56%,15%, .4) 0 -0.1vmax 0.5vmax 0.4vmax, /* soft SD */
-    inset hsla(208,56%,20%,.25) 0 -0.1vmax 0 0.7vmax, /* bottom SD */
-    inset hsla(208,56%,100%,.7) 0  0.2vmax 0.1vmax 0.7vmax, /* top HL */
+    inset hsla(208,56%,30%,  1) 0  0 0 0.7vmin, /* border */
+    inset hsla(208,56%,15%, .4) 0 -0.2vmin 0.9vmin 0.7vmin, /* soft SD */
+    inset hsla(208,56%,20%,.25) 0 -0.2vmin 0 1.2vmin, /* bottom SD */
+    inset hsla(208,56%,100%,.7) 0  0.4vmin 0.2vmin 1.2vmin, /* top HL */
     
-    hsla(208,56%,75%, .8) 0  0 0.3vmax 0.2vmax, /* outer SD */
-    hsla(208,28%,40%, .25) 0 -0.5vmax 0.6vmax 0.4vmax, /* outer SD */
-    hsla(2,47%,95%,   1) 0  0.5vmax 0.6vmax 0.4vmax; /* outer HL */
+    hsla(208,56%,75%, .8) 0  0 0.5vmin 0.4vmin, /* outer SD */
+    hsla(208,28%,40%, .25) 0 -0.9vmin 1.1vmin 0.7vmin, /* outer SD */
+    hsla(2,47%,95%,   1) 0  0.9vmin 1.1vmin 0.7vmin; /* outer HL */
 }
    
 

@@ -1,6 +1,5 @@
-DevExpress.localization.locale("de-de");
-var audioElement = document.createElement('audio');
-audioElement.setAttribute('src', '/static/Wine_Glass.ogg');
+var audioWineGlass = document.createElement('audio');
+audioWineGlass.setAttribute('src', '/static/Wine_Glass.ogg');
 var countdownRunning = false;
 
 var pointList = [{
@@ -40,7 +39,7 @@ var checkpointList = ["Kreisverkehr", "Ortsschild", "Stempelkontrolle", "Stummer
 // Zahlenfeld mit <<, <, >, >>
 var numberBoxOptions = {
     inputAttr: {
-        style: "font-size: 4vmax; text-align: center",
+        style: "font-size: 7.1vmin; text-align: center",
     },
     min: 0,
     value: 0,
@@ -84,7 +83,7 @@ var numberBoxOptions = {
 
 var dataGridOptions = {
     elementAttr: {
-        style: "font-size: 3vmax",
+        style: "font-size: 5.3vmin",
     },
     dataSource: [
     ],
@@ -105,7 +104,7 @@ var dataGridOptions = {
     },
     noDataText: "Keine Daten vorhanden",
     paging: {
-        pageSize: 12,
+        pageSize: 10,
     },
 }
 
@@ -139,12 +138,12 @@ $(function(){
             icon: "fas fa-stopwatch",
             template: $("#tab-regtest"),
         }, {
-            // Bordkarte - Zählpunkte
+            // Zählpunkte
             title: [],
             icon: "fas fa-hashtag",
             template: $("#tab-countpoint"),
         }, {
-            // Bordkarte - Orientierungskontrollen
+            // Orientierungskontrollen
             title: [],
             icon: "fas fa-map-marker-alt",
             template: $("#tab-checkpoint"),
@@ -170,7 +169,7 @@ $(function(){
         step: 0.05,
         format: "#0.00 km",
         onValueChanged: function(e) {
-            $("#button-setsector").dxButton("instance").option("disabled", (e.value === 0.0) || !stageStart.status);
+            $("#button-setsector").dxButton("instance").option("disabled", (e.value === 0.0) || !stageStarted.status);
         },
         buttons: [
             {
@@ -238,25 +237,25 @@ $(function(){
         },
     })) 
 
-    $("#button-resetsector").dxButton($.extend(true, {}, metalButtonOptions, {
+    $("#button-resetsectorpreset").dxButton($.extend(true, {}, metalButtonOptions, {
         icon: "fas fa-undo-alt",
         disabled: false,
         elementAttr: {
             style: "color: var(--tm-red)",
         },
         onClick: function(e) {
-            resetSector();
+            resetSectorPreset();
         },
     })); 
 
-        function resetSector() {
+        function resetSectorPreset() {
             sectorPresetNumberBox.option("value", 0);
-            sectorTextbox.option("value", formatDistance(0));
+            // sectorTextbox.option("value", formatDistance(0));
             sectorPresetTextbox.option("value", "0 m");
             sectorPresetRestTextbox.option("value", "0 m");
             setReverse(false);
-            if (stageStart.status)
-                WebSocket_Send('resetSector');
+            if (stageStarted.status)
+                WebSocket_Send('setSectorLength:0.0');
         }
 
     var reverseButton = $("#button-reverse").dxButton($.extend(true, {}, metalButtonOptions, {
@@ -290,29 +289,26 @@ $(function(){
     // Anzeige der km-Stände
     var sectorTextbox = $("#textbox-sector").dxTextBox($.extend(true, {}, textBoxOptions,{
         value: formatDistance(0),
-        onValueChanged: function(e) {
-            if (isSoundEnabled()) {
-                actValue = unformatDistance(e.value);
-                prevValue = unformatDistance(e.previousValue);
-                presetValue = unformatDistance(sectorPresetTextbox.option("value"));
-                if ((actValue >= presetValue) && (prevValue < presetValue)) {
-                    // Wenn nicht vom User aktiviert, wird "Uncaught (in promise) DOMException" geworfen
-                    audioElement.play().catch(function(error) { });
-                }
-            }
-        },
     })).dxTextBox("instance");
 
     var sectorPresetTextbox = $("#textbox-sectorpreset").dxTextBox($.extend(true, {}, textBoxOptions,{
         value: "0 m",
+        onValueChanged: function(e) {
+            if (isSoundEnabled()) {
+                if ((unformatDistance(e.value) == 0) && (unformatDistance(e.previousValue) > 0)) {
+                    // Wenn nicht vom User aktiviert, wird "Uncaught (in promise) DOMException" geworfen
+                    audioWineGlass.play().catch(function(error) { });
+                }
+            }
+        }
     })).dxTextBox("instance");
 
     var sectorPresetRestTextbox = $("#textbox-sectorpresetrest").dxTextBox($.extend(true, {}, textBoxOptions,{
         value: "0 m",
     })).dxTextBox("instance");
 
-    // Zielzeit Etappe
-    $("#datebox-stageend").dxDateBox({
+    // Startzeit Etappe
+    $("#datebox-stagestart").dxDateBox({
         placeholder: "00:00",
         showClearButton: true,
         displayFormat: "HH:mm",
@@ -322,19 +318,44 @@ $(function(){
         openOnFieldClick: true,
         showDropDownButton: false,
         onValueChanged: function(e) {
-            let stageend = e.component.option("value");
-            if (stageend != null) {
-                stageend.setSeconds(0)
-                stageend.setMilliseconds(0);
-                stageend = stageend.getTime();
+            let stagestart = e.component.option("value");
+            if (stagestart != null) {
+                stagestart.setSeconds(0)
+                stagestart.setMilliseconds(0);
+                stagestart = stagestart.getTime();
+            } else {
+                document.getElementById("label-stagetimeto").innerHTML = "Verbleibende Zeit";
             }
-            WebSocket_Send("setStageTime:"+stageend)
+            WebSocket_Send("setStageStart:"+stagestart)
         },
     });
 
-    var timeInStageTextbox = $("#textbox-timeinstage").dxTextBox($.extend(true, {}, textBoxOptions,{
-        value: "--:--",
-    })).dxTextBox("instance");
+    // Zielzeit Etappe
+    $("#datebox-stagefinish").dxDateBox({
+        placeholder: "00:00",
+        showClearButton: true,
+        displayFormat: "HH:mm",
+        pickerType: "rollers",
+        type: "time",
+        // value: new Date(),
+        openOnFieldClick: true,
+        showDropDownButton: false,
+        onValueChanged: function(e) {
+            let stagefinish = e.component.option("value");
+            if (stagefinish != null) {
+                stagefinish.setSeconds(0)
+                stagefinish.setMilliseconds(0);
+                stagefinish = stagefinish.getTime();
+            } else {
+                document.getElementById("label-stagetimeto").innerHTML = "Verbleibende Zeit";
+            }
+            WebSocket_Send("setStageFinish:"+stagefinish)
+        },
+    });
+
+    $("#textbox-stagetimeto").dxTextBox($.extend(true, {}, textBoxOptions,{
+        value: "--:--:--",
+    }));
 
 // Tab GLP
 
@@ -346,7 +367,8 @@ $(function(){
         },
         onClick: function(e) {
             if (countdownRunning == false) {
-                resetSector();
+                resetSectorPreset();
+                WebSocket_Send('resetSector');
                 WebSocket_Send('startRegtest:'+getRegtestTime());
                 if (getRegtestLength() > 0) {
                     WebSocket_Send('setRegtestLength:'+getRegtestLength());                        
@@ -363,7 +385,10 @@ $(function(){
             } else {
                 WebSocket_Send('stopRegtest');
                 resetRegtest(false);
-                setTimeout(resetSector, 2000);
+                setTimeout(function() {
+                        resetSectorPreset();
+                        WebSocket_Send('resetSector');
+                    }, 2000);
             }                
         },
     })).dxButton("instance"); 
@@ -466,7 +491,7 @@ $(function(){
             regtestTimeTextbox.option("value", regtestTime + " sek");
             if (regtestTime > 0) {
                 resetRegtestButton.option("disabled", false);
-                if (stageStart.status)
+                if (stageStarted.status)
                     setRegtestButton.option("disabled", false);
                 // setRegtestStartTime();
             } else {
@@ -556,6 +581,66 @@ $(function(){
             setRegtestAvgSpeed();
         };
 
+    // Geschwindigkeitsvorgabe
+    var regtestAvgSpeedNumberBox = $("#numberbox-regtestavgspeed").dxNumberBox($.extend(true, {}, numberBoxOptions, {
+        max: 80,
+        step: 0.1,
+        format: "#0.0 km/h",
+        onValueChanged: function(e) {
+            // setRegtestLength();
+        },
+        buttons: [
+            {
+                options: {
+                    onClick: function(e) {
+                        let newval = regtestAvgSpeedNumberBox.option("value") - 2;
+                        if (newval <= regtestAvgSpeedNumberBox.option("min")) {
+                            regtestAvgSpeedNumberBox.option("value", regtestAvgSpeedNumberBox.option("min"));
+                        } else {
+                            regtestAvgSpeedNumberBox.option("value", newval);
+                        }
+                    },
+                },
+            },
+            {
+                options: {
+                   onClick: function(e) {
+                        let newval = regtestAvgSpeedNumberBox.option("value") - .1;
+                        if (newval <= regtestAvgSpeedNumberBox.option("min")) {
+                            regtestAvgSpeedNumberBox.option("value", regtestAvgSpeedNumberBox.option("min"));
+                        } else {
+                            regtestAvgSpeedNumberBox.option("value", newval);
+                        }
+                    },
+                }
+            },
+            {
+                options: {
+                   onClick: function(e) {
+                        let newval = regtestAvgSpeedNumberBox.option("value") + .1;
+                        if (newval >= regtestAvgSpeedNumberBox.option("max")) {
+                            regtestAvgSpeedNumberBox.option("value", regtestAvgSpeedNumberBox.option("max"));
+                        } else {
+                            regtestAvgSpeedNumberBox.option("value", newval);
+                        }
+                    },
+                  }
+            },
+            {
+                options: {
+                    onClick: function(e) {
+                        let newval = regtestAvgSpeedNumberBox.option("value") + 2;
+                        if (newval >= regtestAvgSpeedNumberBox.option("max")) {
+                            regtestAvgSpeedNumberBox.option("value", regtestAvgSpeedNumberBox.option("max"));
+                        } else {
+                            regtestAvgSpeedNumberBox.option("value", newval);
+                        }
+                    }
+                }
+            }
+        ],
+    })).dxNumberBox("instance");
+      
 
     /* Startzeit (TODO: nicht fertig implementiert)
     
@@ -672,10 +757,13 @@ $(function(){
                     };
                 } else {
                     if (isSoundEnabled()) {
-                        audioElement.play().catch(function(error) { });
+                        audioWineGlass.play().catch(function(error) { });
                     };
                     resetRegtest();
-                    setTimeout(resetSector, 2000);
+                    setTimeout(function() {
+                            resetSectorPreset();
+                            WebSocket_Send('resetSector');
+                        }, 2000);
                 }
             };
         },
@@ -720,7 +808,7 @@ $(function(){
             {
                 dataField: "ID",
                 allowEditing: false,
-                width: "6vmax",
+                width: "11vmin",
             },
             {
                 dataField: "Beschreibung",
@@ -730,7 +818,7 @@ $(function(){
                 dataField: "Sicher",
                 dataType: "boolean",
                 caption: "OK",
-                width: "10vmax",
+                width: "15vmin",
             },
         ],
         summary: {
@@ -761,7 +849,7 @@ $(function(){
             {
                 dataField: "ID",
                 allowEditing: false,
-                width: "6vmax",
+                width: "11vmin",
             },
             {
                 dataField: "Beschreibung",
@@ -773,13 +861,13 @@ $(function(){
             {
                 dataField: "Name",
                 allowEditing: true,
-                width: "12vmax",
+                width: "21vmin",
             },
             {
                 dataField: "Sicher",
                 dataType: "boolean",
                 caption: "OK",  
-                width: "10vmax",
+                width: "15vmin",
             },
         ],
         onRowUpdated: function(e) {
@@ -900,7 +988,7 @@ $(function(){
                 e.component.option("icon", "fas fa-volume-up");
                 e.component.option("elementAttr", {"style": "color: var(--tm-green)"});
                 // Wenn nicht vom User aktiviert, wird "Uncaught (in promise) DOMException" geworfen
-                audioElement.play().catch(function(error) { });
+                audioWineGlass.play().catch(function(error) { });
             };
         },
     }));
@@ -909,18 +997,18 @@ $(function(){
             return $("#button-togglesound").dxButton("instance").option("icon") === "fas fa-volume-up"
         };
 
-    $("#button-resettripmaster").dxButton($.extend(true, {}, metalButtonOptions, {
+    $("#button-resetrallye").dxButton($.extend(true, {}, metalButtonOptions, {
         icon: "fas fa-redo",
         disabled: false,
         elementAttr: {
             style: "color: var(--tm-blue)",
         },
         onClick: function(e) {
-            confirmDialog("Reset Tripmaster").show().done(function (dialogResult) {
+            confirmDialog("Reset Rallye").show().done(function (dialogResult) {
                 if (dialogResult) {
-                    WebSocket_Send('resetTripmaster');
+                    WebSocket_Send('resetRallye');
                     // stageTextbox.option("value", formatDistance(0));
-                    // totalTextbox.option("value", formatDistance(0));
+                    // rallyeTextbox.option("value", formatDistance(0));
                     location.reload();
                 }
             });
@@ -1076,7 +1164,7 @@ $(function(){
     var stageTextbox = $("#textbox-stage").dxTextBox($.extend(true, {}, textBoxOptions,{
     })).dxTextBox("instance");
     
-    var totalTextbox = $("#textbox-total").dxTextBox($.extend(true, {}, textBoxOptions,{
+    var rallyeTextbox = $("#textbox-rallye").dxTextBox($.extend(true, {}, textBoxOptions,{
     })).dxTextBox("instance");
 
 });

@@ -44,7 +44,7 @@
                     <div>
                     <div id="button-reverse"></div>
                     <div id="button-setsector"></div>
-                    <div id="button-resetsector"></div>
+                    <div id="button-resetsectorpreset"></div>
                 </div>
             </div>
             <div class="flex-row">
@@ -69,21 +69,21 @@
                 </div>
             </div>
             <div class="flex-row">
-                <div>Etappe</div>
-                <div>
-                    <div id="button-togglestage"></div>
+                <div>Etappe: Start</div>
+                <div class="col50">
+                    <div id="datebox-stagestart"></div>
                 </div>
             </div>
             <div class="flex-row">
-                <div>Zielankunft</div>
+                <div>Etappe: Ziel</div>
                 <div class="col50">
-                    <div id="datebox-stageend"></div>
+                    <div id="datebox-stagefinish"></div>
                 </div>
             </div>
              <div class="flex-row tm-background-output">
-                <div>Vebleibende Zeit</div>
+                <div id="label-stagetimeto">Vebleibende Zeit</div>
                 <div class="col50">
-                    <div id="textbox-timeinstage"></div>
+                    <div id="textbox-stagetimeto"></div>
                 </div>
             </div>
         </script>
@@ -104,6 +104,9 @@
             </div>
             <div class="flex-row">
                 <div id="numberbox-regtestlength"></div>
+            </div>
+            <div class="flex-row">
+                <div id="numberbox-regtestavgspeed"></div>
             </div>
             
             <!-- Anzeige -->
@@ -168,14 +171,10 @@
                         <div id="datagrid-files"></div>
                     </div>
                     <div id="button-togglesound"></div>
-                    <div id="button-resettripmaster"></div>
+                    <div id="button-resetrallye"></div>
                 </div>
             </div>
-            <div class="flex-row">
-                <div></div>
-                <div>
-                </div>
-            </div>
+
             <div class="flex-row">
                 <div>Konfiguration</div>
                 <div class="col50">
@@ -224,9 +223,9 @@
                 </div>
             </div>
             <div class="flex-row tm-background-output">
-                <div>Gesamt</div>
+                <div>Rallye</div>
                 <div class="col50">
-                    <div id="textbox-total"></div>
+                    <div id="textbox-rallye"></div>
                 </div>
             </div>
 

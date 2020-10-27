@@ -24,8 +24,8 @@ function WebSocket_Open(page) {
         if (document.getElementById("circulargauge-speed") !== null) {
             $('#circulargauge-speed').dxCircularGauge("instance").option("animation.duration", SAMPLE_TIME);
             if ((document.getElementById("odometer-kmsector") !== null)) {
-                kmtotal.render();
-                $("#odometer-kmtotal").ready(function() { 
+                kmstage.render();
+                $("#odometer-kmstage").ready(function() { 
                     kmsector.render();
                     $("#odometer-kmsector").ready(function() { 
                         resizeAndPosition();
@@ -37,8 +37,6 @@ function WebSocket_Open(page) {
             $("#lineargauge-kmsector").dxLinearGauge("instance").option("animation.duration", SAMPLE_TIME);
         }
         WebSocket_Send("getAllPoints");
-
-        // DevExpress.ui.notify("WebSocket geöffnet", "success");
     }
     wss.onclose = function(evt) {
         if (isset(evt.reason)) {
@@ -57,56 +55,61 @@ function WebSocket_Open(page) {
         var message = evt.data;
         var values = message.split(':');
         if (values[0] == "data") {
-            // mylog(message);
-    // 1,     2,    3,   4        5,        6,        7,         8,                9,                     10,                 11,          12,       13,  14
-    // INDEX, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_STAGE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_PRESET_REST, FRAC_SECTOR_DRIVEN, DEV_AVG_KMH, GPS_MODE, LAT, LON
-    // 15,          16,           17,            18,             19
-    // HAS_SENSORS, IS_TIME_SYNC, STAGE_STARTED, STAGE_FRACTIME, STAGE_RESTTIME
-            INDEX = values[1]; KMH = values[3]; AVG_KMH = values[4]; KM_TOTAL = values[5]; KM_STAGE = values[6]; KM_SECTOR = values[7];
-            KM_SECTOR_PRESET = values[8]; KM_SECTOR_PRESET_REST = values[9]; FRAC_SECTOR_DRIVEN = values[10]; DEV_AVG_KMH = values[11];
+            mylog(message);
+            // 1,     2,    3,   4        5,        6,        7,         8,                9,                     10,               
+            // INDEX, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_STAGE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_PRESET_REST, FRAC_SECTOR_DRIVEN, 
+            // 11,          12,       13,  14,  15,          16,           17,            18,             19,                20
+            // DEV_AVG_KMH, GPS_MODE, LON, LAT, HAS_SENSORS, IS_TIME_SYNC, STAGE_STARTED, STAGE_FRACTIME, STAGE_TIMETOSTART, STAGE_TIMETOFINISH
+            INDEX = values[1]; 
+            KMH = values[3]; 
+            AVG_KMH = parseFloat(values[4]); 
+            KM_RALLYE = parseFloat(values[5]);
+            KM_STAGE = parseFloat(values[6]);
+            KM_SECTOR = parseFloat(values[7]);
+            KM_SECTOR_PRESET = parseFloat(values[8]);
+            KM_SECTOR_PRESET_REST = parseFloat(values[9]);
+            FRAC_SECTOR_DRIVEN = parseFloat(values[10]);
+            DEV_AVG_KMH = parseFloat(values[11]);
             GPS_MODE = parseInt(values[12]); 
-            LAT = values[13]; LON = values[14]; 
+            LON = values[13]; 
+            LAT = values[14]; 
             HAS_SENSORS = parseInt(values[15]);
             IS_TIME_SYNC = parseInt(values[16]);
-            STAGE_STARTED = parseInt(values[17]), 
+            STAGE_STARTED = (parseInt(values[17]) != 0), 
             STAGE_FRACTIME = parseInt(values[18]), 
-            STAGE_RESTTIME = values[19].replace("&#058;", ":");
+            STAGE_TIMETOSTART = parseInt(values[19]);
+            STAGE_TIMETOFINISH = values[20];
 
             // Tacho
             if (document.getElementById("circulargauge-speed") !== null) {
                 let speedGauge = $('#circulargauge-speed').dxCircularGauge("instance");
-                // Die aktuelle Geschwindigkeit ist der Hauptwert, ...
+                // Hauptwert: Gerundete aktuelle Geschwindigkeit 
                 speedGauge.value(parseInt(KMH));
-                // ... die Durchschnittsgeschwindigkeit oder die prozentuale Etappenrestzeit der Nebenwert des Tachos
+                // Nebenwert: Durchschnittsgeschwindigkeit oder prozentuale Etappenrestzeit
                 if (STAGE_FRACTIME == 0) {
                     speedGauge.subvalues([AVG_KMH]);
-                    if (isset(subValueIndicator)) subValueIndicator.color = "blue";
-                    // macht die Animation kaputt
-                    // speedGauge.option("subvalueIndicator", {"color": "gray"});
+                    if (isset(subValueIndicator)) subValueIndicator.color = "gray";
                 } else {
                     speedGauge.subvalues([STAGE_FRACTIME]);
-                    // macht die Animation kaputt
-                    /*
                     if (STAGE_FRACTIME < 80) {
-                        fontColor = "var(--tm-green)";
+                        indicatorColor = "green";
                     } else if (STAGE_FRACTIME < 100) {
-                        fontColor = "var(--tm-yellow)";
+                        indicatorColor = "yellow";
                     } else {
-                        fontColor = "var(--tm-red)";
+                        indicatorColor = "red";
                     }
-                    speedGauge.option("subvalueIndicator", {"color": fontColor});
-                    */
-                }
-            } 
+                    if (isset(subValueIndicator)) subValueIndicator.color = indicatorColor;
+                };
+            }; 
             // Odometer, mit , als Dezimaltrennzeichen
-            if (document.getElementById("odometer-kmtotal") !== null) {
+            if (document.getElementById("odometer-kmstage") !== null) {
                 // aus den 10m die 100m _nicht_ runden, sondern abschneiden
                 KM_STAGE_TRUNC = Math.trunc(KM_STAGE * 10) / 10;
-                document.getElementById("odometer-kmtotal").innerHTML = parseFloat(KM_STAGE_TRUNC).toLocaleString('de-DE');
+                document.getElementById("odometer-kmstage").innerHTML = parseFloat(KM_STAGE_TRUNC).toLocaleString('de-DE');
             } 
             if (document.getElementById("odometer-kmsector") !== null) {
                 let odometerKmSector = document.getElementById("odometer-kmsector");
-                // Wenn Abschnittslänge eingestellt..
+                // Wenn Abschnittsvorgabe eingestellt..
                 // if (KM_SECTOR_PRESET > 0) {
                     // odometerKmSector.style.color = "var(--tm-red)";
                     // odometerKmSector.innerHTML = parseFloat(KM_SECTOR_PRESET_REST).toLocaleString('de-DE');
@@ -117,15 +120,16 @@ function WebSocket_Open(page) {
             } 
             // Linearanzeige: restliche km im Abschnitt
             if (document.getElementById("lineargauge-kmsector") !== null) {
-                lineargauge = $("#lineargauge-kmsector").dxLinearGauge("instance")
                 kmSectorPreset = KM_SECTOR_PRESET;
                 oldLeftInSector = kmLeftInSector;
                 kmLeftInSector = KM_SECTOR_PRESET_REST;
                 diffLeftInSector = kmLeftInSector - oldLeftInSector;
                 // mylog("kmSectorPreset: " + kmSectorPreset);
                 if (kmSectorPreset > 0) {
+                    lineargauge = $("#lineargauge-kmsector").dxLinearGauge("instance")
                     lineargauge.option("value", FRAC_SECTOR_DRIVEN);
                     lineargauge.option("subvalues", [FRAC_SECTOR_DRIVEN]);
+                    setKmSector(FRAC_SECTOR_DRIVEN);
                     // Letzter Eintrag vor Stopp
                     if ((kmLeftInSector == 0.0) && (diffLeftInSector != 0.0)) {
                         setTimeout(function() {
@@ -138,7 +142,7 @@ function WebSocket_Open(page) {
             if (document.getElementById("status-gps") !== null) {
                 switch(GPS_MODE) {
                     case 0:
-                        fontColor = "lightgray";
+                        fontColor = "var(--tm-lightgray)";
                         break;
                     case 1:
                         fontColor = "var(--tm-red)";
@@ -159,7 +163,7 @@ function WebSocket_Open(page) {
 
                 switch(HAS_SENSORS) {
                     case 0:
-                        fontColor = "lightgray";
+                        fontColor = "var(--tm-lightgray)";
                         break;
                     case 1:
                         fontColor = "var(--tm-green)";
@@ -171,33 +175,55 @@ function WebSocket_Open(page) {
             };
             // Etappe starten und beenden
             if (document.getElementById("button-togglestage") !== null) {
-                $("#button-togglestage").dxButton("instance").option("disabled", (IS_TIME_SYNC == 0));
-                if (isset(stageStart.status)) stageStart.status = (STAGE_STARTED != 0);
+                if (STAGE_STARTED) {
+                    $("#button-togglestage").dxButton("instance").option("disabled", false);
+                } else {
+                    if (STAGE_TIMETOSTART < 0) {
+                        $("#button-togglestage").dxButton("instance").option("disabled", true);                        
+                    } else {
+                        $("#button-togglestage").dxButton("instance").option("disabled", (IS_TIME_SYNC == 0));                        
+                    }
+                }
+            };
+            if (isset(stageStarted.status)) {
+                stageStarted.status = STAGE_STARTED;
             };
             
-            // Etappenrestzeit
-            if (document.getElementById("textbox-timeinstage") !== null) {
-                let stageresttime;
-                let digits = 5;
-                if (Math.abs(STAGE_RESTTIME) < 60)
-                    digits = 8;
-                if (STAGE_RESTTIME == -999999) {
-                    stageresttime = "--:--";
-                } else if (STAGE_RESTTIME.includes("-")) {
-                    stageresttime = "-" + new Date(-STAGE_RESTTIME * 1000).toISOString().substr(11, digits)
-                    $("#textbox-timeinstage").find(".dx-texteditor-input").css("color", "var(--tm-red)");                    
-                } else {
-                    stageresttime = new Date(STAGE_RESTTIME * 1000).toISOString().substr(11, digits)
-                    $("#textbox-timeinstage").find(".dx-texteditor-input").css("color", "");                    
+            // Etappestart- und -zielzeit
+            if (document.getElementById("textbox-stagetimeto") !== null) {
+                let stagetimeto = "--:--:--";
+                $("#textbox-stagetimeto").find(".dx-texteditor-input").css("color", "");
+                if (STAGE_TIMETOSTART < 0) {
+                    document.getElementById("label-stagetimeto").innerHTML = "Bis zum Start";
+                    stagetimeto = new Date(-STAGE_TIMETOSTART * 1000).toISOString().substr(11, 8)
+                    $("#textbox-stagetimeto").find(".dx-texteditor-input").css("color", "var(--tm-red)");                    
+                } else if (STAGE_FRACTIME > 0) {                    
+                    if (STAGE_TIMETOFINISH < 0) {
+                        document.getElementById("label-stagetimeto").innerHTML = "Zielzeit überschritten";
+                        stagetimeto = new Date(-STAGE_TIMETOFINISH * 1000).toISOString().substr(11, 8)
+                        $("#textbox-stagetimeto").find(".dx-texteditor-input").css("color", "var(--tm-red)");                    
+                    } else {
+                        document.getElementById("label-stagetimeto").innerHTML = "Bis zum Ziel";
+                        stagetimeto = new Date(STAGE_TIMETOFINISH * 1000).toISOString().substr(11, 8)
+                    }
                 }
-                $("#textbox-timeinstage").dxTextBox("instance").option("value", stageresttime);
+                $("#textbox-stagetimeto").dxTextBox("instance").option("value", stagetimeto);
             };            
-            // Entfernungstextboxen
-            // Vorgegebene Abschnittslänge
-            if (document.getElementById("textbox-sectorpreset") !== null) {
-                $("#textbox-sectorpreset").dxTextBox("instance").option("value", formatDistance(KM_SECTOR_PRESET));
+            if (document.getElementById("datebox-stagestart") !== null) {
+                // Etappenstartzeit darf nicht eingegeben werden, wenn Etappe schon läuft
+                $("#datebox-stagestart").dxDateBox("instance").option("openOnFieldClick", !STAGE_STARTED);
             };
-            // Verbleibende Abschnittslänge
+            
+            // Entfernungstextboxen
+            // Abschnittsvorgabe
+            if (document.getElementById("textbox-sectorpreset") !== null) {
+                let value = "0 m"
+                if (KM_SECTOR_PRESET_REST > 0) {
+                    value = formatDistance(KM_SECTOR_PRESET)
+                }
+                $("#textbox-sectorpreset").dxTextBox("instance").option("value", value);
+            };
+            // Verbleibende Abschnittsvorgabe
             if (document.getElementById("textbox-sectorpresetrest") !== null) {
                 $("#textbox-sectorpresetrest").dxTextBox("instance").option("value", formatDistance(KM_SECTOR_PRESET_REST));
             };
@@ -210,8 +236,8 @@ function WebSocket_Open(page) {
                 $("#textbox-stage").dxTextBox("instance").option("value", formatDistance(KM_STAGE));
             };
             // Gesamt
-            if (document.getElementById("textbox-total") !== null) {
-                $("#textbox-total").dxTextBox("instance").option("value", formatDistance(KM_TOTAL));
+            if (document.getElementById("textbox-rallye") !== null) {
+                $("#textbox-rallye").dxTextBox("instance").option("value", formatDistance(KM_RALLYE));
             } 
             // Abweichung der durchschnittlichen Geschwindigkeit von der Vorgabe
             if ((document.getElementById("circulargauge-devavgspeed") !== null)) {
@@ -219,7 +245,8 @@ function WebSocket_Open(page) {
                 devAvgSpeed.value(DEV_AVG_KMH);
                 devAvgSpeed.subvalues([DEV_AVG_KMH]);
             } 
-        } else if (values[0] == "countdown") {
+        }
+        else if (values[0] == "countdown") {
             // mylog(message);
             var secondsleft = values[1]
             if (document.getElementById("textbox-regtesttime") !== null) {
@@ -288,7 +315,7 @@ function WebSocket_Open(page) {
                                 button.option("visible", true);
                                 button.option({
                                     onClick: function(e) {
-                                        window.navigator.vibrate(200);
+                                        audioClick.play().catch(function(error) { });
                                         WebSocket_Send(pointcategory + ":" + pointtype)
                                     },
                                 })

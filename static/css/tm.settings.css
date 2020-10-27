@@ -3,25 +3,25 @@
 }
 
 .metal-button {
-    width: 11vmax;
-    height: 11vmax;
-    margin-left: 1vmax;
+    width: 19.4vmin;
+    height: 19.4vmin;
+    margin-left: 1.8vmin;
 }
 
 /* TabPanel */
 .dx-field-label {
-    font-size: 3vmax;
+    font-size: 5vmin;
 }
 
 .dx-tabpanel .dx-multiview-wrapper {
-    padding-top: 3vmax;
+    padding-top: 5vmin;
 }
 
 .dx-tab-selected .dx-icon {
     color: var(--tm-blue) !important;
 }
 .dx-tab .dx-icon {
-    color: gray;
+    color: "var(--tm-gray)";
 }
 
 /* Rechte Spalte */
@@ -33,7 +33,7 @@
     display: flex;
     /* align-items: stretch; */
     justify-content: space-between;
-    padding: 1vmax 2.5vmax;
+    padding: 1.8vmin 4.4vmin;
 }
 
 .space-evenly {
@@ -41,7 +41,7 @@
 }
     
 .dx-popup-content > .flex-row, .label-key {
-    padding: 1vmax 0;
+    padding: 1.8vmin 0;
 }
 
 /* Breite der Bearbeiten Spalte im Datagrid */
@@ -58,12 +58,12 @@
 
 /* Text in der linken Spalte = erstes div Kind */
 .flex-row div:nth-child(1), .label-key {
-    font-size: 3vmax;
+    font-size: 5.3vmin;
 }
 
 /* Setup Tab, Platzhalter in DateBox */
 .dx-tab .dx-icon, .dx-placeholder {
-    font-size: 4vmax;
+    font-size: 7.1vmin;
 }
 
 /* Inputfeld in DateBox */
@@ -77,7 +77,7 @@
 .dx-datagrid-content .dx-texteditor-input,
 .dx-treeview .dx-item,
 .dx-popup-content .dx-item {
-    font-size: 3vmax;
+    font-size: 5.3vmin;
 }
 
 /* TextBox */

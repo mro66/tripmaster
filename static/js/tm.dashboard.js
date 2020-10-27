@@ -1,12 +1,14 @@
 // Bildschirmdimension zum Skalieren
 // var windowDiagonal = Math.sqrt(Math.pow(window.innerHeight, 2) + Math.pow(window.innerWidth, 2))/1000;
-var vh = Math.sqrt(Math.pow(window.innerHeight, 2))/550;
+var vmin = Math.sqrt(Math.pow(window.innerHeight, 2))/550;
 var AVG_KMH_PRESET = 0;
+var audioClick = document.createElement('audio');
+audioClick.setAttribute('src', '/static/Click.ogg');
 
 var subValueIndicator = {
-    value: "red",
-    listener() {
-        speedGauge.option("subvalueIndicator", {"color": "var(--tm-" + this.value + ")"});
+    value: "gray",
+    handler() {
+        document.getElementById("circulargauge-speed").getElementsByClassName('dxg-subvalue-indicator')[0].style.fill = "var(--tm-" + this.value + ")";
     },
     get color() {
         return this.value;
@@ -14,11 +16,26 @@ var subValueIndicator = {
     set color(value) {
         if (value != this.value) {
             this.value = value;
-            this.listener();
+            this.handler();
         };
     },
 };
 
+// Farbverlauf der Linearen Anzeige (leider deaktiviert, da bei einem Farbwechsel die Anzeige immer zuerst auf 0 springt :-(
+    function setKmSector(fracSectorDriven) {
+        if (fracSectorDriven <= 10) { rgbColor = "rgb(217,83,79)" } else
+        if (fracSectorDriven <= 20) { rgbColor = "rgb(222,101,79)" } else
+        if (fracSectorDriven <= 30) { rgbColor = "rgb(226,119,79)" } else
+        if (fracSectorDriven <= 40) { rgbColor = "rgb(231,137,78)" } else
+        if (fracSectorDriven <= 50) { rgbColor = "rgb(235,155,78)" } else
+        if (fracSectorDriven <= 60) { rgbColor = "rgb(240,173,78)" } else
+        if (fracSectorDriven <= 70) { rgbColor = "rgb(203,176,82)" } else
+        if (fracSectorDriven <= 80) { rgbColor = "rgb(166,179,85)" } else
+        if (fracSectorDriven <= 90) { rgbColor = "rgb(129,181,89)" } else
+        if (fracSectorDriven <= 100) { rgbColor = "rgb(92,184,92)" }
+        document.getElementById("lineargauge-kmsector").getElementsByClassName('dxg-subvalue-indicator')[1].style.fill = rgbColor;
+        document.getElementById("lineargauge-kmsector").getElementsByClassName('dxg-main-bar')[0].style.fill = rgbColor;
+    };
 
 
 $(function(){
@@ -54,58 +71,58 @@ $(function(){
             startValue: 0, 
             endValue: 150,
             tick: {
-                color: "gray",
-                length: 22*vh,
-                width: 5*vh,
+                color: "var(--tm-gray)",
+                length: 22*vmin,
+                width: 5*vmin,
             },
             tickInterval: 10,
             minorTick: {
                 color: "Ivory",
                 visible: true,
-                length: 15*vh,
-                width: 2*vh,
+                length: 15*vmin,
+                width: 2*vmin,
             },
             minorTickInterval: 2,
             orientation: "inside",
             label: {
                 font: {
-                    color: "gray", 
-                    size: 42*vh, 
+                    color: "var(--tm-gray)", 
+                    size: 42*vmin, 
                     family: "Tripmaster Font" 
                 },
-                indentFromTick: -30*vh,
+                indentFromTick: -30*vmin,
            }
         },
         rangeContainer: {
             backgroundColor: "black",
-            offset: 15*vh,
-            width: 15*vh,
+            offset: 15*vmin,
+            width: 15*vmin,
         },
         value: 0,
         valueIndicator: {
             type: "twoColorNeedle",
             color: "black",
             secondFraction: 0.5,
-            secondColor: "gray",
+            secondColor: "var(--tm-gray)",
             offset: 0,
-            width: 7*vh,
-            indentFromCenter: 25*vh,
-            spindleGapSize: 20*vh,
-            spindleSize: 50*vh,
+            width: 7*vmin,
+            indentFromCenter: 25*vmin,
+            spindleGapSize: 20*vmin,
+            spindleSize: 50*vmin,
         },
         subvalues: [0],
         subvalueIndicator: {
             type: "triangleMarker",
-            offset: -5*vh,
-            length: 20*vh,
-            width: 20*vh,
+            offset: -5*vmin,
+            length: 20*vmin,
+            width: 20*vmin,
             
         },
         redrawOnResize: true,
         onInitialized: function(e) {
             e.element.click(function() {
-                if (stageStart.status) {
-                    window.navigator.vibrate(200);
+                if (stageStarted.status) {
+                    audioClick.play().catch(function(error) { });
                     WebSocket_Send('resetSector');
                 } else {
                     DevExpress.ui.notify("Etappe noch nicht gestartet", "warning")
@@ -130,18 +147,18 @@ $(function(){
             orientation: "vertical"
         },
         valueIndicator: {
-            size: 15*vh,
+            size: 15*vmin,
         },
         subvalues: [],
         subvalueIndicator: {
             type: "textCloud",
             horizontalOrientation: "right",
-            offset: 35*vh,
-            arrowLength: 15*vh,
+            offset: 35*vmin,
+            arrowLength: 15*vmin,
             text: {
                 font: {
                     family: "Tripmaster Font", 
-                    size: "3.5vmax",
+                    size: "6vmin",
                     color: "Ivory",
                 },
                 customizeText: function (e) {
@@ -157,16 +174,16 @@ $(function(){
         rangeContainer: {
             horizontalOrientation: "center",
             width: {
-                start: 10*vh,
-                end: 10*vh,
+                start: 10*vmin,
+                end: 10*vmin,
             },
-            offset: -5*vh,
+            offset: -5*vmin,
         },
         scale: {
             tick: {
-                width: 5*vh,
+                width: 5*vmin,
                 color: "var(--tm-red)",
-                length: 15*vh,
+                length: 15*vmin,
             },
             tickInterval: 25,
             horizontalOrientation: "left",
@@ -188,6 +205,10 @@ $(function(){
     });
     
     // Buttons
+    // Start/Stop Etappe
+    $("#button-togglestage").dxButton($.extend(true, {}, metalButtonOptions, toggleStageButtonOptions, {
+    })); 
+
     $("#button-1").dxButton($.extend(true, {}, metalButtonOptions, {
     })); 
 
@@ -219,21 +240,21 @@ $(function(){
             endValue: 25,
             tickInterval: 30,
             tick: {
-                length: 6*vh,
-                width: 3*vh
+                length: 6*vmin,
+                width: 3*vmin
             },
             minorTickInterval: 10,
             minorTick: {
-                length: 6*vh,
-                width: 3*vh,
+                length: 6*vmin,
+                width: 3*vmin,
                 visible: true
             },
             label: {
                 visible: true,
-                indentFromTick: -120*vh,
+                indentFromTick: -120*vmin,
                 useRangeColors: true,
                 font: {
-                    size: "4.5vw",
+                    size: "8vmin",
                     family: "Tripmaster Font",
                     weight: "lighter"
                 },
@@ -243,7 +264,7 @@ $(function(){
             }
         },
         rangeContainer: {
-            width: 7*vh,
+            width: 10*vmin,
             palette: [
                 "var(--tm-red)",
                 "var(--tm-yellow)",
@@ -264,13 +285,13 @@ $(function(){
             type: "rangeBar",
             color: "var(--tm-blue)",
             baseValue: 0,
-            offset: 60*vh,
-            size: 10*vh,
+            offset: 60*vmin,
+            size: 10*vmin,
             text: {
-                indent: 15*vh,
+                indent: 15*vmin,
                 font: {
                     color: "var(--tm-blue)",
-                    size: "3vw",
+                    size: "5.3vmin",
                     family: "Tripmaster Font"
                 },
                 customizeText: function(arg) {
@@ -286,11 +307,11 @@ $(function(){
         subvalues: [0],
         subvalueIndicator: {
             type: "TriangleNeedle",
-            offset: 60*vh,
+            offset: 60*vmin,
             baseValue: 0,
             color: "var(--tm-blue)",
-            width: 13*vh,
-            indentFromCenter: 150*vh,
+            width: 13*vmin,
+            indentFromCenter: 150*vmin,
             spindleSize: 0
         },
         // redrawOnResize: true,
@@ -331,14 +352,14 @@ function resizeAndPosition() {
     var spindleSize = parseFloat(speedCircularGauge.option("valueIndicator.spindleSize"));
     
     // Elemente an der Mitte des Tachos ausrichten
-    var odoKmTotal = document.getElementById("odometer-kmtotal");
+    var odoKmStage = document.getElementById("odometer-kmstage");
     var odoKmSector = document.getElementById("odometer-kmsector");
     var statusGPS = document.getElementById("status-gps");
     var statusTyre = document.getElementById("status-tyre");
     
     //top ...
-    // kmtotal
-    odoKmTotal.style.top = y - spindleSize - parseFloat(odoKmTotal.clientHeight) + "px";
+    // kmstage
+    odoKmStage.style.top = y - spindleSize - parseFloat(odoKmStage.clientHeight) + "px";
     // kmsector
     odoKmSector.style.top = y + spindleSize + "px";
     // gps
@@ -346,9 +367,9 @@ function resizeAndPosition() {
     // tyre
     statusTyre.style.top = y - statusTyre.clientHeight / 2 + "px";
     // ... und left
-    // kmtotal
-    odoKmTotal.style.left = x - odoKmTotal.clientWidth / 2 + "px";
-    odoKmTotal.style.visibility = "visible";
+    // kmstage
+    odoKmStage.style.left = x - odoKmStage.clientWidth / 2 + "px";
+    odoKmStage.style.visibility = "visible";
     // kmsector
     odoKmSector.style.left = x - odoKmSector.clientWidth / 2 + "px";
     odoKmSector.style.visibility = "visible";

@@ -1,6 +1,11 @@
-var stageStart = {
+DevExpress.localization.locale("de-de");
+
+// Globale Variable
+var kmLeftInSector = 0;
+var kmSectorPreset = 0;
+var stageStarted = {
     value: false,
-    listener() {
+    handler() {
         // Div Buttons der Settings (de)aktivieren
         if (document.getElementById("button-setsector") !== null) {
             let isZero = ($("#numberbox-sectorpreset").dxNumberBox("instance").option("value") == 0);
@@ -28,24 +33,19 @@ var stageStart = {
     set status(value) {
         if (value != this.value) {
             this.value = value;
-            this.listener();
+            this.handler();
         };
     },
 };
 
-var kmLeftInSector = 0;
-var kmSectorPreset = 0;
-
-// Gemeinsame Optionen ...
-
-// ... der Anzeigetextboxen
+// Optionen Anzeigetextboxen
 var textBoxOptions = {
     readOnly: true,
     focusStateEnabled: false,
     hoverStateEnabled: false,
 };
 
-// ... der Metallschaltflächen
+// Optionen Metallbuttons
 var metalButtonOptions = {
     elementAttr: {
         class: "metal-button",
@@ -54,15 +54,23 @@ var metalButtonOptions = {
     focusStateEnabled: false,
     hoverStateEnabled: false,
 };
-    
+
+// Optionen Etappe Start/Stop
+var toggleStageButtonOptions = {
+    icon: "fas fa-flag-checkered",
+    elementAttr: {
+        style: "color: var(--tm-gray)",
+    },
+};    
+
 $(function(){
 
     // Reload nach Abbruch der WebSocket Verbindung    
     $("#button-reloadpage").dxButton($.extend(true, {}, metalButtonOptions, {
         disabled: false,
         icon: "fas fa-plug",
-        width: "16vmax",
-        height: "16vmax",
+        width: "28vmin",
+        height: "28vmin",
         elementAttr: {
             style: "color: var(--tm-blue)",
         },
@@ -71,44 +79,7 @@ $(function(){
          },
     }));   
 
-    // Etappe Start/Stop
-    $("#button-togglestage").dxButton($.extend(true, {}, metalButtonOptions, {
-        onClick: function(e) {
-            WebSocket_Send('toggleStage');
-        },
-    })); 
-
-
 });
-
-// Farbverlauf der Linearen Anzeige (leider deaktiviert, da bei einem Farbwechsel die Anzeige immer zuerst auf 0 springt :-(
-    function setKmSector(fracSectorDriven) {
-        fracSectorDriven = parseInt(fracSectorDriven);
-        var colorConst = 153;
-        var breakConst = 75;
-        var redValue = colorConst;
-        var greenValue = fracSectorDriven * colorConst / breakConst;
-        if (fracSectorDriven > breakConst) {
-            redValue = colorConst - (fracSectorDriven - breakConst) * colorConst / (100 - breakConst);
-            greenValue = colorConst;
-        };
-        rgbColor = "rgb(" + redValue + "," + greenValue + ",0)";
-        var subValues = [];
-        if (fracSectorDriven > 0) {
-            subValues = [fracSectorDriven];
-        };
-        var kmSectorLinearGauge = $("#lineargauge-kmsector").dxLinearGauge('instance');
-        kmSectorLinearGauge.option({
-            value: fracSectorDriven,
-            valueIndicator: {
-                color: "rgb(" + redValue + "," + greenValue + ",0)",
-            },
-            subvalues: subValues,
-            subvalueIndicator: {
-                color: "rgb(" + redValue + "," + greenValue + ",0)",
-            },            
-        });
-    };
 
 // Bestätigungsdialog
 

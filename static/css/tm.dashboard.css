@@ -1,3 +1,7 @@
+/* FYI - flex */
+/* justify-content: center;     /* zentriert in Hauptrichtung */
+/* align-items: center;         /* zentriert in Nebenrichtung */
+
 /* Circular gauge */
 #circulargauge-speed {
     position: relative;
@@ -7,8 +11,8 @@
 }
 
 /* Odometer */
-#odometer-kmtotal, #odometer-kmsector {
-    font-size: 9vh;
+#odometer-kmstage, #odometer-kmsector {
+    font-size: 9vmin;
     position: absolute;
     visibility: hidden;
     z-index: 0;
@@ -17,9 +21,6 @@
 #right-sector {
     justify-content: center;
 }
-
-/* justify-content: center;     /* zentriert in Hauptrichtung */
-/* align-items: center;         /* zentriert in Nebenrichtung */
 
 .flex-column {
     height: 100%;
@@ -39,8 +40,8 @@
     position: absolute;
     visibility: hidden;
     font-family: 'Tripmaster Font';
-    font-size: 7vh;
-    color: lightgray;
+    font-size: 7vmin;
+    color: "var(--tm-lightgray)";
 }
 
 /* Countdown */
@@ -55,7 +56,7 @@
 }
 .dx-widget input {
     font-family: 'Tripmaster Font';
-    font-size: 15vh;
+    font-size: 15vmin;
     text-align: center;
     background-color: Ivory;
 }
