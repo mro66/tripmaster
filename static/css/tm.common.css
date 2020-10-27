@@ -1,14 +1,14 @@
 :root {
-	--tm-red: #d9534f;
-	--tm-yellow: #f0ad4e;
-	--tm-green: #5cb85c;
-	--tm-blue: #337ab7;
+    --tm-red: #d9534f;
+    --tm-yellow: #f0ad4e;
+    --tm-green: #5cb85c;
+    --tm-blue: #337ab7;
     --tm-digit: #eee0d3;
 }
 
 @font-face {
-	font-family: 'Tripmaster Font';
-	src: url('/static/css/fonts/Alternate Gothic.otf');
+    font-family: 'Tripmaster Font';
+    src: url('/static/css/fonts/Alternate Gothic.otf');
 }
 
 html, body {
@@ -21,6 +21,9 @@ html, body {
 #reloadpage {
     display: none;
     height: 100%;
+    font-size: 7vmax;
+    font-family: "Tripmaster Font";
+    flex-direction: column;
     align-items: center;
     justify-content: center;
 }
@@ -42,7 +45,7 @@ html, body {
 }
 
 #reloadpage .dx-button-content .dx-icon {
-    font-size: 9vmax;
+    font-size: 8vmax;
 }
 
 .metal-button {
@@ -84,7 +87,7 @@ html, body {
 /* DEBUG */
 
 .red1px {
-	border: 1px red solid;
+    border: 1px red solid;
 }
 
 .rect{

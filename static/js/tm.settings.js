@@ -1,55 +1,42 @@
+DevExpress.localization.locale("de-de");
 var audioElement = document.createElement('audio');
 audioElement.setAttribute('src', '/static/Wine_Glass.ogg');
 var countdownRunning = false;
 
-var checkpointList = [{
-        "Variable": "null",
-        "Name": "Keine",
-        "Icon": "fas fa-minus",
-        "Iconfarbe": "var(--tm-red)"
-    },{
-        "Variable": "roundabout",
-        "Name": "Kreisverkehr",
-        "Icon": "fas fa-sync",
-        "Iconfarbe": "var(--tm-blue)"
+var pointList = [{
+    Variable: "checkpoint:null",
+    Name: "Inaktiv",
+}, {
+    Name: "Zählpunkte",
+    items: [{
+        Variable: "countpoint:roundabout",
+        Name: "Kreisverkehr",
     }, {
-        "Variable": "townsign",
-        "Name": "Ortsschild",
-        "Icon": "fas fa-sign",
-        "Iconfarbe": "var(--tm-yellow)"
+        Variable: "countpoint:countpoint",
+        Name: "Sonstiges",
+    }],
+}, {
+    Name: "Orientierungskontrollen",
+    items: [{
+        Variable: "checkpoint:roundabout",
+        Name: "Kreisverkehr",
     }, {
-        "Variable": "stampcheck",
-        "Name": "Stempelkontrolle",
-        "Icon": "fas fa-stamp",
-        "Iconfarbe": "var(--tm-red)"
+        Variable: "checkpoint:townsign",
+        Name: "Ortsschild",
     }, {
-        "Variable": "mutecheck",
-        "Name": "Stummer Wächter",
-        "Icon": "fas fa-neuter",
-        "Iconfarbe": "var(--tm-green)"
+        Variable: "checkpoint:stampcheck",
+        Name: "Stempelkontrolle",
     }, {
-        "Variable": "checkpoint",
-        "Name": "Sonstiges",
-        "Icon": "fas fa-map-marker-alt",
-        "Iconfarbe": "var(--tm-green)"
-    }];
+        Variable: "checkpoint:mutecheck",
+        Name: "Stummer Wächter",
+    }, {
+        Variable: "checkpoint:checkpoint",
+        Name: "Sonstige OK",
+    }]
+}];
 
-var countpointList = [{
-        "Variable": "null",
-        "Name": "Keine",
-        "Icon": "fas fa-minus",
-        "Iconfarbe": "var(--tm-red)"
-    },{
-        "Variable": "roundabout",
-        "Name": "Kreisverkehr",
-        "Icon": "fas fa-sync",
-        "Iconfarbe": "var(--tm-blue)"
-    }, {
-        "Variable": "countpoint",
-        "Name": "Sonstiges",
-        "Icon": "fas fa-hashtag",
-        "Iconfarbe": "var(--tm-blue)"
-    }];
+var checkpointList = ["Kreisverkehr", "Ortsschild", "Stempelkontrolle", "Stummer Wächter", "Sonstige OK"];
+
 // Zahlenfeld mit <<, <, >, >>
 var numberBoxOptions = {
     inputAttr: {
@@ -101,6 +88,9 @@ var dataGridOptions = {
     },
     dataSource: [
     ],
+    sorting: {
+        mode: "None",
+    },
     keyExpr: "ID",
     editing: {
         mode: "cell",
@@ -119,6 +109,16 @@ var dataGridOptions = {
     },
 }
 
+var pointButtonOptions = {
+    disabled: false,
+    onClick: function(e) {
+        // Übergabe der ID des Button Elements (z. B. "button-1") an das Popup
+        $("#popup-setbutton").dxPopup("instance").option("elementAttr", {"name": e.component.element().attr("id")});
+        $("#popup-setbutton").dxPopup("show");
+    },
+};
+
+
 $(function(){
 
 // TabPanel 
@@ -129,7 +129,7 @@ $(function(){
         loop: true,
         selectedIndex: 0,
         items: [{
-            // Abschnitt
+            // Strecke
             "title": [],
             icon: "fas fa-route",
             template: $("#tab-sector"),
@@ -157,8 +157,8 @@ $(function(){
         onSelectionChanged: function(e) {
             if (e.component.option("selectedIndex")==0) {
                 $("#textbox-sector").appendTo("#tab0_sector");
-            } else if (e.component.option("selectedIndex")==2) {
-                $("#textbox-sector").appendTo("#tab2_sector");
+            } else if (e.component.option("selectedIndex")==4) {
+                $("#textbox-sector").appendTo("#tab4_sector");
             }
         }
     });
@@ -170,7 +170,7 @@ $(function(){
         step: 0.05,
         format: "#0.00 km",
         onValueChanged: function(e) {
-            $("#button-setsector").dxButton("instance").option("disabled", (e.value === 0.0) || !stageStarted);
+            $("#button-setsector").dxButton("instance").option("disabled", (e.value === 0.0) || !stageStart.status);
         },
         buttons: [
             {
@@ -181,7 +181,7 @@ $(function(){
                             sectorPresetNumberBox.option("value", sectorPresetNumberBox.option("min"));
                         } else {
                             sectorPresetNumberBox.option("value", newval);
-                        }
+                        };
                     },
                 },
             },
@@ -193,9 +193,9 @@ $(function(){
                             sectorPresetNumberBox.option("value", sectorPresetNumberBox.option("min"));
                         } else {
                             sectorPresetNumberBox.option("value", newval);
-                        }
+                        };
                     },
-                }
+                },
             },
             {
                 options: {
@@ -205,9 +205,9 @@ $(function(){
                             sectorPresetNumberBox.option("value", sectorPresetNumberBox.option("max"));
                         } else {
                             sectorPresetNumberBox.option("value", newval);
-                        }
+                        };
                     },
-                  }
+                },
             },
             {
                 options: {
@@ -217,20 +217,21 @@ $(function(){
                             sectorPresetNumberBox.option("value", sectorPresetNumberBox.option("max"));
                         } else {
                             sectorPresetNumberBox.option("value", newval);
-                        }
-                    }
-                }
-            }
+                        };
+                    },
+                },
+            },
         ],
     })).dxNumberBox("instance");
 
     $("#button-setsector").dxButton($.extend(true, {}, metalButtonOptions, {
         icon: "fas fa-check",
+        disabled: true,
         elementAttr: {
             style: "color: var(--tm-green)",
         },
         onClick: function(e) {
-            let sectorLength = parseFloat(sectorPresetNumberBox.option("value")); //.toFixed(2); 
+            let sectorLength = parseFloat(sectorPresetNumberBox.option("value"));
             setReverse(false);
             WebSocket_Send('setSectorLength:'+sectorLength);
             sectorPresetNumberBox.option("value", 0);
@@ -254,7 +255,7 @@ $(function(){
             sectorPresetTextbox.option("value", "0 m");
             sectorPresetRestTextbox.option("value", "0 m");
             setReverse(false);
-            if (stageStarted)
+            if (stageStart.status)
                 WebSocket_Send('resetSector');
         }
 
@@ -278,14 +279,15 @@ $(function(){
                 reverseButton.option("icon", "fas fa-arrow-down");
                 reverseButton.option("elementAttr", {"style": "color: var(--tm-red)"});
                 // Wenn rückwärts, dann roter Text
-                $("#textbox-sector").find(".dx-texteditor-input").css("color", "var(--tm-red)");					
+                $("#textbox-sector").find(".dx-texteditor-input").css("color", "var(--tm-red)");                    
             } else {
                 reverseButton.option("icon", "fas fa-arrow-up");
                 reverseButton.option("elementAttr", {"style": "color: var(--tm-green)"});
-                $("#textbox-sector").find(".dx-texteditor-input").css("color", "");					
+                $("#textbox-sector").find(".dx-texteditor-input").css("color", "");                    
             };          
         };
- 
+    
+    // Anzeige der km-Stände
     var sectorTextbox = $("#textbox-sector").dxTextBox($.extend(true, {}, textBoxOptions,{
         value: formatDistance(0),
         onValueChanged: function(e) {
@@ -309,12 +311,16 @@ $(function(){
         value: "0 m",
     })).dxTextBox("instance");
 
+    // Zielzeit Etappe
     $("#datebox-stageend").dxDateBox({
         placeholder: "00:00",
         showClearButton: true,
         displayFormat: "HH:mm",
         pickerType: "rollers",
         type: "time",
+        // value: new Date(),
+        openOnFieldClick: true,
+        showDropDownButton: false,
         onValueChanged: function(e) {
             let stageend = e.component.option("value");
             if (stageend != null) {
@@ -327,13 +333,14 @@ $(function(){
     });
 
     var timeInStageTextbox = $("#textbox-timeinstage").dxTextBox($.extend(true, {}, textBoxOptions,{
-        value: "00:00",
+        value: "--:--",
     })).dxTextBox("instance");
 
 // Tab GLP
 
     var setRegtestButton = $("#button-setregtest").dxButton($.extend(true, {}, metalButtonOptions, {
         icon: "fas fa-check",
+        disabled: true,
         elementAttr: {
             style: "color: var(--tm-green)",
         },
@@ -342,7 +349,7 @@ $(function(){
                 resetSector();
                 WebSocket_Send('startRegtest:'+getRegtestTime());
                 if (getRegtestLength() > 0) {
-                    WebSocket_Send('setSectorLength:'+getRegtestLength());						
+                    WebSocket_Send('setRegtestLength:'+getRegtestLength());                        
                 };
                 if (getRegtestAvgSpeed() > 0) {
                     WebSocket_Send('setAvgSpeed:'+getRegtestAvgSpeed());
@@ -357,7 +364,7 @@ $(function(){
                 WebSocket_Send('stopRegtest');
                 resetRegtest(false);
                 setTimeout(resetSector, 2000);
-            }				
+            }                
         },
     })).dxButton("instance"); 
 
@@ -391,7 +398,6 @@ $(function(){
         };
 
     // Zeitvorgabe
-
     var regtestTimeNumberbox = $("#numberbox-regtesttime").dxNumberBox($.extend(true, {}, numberBoxOptions, {
         max: 1200,
         step: 1,
@@ -460,7 +466,7 @@ $(function(){
             regtestTimeTextbox.option("value", regtestTime + " sek");
             if (regtestTime > 0) {
                 resetRegtestButton.option("disabled", false);
-                if (stageStarted)
+                if (stageStart.status)
                     setRegtestButton.option("disabled", false);
                 // setRegtestStartTime();
             } else {
@@ -470,8 +476,7 @@ $(function(){
             setRegtestAvgSpeed();
         };
    
-    // Strecke
-
+    // Streckenvorgabe
     var regtestLengthNumberBox = $("#numberbox-regtestlength").dxNumberBox($.extend(true, {}, numberBoxOptions, {
         max: 25,
         step: 0.05,
@@ -589,7 +594,7 @@ $(function(){
                 regtestStartHourNumberbox.option("value", regtestStartHourNumberbox.option("value")-1);
             } else if (e.value == null) {
                 e.component.option("value", 0);
-            }					
+            }                    
             setRegtestStartTime();
         },
     }).dxNumberBox("instance");
@@ -610,9 +615,9 @@ $(function(){
                 regtestStartMinuteNumberbox.option("value", regtestStartMinuteNumberbox.option("value")-1);
             } else if (e.value == null) {
                 e.component.option("value", 0);
-            }					
+            }                    
             setRegtestStartTime();
-        },		
+        },        
     }).dxNumberBox("instance");
 
     function getRegtestStartTime() {
@@ -628,22 +633,21 @@ $(function(){
         } else {
             return 0;
         };
-    };			
+    };            
 
     function setRegtestStartTime() {
         if (setRegtestButton.option("disabled") == false) {
             startDate = 0; //getRegtestStartTime();
             if (startDate > 0) {
-                setRegtestButton.option("text", "Um "+startDate.toTimeString().split(' ')[0]+" starten");	
+                setRegtestButton.option("text", "Um "+startDate.toTimeString().split(' ')[0]+" starten");    
             } else {
                 setRegtestButton.option("text", "Starten"); //"Manuell starten");
             };
         };
-    };			
+    };            
     */
     
     // Anzeige
-    
     var regtestTimeTextbox = $("#textbox-regtesttime").dxTextBox($.extend(true, {}, textBoxOptions,{
         value: "0 sek",
         onValueChanged: function(e) {
@@ -750,13 +754,6 @@ $(function(){
         },
     }));
 
-    $("#selectbox-countpoint").dxSelectBox({
-        dataSource: countpointList,
-        displayExpr: "Name",
-        valueExpr: "Variable",
-        value: "roundabout"
-    });
-
 // Tab Orientierungskontrollen
 
     $("#datagrid-checkpoint").dxDataGrid($.extend(true, {}, dataGridOptions, {
@@ -768,11 +765,9 @@ $(function(){
             },
             {
                 dataField: "Beschreibung",
-                allowEditing: false,
+                allowEditing: true,
                 lookup: {
                     dataSource: checkpointList,
-                    displayExpr: "Name",
-                    valueExpr: "ID"
                 }
             },
             {
@@ -790,32 +785,17 @@ $(function(){
         onRowUpdated: function(e) {
             id = e.data.ID;
             description = e.data.Beschreibung;
-            
+            // Schreibt jeden Klein- in Großbuchstaben um
             e.data.Name = e.data.Name.toUpperCase();
-            
             name = e.data.Name;
             visibility = e.data.Sicher;           
             WebSocket_Send("changepoint:checkpoint&"+id+"&"+description+"&"+name+"&"+(visibility?1:0));
         },
     }));
 
-    $("#selectbox-checkpoint").dxSelectBox({
-        dataSource: checkpointList,
-        displayExpr: "Name",
-        valueExpr: "Variable",
-        value: "townsign",
-        onSelectionChanged: function(e) {
-            // v = e.data.Variable;
-            // n = e.data.Name;
-            // i = e.data.Icon;
-            // c = e.data.Iconfarbe;
-            // mylog(v); mylog(n); mylog(i); mylog(c);
-        },
-    });
-
 // Tab Setup
 
-    // RasPi - Reboot
+    // RasPi
     $("#button-sudoreboot").dxButton($.extend(true, {}, metalButtonOptions, {
         icon: "fas fa-redo",
         disabled: false,
@@ -831,7 +811,6 @@ $(function(){
         },
     })); 
     
-    // RasPi - Halt
     $("#button-sudohalt").dxButton($.extend(true, {}, metalButtonOptions, {
         icon: "fas fa-power-off",
         disabled: false,
@@ -847,8 +826,67 @@ $(function(){
         },
     })); 
 
-    // Tripmaster - Sound
-    var toggleSoundButton = $("#button-togglesound").dxButton($.extend(true, {}, metalButtonOptions, {
+    // Tripmaster
+    $("#button-download").dxButton($.extend(true, {}, metalButtonOptions, {
+        icon: "fas fa-save",
+        disabled: false,
+        elementAttr: {
+            style: "color: var(--tm-blue)",
+        },
+        onClick: function(e) {
+            $("#popup-download").dxPopup("show");
+        },
+    })); 
+    
+    $("#popup-download").dxPopup({
+        showTitle: true,
+        title: "Download",
+        showCloseButton: true,
+        dragEnabled: false,
+        closeOnOutsideClick: true,
+        height: "80%",
+        deferRendering: false,
+        onShown: function (e) {         
+            $("#datagrid-files").dxDataGrid($.extend(true, {}, dataGridOptions, {
+                columns: [
+                    {
+                        dataField: "Dateiname",
+                        allowEditing: false,
+                        cellTemplate: function (container, options) {
+                            $("<div>")
+                                .append($("<a>", { "href": "/out/"+options.value, "html": options.value }))
+                                .appendTo(container);
+                        }
+                    },
+                ],
+                editing: {
+                    mode: "row",
+                    allowDeleting: true,
+                    allowUpdating: false,
+                    texts: {
+                        confirmDeleteMessage: "Datei löschen?",
+                    },
+                    useIcons: true,
+                },
+                paging: {
+                    pageSize: 8,
+                },
+                onInitialized: function(e) {
+                    WebSocket_Send("getFiles");
+                },
+                onRowRemoving: function(e) {
+                    filename = e.data.Dateiname;
+                    mylog(filename);
+                    WebSocket_Send("deleteFile:" + filename);
+                },
+            }));
+        },
+        onHidden: function(e) {
+            $("#datagrid-files").dxDataGrid("dispose");
+        },
+    });
+
+    $("#button-togglesound").dxButton($.extend(true, {}, metalButtonOptions, {
         icon: "fas fa-volume-mute",
         disabled: false,
         elementAttr: {
@@ -856,22 +894,21 @@ $(function(){
         },
         onClick: function(e) {
             if (isSoundEnabled()) {
-                toggleSoundButton.option("icon", "fas fa-volume-mute");
-                toggleSoundButton.option("elementAttr", {"style": "color: var(--tm-red)"});
+                e.component.option("icon", "fas fa-volume-mute");
+                e.component.option("elementAttr", {"style": "color: var(--tm-red)"});
             } else {
-                toggleSoundButton.option("icon", "fas fa-volume-up");
-                toggleSoundButton.option("elementAttr", {"style": "color: var(--tm-green)"});
+                e.component.option("icon", "fas fa-volume-up");
+                e.component.option("elementAttr", {"style": "color: var(--tm-green)"});
                 // Wenn nicht vom User aktiviert, wird "Uncaught (in promise) DOMException" geworfen
                 audioElement.play().catch(function(error) { });
             };
         },
-    })).dxButton("instance");
+    }));
 
         function isSoundEnabled() {
-            return toggleSoundButton.option("icon") === "fas fa-volume-up"
+            return $("#button-togglesound").dxButton("instance").option("icon") === "fas fa-volume-up"
         };
 
-    // Tripmaster - Reset
     $("#button-resettripmaster").dxButton($.extend(true, {}, metalButtonOptions, {
         icon: "fas fa-redo",
         disabled: false,
@@ -882,14 +919,15 @@ $(function(){
             confirmDialog("Reset Tripmaster").show().done(function (dialogResult) {
                 if (dialogResult) {
                     WebSocket_Send('resetTripmaster');
-                    stageTextbox.option("value", formatDistance(0));
-                    totalTextbox.option("value", formatDistance(0));
+                    // stageTextbox.option("value", formatDistance(0));
+                    // totalTextbox.option("value", formatDistance(0));
+                    location.reload();
                 }
             });
         },
     })); 
 
-
+    // Fahrzeugkonfiguration
     var configurationSelectBox = $("#selectbox-configuration").dxSelectBox({
         dataSource: [
             "Jaguar",
@@ -911,7 +949,6 @@ $(function(){
         },
     });
 
-    // Optionen der Eingabetextboxen
     var inputTextBoxOptions = {
         // 'value' muss definiert sein, sonst ist ein gelöschter Wert valide
         value: "1",
@@ -992,6 +1029,50 @@ $(function(){
         },
     }).dxPopup("instance");
 
+    // Buttons
+    $("#button-1").dxButton($.extend(true, {}, metalButtonOptions, pointButtonOptions, {
+    })); 
+
+    $("#button-2").dxButton($.extend(true, {}, metalButtonOptions, pointButtonOptions, {
+    })); 
+
+    $("#button-3").dxButton($.extend(true, {}, metalButtonOptions, pointButtonOptions, {
+    })); 
+
+    $("#button-4").dxButton($.extend(true, {}, metalButtonOptions, pointButtonOptions, {
+    }));
+
+    var setButtonPopup = $("#popup-setbutton").dxPopup({
+        showTitle: true,
+        title: "Buttondefinition",
+        showCloseButton: true,
+        dragEnabled: false,
+        closeOnOutsideClick: true,
+        height: "80%",
+        deferRendering: false,
+        onShown: function (e) {         
+            $("#selectbox-checkpoint").dxTreeView({
+                dataSource:  new DevExpress.data.DataSource({
+                    store: pointList,
+                }),
+                displayExpr: "Name",
+                valueExpr: "Variable",
+                onContentReady: function(e) {
+                    e.component.expandAll();
+                },
+                onItemClick: function(e) {
+                    let settings = e.itemData.Variable;
+                    if (typeof settings !== 'undefined') {
+                        let id = setButtonPopup.element().attr("name");
+                        WebSocket_Send(id +':' + settings);
+                        setButtonPopup.hide();
+                    }
+                },
+            });
+        },
+    }).dxPopup("instance");
+
+    // Anzeige der km-Stände
     var stageTextbox = $("#textbox-stage").dxTextBox($.extend(true, {}, textBoxOptions,{
     })).dxTextBox("instance");
     

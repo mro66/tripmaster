@@ -5,11 +5,11 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-	<link rel="manifest" href="/static/json/tm.settings.json">
-	<link rel="stylesheet" type="text/css" href="/static/css/dx.common.css" />
-	<link rel="stylesheet" type="text/css" href="/static/css/dx.light.css" />
+    <link rel="manifest" href="/static/json/tm.settings.json">
+    <link rel="stylesheet" type="text/css" href="/static/css/dx.common.css" />
+    <link rel="stylesheet" type="text/css" href="/static/css/dx.light.css" />
     <link rel="dx-theme" data-theme="generic.light" href="/static/css/dx.light.css" />
-	<link rel="stylesheet" href="/static/css/fontawesome.5.8.2.all.min.css"/>
+    <link rel="stylesheet" href="/static/css/fontawesome.5.8.2.all.min.css"/>
 
     <link rel="stylesheet" type="text/css" href="/static/css/tm.common.css" />
     <link rel="stylesheet" type="text/css" href="/static/css/tm.settings.css" />
@@ -19,98 +19,101 @@
     <script src="/static/js/tm.common.js"></script>
 
     <script src="/static/js/websocket.js"></script>
+    <script src="https://cdn3.devexpress.com/jslib/19.1.4/js/localization/dx.messages.de.js"></script>
+    <script src="https://unpkg.com/devextreme-intl@19.1/dist/devextreme-intl.min.js"></script>
     <script>
-		var DEBUG = {{ debug }};
-		var SAMPLE_TIME = {{ sample_time }};
-		var REVERSE = ('{{ sector_reverse }}' === 'False');
-		window.jQuery || document.write(decodeURIComponent('%3Cscript src="static/jquery.min.js"%3E%3C/script%3E'))
-		
-		var ACTIVE_CONFIG = '{{ active_config }}';
-	</script>
+        var DEBUG = {{ debug }};
+        var SAMPLE_TIME = {{ sample_time }};
+        var REVERSE = ('{{ sector_reverse }}' === 'False');
+        window.jQuery || document.write(decodeURIComponent('%3Cscript src="static/jquery.min.js"%3E%3C/script%3E'))
+        
+        var ACTIVE_CONFIG = '{{ active_config }}';
+    </script>
 </head>
 <body onload="WebSocket_Open('settings')" class="dx-viewport">
     <div id="reloadpage">
+        <div>Tripmaster Settings</div>
         <div id="button-reloadpage"></div>
     </div>
-	<div id="tabpanel-settings">
+    <div id="tabpanel-settings" name="main">
     
         <!-- Abschnitt -->
-		<script id="tab-sector" type="text/html">
-            <div class="flex-row-stretch">
+        <script id="tab-sector" type="text/html">
+            <div class="flex-row">
                 <div>Abschnitt</div>
-                <div>
+                    <div>
                     <div id="button-reverse"></div>
                     <div id="button-setsector"></div>
                     <div id="button-resetsector"></div>
                 </div>
             </div>
-            <div class="flex-row-stretch">
+            <div class="flex-row">
                 <div id="numberbox-sectorpreset"></div>
             </div>
-            <div class="flex-row-stretch tm-background-output">
+            <div class="flex-row tm-background-output">
                 <div>Abschnitt</div>
                 <div id="tab0_sector" class="col50">
                     <div id="textbox-sector"></div>
                 </div>
             </div>
-            <div class="flex-row-stretch tm-background-output">
+            <div class="flex-row tm-background-output">
                 <div>Vorgabe</div>
                 <div class="col50">
                     <div id="textbox-sectorpreset"></div>
                 </div>
             </div>
-             <div class="flex-row-stretch tm-background-output">
+             <div class="flex-row tm-background-output">
                 <div>Rest</div>
                 <div class="col50">
                     <div id="textbox-sectorpresetrest"></div>
                 </div>
             </div>
-            <div class="flex-row-stretch">
+            <div class="flex-row">
                 <div>Etappe</div>
                 <div>
                     <div id="button-togglestage"></div>
                 </div>
             </div>
-            <div class="flex-row-stretch">
+            <div class="flex-row">
                 <div>Zielankunft</div>
                 <div class="col50">
                     <div id="datebox-stageend"></div>
                 </div>
             </div>
-             <div class="flex-row-stretch tm-background-output">
+             <div class="flex-row tm-background-output">
                 <div>Vebleibende Zeit</div>
                 <div class="col50">
                     <div id="textbox-timeinstage"></div>
                 </div>
             </div>
-		</script>
+        </script>
 
         <!-- GLP -->
-		<script id="tab-regtest" type="text/html">
+        <script id="tab-regtest" type="text/html">
         
             <!-- Einstellungen -->
-            <div class="flex-row-stretch">
+            <div class="flex-row">
                 <div>Gleichmäßigkeits-<br>prüfung</div>
                 <div>
                     <div id="button-setregtest"></div>
                     <div id="button-resetregtest"></div>
                 </div>
             </div>
-            <div class="flex-row-stretch">
+            <div class="flex-row">
                 <div id="numberbox-regtesttime"></div>
             </div>
-            <div class="flex-row-stretch">
+            <div class="flex-row">
                 <div id="numberbox-regtestlength"></div>
             </div>
             
             <!-- Anzeige -->
-            <div class="flex-row-stretch tm-background-output">
+            <div class="flex-row tm-background-output">
                 <div>Zeit</div>
                 <div class="col50">
                     <div id="textbox-regtesttime"></div>
                 </div>
             </div>
-            <div class="flex-row-stretch tm-background-output">
+            <div class="flex-row tm-background-output">
                 <div class="col50">
                     <div id="textbox-regtestminutes"></div>
                 </div>
@@ -118,50 +121,38 @@
                     <div id="textbox-regtestminutesdecimal"></div>
                 </div>
             </div>
-            <div class="flex-row-stretch tm-background-output">
+            <div class="flex-row tm-background-output">
                 <div>Strecke</div>
                 <div class="col50">
                     <div id="textbox-regtestlength"></div>
                 </div>
             </div>
-            <div class="flex-row-stretch tm-background-output">
+            <div class="flex-row tm-background-output">
                 <div>&#216; Geschwind.</div>
                 <div class="col50">
                     <div id="textbox-regtestavgspeed"></div>
                 </div>
             </div>
-		</script>
-		
+        </script>
+        
         
         <!-- Zählpunkte -->
-		<script id="tab-countpoint" type="text/html">
-            <div class="flex-row-stretch">
+        <script id="tab-countpoint" type="text/html">
+            <div class="flex-row">
                 <div id="datagrid-countpoint"></div>
             </div>
-            <div class="flex-row-stretch">
-                <div>Button für</div>
-            </div>
-            <div class="flex-row-stretch">
-                <div id="selectbox-countpoint"></div>
-            </div>
-		</script>
+        </script>
 
         <!-- Orientierungskontrollen -->
-		<script id="tab-checkpoint" type="text/html">
-            <div class="flex-row-stretch">
+        <script id="tab-checkpoint" type="text/html">
+            <div class="flex-row">
                 <div id="datagrid-checkpoint"></div>
             </div>
-            <div class="flex-row-stretch">
-                <div>Button für</div>
-            </div>
-            <div class="flex-row-stretch">
-                <div id="selectbox-checkpoint"></div>
-            </div>
-		</script>
+        </script>
 
         <!-- Setup -->
-		<script id="tab-setup" type="text/html">
-            <div class="flex-row-stretch">
+        <script id="tab-setup" type="text/html">
+            <div class="flex-row">
                 <div>Raspberry Pi</div>
                 <div>
                     <div id="button-sudohalt"></div>
@@ -169,19 +160,23 @@
                 </div>
             </div>
 
-            <div class="flex-row-stretch">
+            <div class="flex-row">
                 <div>Tripmaster</div>
                 <div>
+                    <div id="button-download"></div>
+                    <div id="popup-download">
+                        <div id="datagrid-files"></div>
+                    </div>
                     <div id="button-togglesound"></div>
-					<div id="button-resettripmaster"></div>
+                    <div id="button-resettripmaster"></div>
                 </div>
             </div>
-            <div class="flex-row-stretch">
+            <div class="flex-row">
                 <div></div>
                 <div>
                 </div>
             </div>
-            <div class="flex-row-stretch">
+            <div class="flex-row">
                 <div>Konfiguration</div>
                 <div class="col50">
                     <div id="selectbox-configuration"></div>
@@ -194,7 +189,7 @@
                         <div class="label-key" id="label-key2"></div>
                         <div id="textbox-key2"></div>
                         <br><br>
-                        <div class="flex-row-stretch space-evenly">
+                        <div class="flex-row space-evenly">
                             <div>
                                 <div id="button-saveconfiguration"></div>
                             </div>
@@ -206,25 +201,35 @@
                 </div>
             </div>
 
-            <div class="flex-row-stretch tm-background-output">
+            <div class="flex-row">
+                <div id="button-1"></div>
+                <div id="button-2"></div>
+                <div id="button-3"></div>
+                <div id="button-4"></div>
+                <div id="popup-setbutton">
+                    <div id="selectbox-checkpoint"></div>
+                </div>
+            </div>
+            
+            <div class="flex-row tm-background-output">
                 <div>Abschnitt</div>
-                <div class="col50" id="tab2_sector">
+                <div class="col50" id="tab4_sector">
                     <div></div>
                 </div>
             </div>
-            <div class="flex-row-stretch tm-background-output">
+            <div class="flex-row tm-background-output">
                 <div>Etappe</div>
                 <div class="col50">
                     <div id="textbox-stage"></div>
                 </div>
             </div>
-            <div class="flex-row-stretch tm-background-output">
+            <div class="flex-row tm-background-output">
                 <div>Gesamt</div>
                 <div class="col50">
                     <div id="textbox-total"></div>
                 </div>
             </div>
 
-		</script>
+        </script>
     </body>
 </html>

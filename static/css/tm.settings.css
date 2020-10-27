@@ -10,7 +10,7 @@
 
 /* TabPanel */
 .dx-field-label {
-	font-size: 3vmax;
+    font-size: 3vmax;
 }
 
 .dx-tabpanel .dx-multiview-wrapper {
@@ -29,89 +29,104 @@
     width: 50%;
 }
 
-.flex-row-stretch {
-	display: flex;
-	align-items: stretch;
-	justify-content: space-between;
+.flex-row {
+    display: flex;
+    /* align-items: stretch; */
+    justify-content: space-between;
     padding: 1vmax 2.5vmax;
 }
 
 .space-evenly {
-	justify-content: space-evenly;
+    justify-content: space-evenly;
 }
-	
-.dx-popup-content > .flex-row-stretch, .label-key {
+    
+.dx-popup-content > .flex-row, .label-key {
     padding: 1vmax 0;
 }
 
-.flex-row-stretch > div {
-	display: flex;
-	align-items: center;
+/* Breite der Bearbeiten Spalte im Datagrid */
+.dx-datagrid-content .dx-datagrid-table .dx-row .dx-command-edit.dx-command-edit-with-icons {
+  width: 45px;
+  min-width: 45px;
 }
 
-.flex-row-stretch div:nth-child(1), .label-key {
+.flex-row > div {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Text in der linken Spalte = erstes div Kind */
+.flex-row div:nth-child(1), .label-key {
     font-size: 3vmax;
 }
 
 /* Setup Tab, Platzhalter in DateBox */
 .dx-tab .dx-icon, .dx-placeholder {
-	font-size: 4vmax;
+    font-size: 4vmax;
 }
 
-/* Inputfeld im Datagrid */
-.dx-datagrid-content .dx-texteditor-input {
+/* Inputfeld in DateBox */
+#datebox-stageend .dx-texteditor-input {
+    padding-right: 0px;
+}
+
+/* Inputfeld im Datagrid
+   Eintrag im Treeview 
+   Eintrag Drop-Down Datagrid */
+.dx-datagrid-content .dx-texteditor-input,
+.dx-treeview .dx-item,
+.dx-popup-content .dx-item {
     font-size: 3vmax;
 }
 
 /* TextBox */
-.dx-textbox-red {
-	border: 1px var(--tm-red) solid ;
-}
+
 .dx-texteditor.dx-state-readonly {
     border-color: #ddd;
 }
 
 .tenseconds {
-	font-weight: bold;
-	animation-name: tenseconds;
-	animation-duration: 10s;
+    font-weight: bold;
+    animation-name: tenseconds;
+    animation-duration: 10s;
 }
 
 .secondyellow {
-	font-weight: bold;
-	animation-name: yellow;
-	animation-duration: 1s;
+    font-weight: bold;
+    animation-name: yellow;
+    animation-duration: 1s;
 }
 
 .secondred {
-	font-weight: bold;
-	animation-name: red;
-	animation-duration: 1s;
+    font-weight: bold;
+    animation-name: red;
+    animation-duration: 1s;
 }
 
 .flicker {
-	font-weight: normal;
-	animation-name: flicker;
-	animation-duration: 0.5s;
+    font-weight: normal;
+    animation-name: flicker;
+    animation-duration: 0.5s;
 }
 
 /* Standard syntax */
 @keyframes yellow {
-	0%  {background-color: var(--tm-yellow); color: white;}
-	100%   {background-color: white; color: var(--tm-yellow);}
+    0%  {background-color: var(--tm-yellow); color: white;}
+    100%   {background-color: white; color: var(--tm-yellow);}
 }
 
 @keyframes red {
-	0%  {background-color: var(--tm-red); color: white;}
-	100%   {background-color: white; color: var(--tm-red);}
+    0%  {background-color: var(--tm-red); color: white;}
+    100%   {background-color: white; color: var(--tm-red);}
 }
 
 @keyframes flicker {
-	0%  {background-color: white; color: var(--tm-red);}
-	16%  {background-color: var(--tm-red); color: white;}
-	33%  {background-color: white; color: var(--tm-red);}
-	50%  {background-color: var(--tm-red); color: white;}
-	66%  {background-color: white; color: var(--tm-red);}
-	83%  {background-color: var(--tm-red); color: white;}
-	100% {background-color: white; color: black;}
+    0%  {background-color: white; color: var(--tm-red);}
+    16%  {background-color: var(--tm-red); color: white;}
+    33%  {background-color: white; color: var(--tm-red);}
+    50%  {background-color: var(--tm-red); color: white;}
+    66%  {background-color: white; color: var(--tm-red);}
+    83%  {background-color: var(--tm-red); color: white;}
+    100% {background-color: white; color: black;}
 }

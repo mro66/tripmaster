@@ -5,12 +5,12 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-	<link rel="manifest" href="/static/json/tm.dashboard.json">
-	<link rel="stylesheet" type="text/css" href="/static/css/dx.common.css" />
-	<link rel="stylesheet" type="text/css" href="/static/css/dx.light.css" />
+    <link rel="manifest" href="/static/json/tm.dashboard.json">
+    <link rel="stylesheet" type="text/css" href="/static/css/dx.common.css" />
+    <link rel="stylesheet" type="text/css" href="/static/css/dx.light.css" />
     <link rel="dx-theme" data-theme="generic.light" href="/static/css/dx.light.css" />
-	<link rel="stylesheet" href="/static/css/fontawesome.5.8.2.all.min.css"/>
-	<link rel="stylesheet" href="/static/css/odometer-theme-car.css" />
+    <link rel="stylesheet" href="/static/css/fontawesome.5.8.2.all.min.css"/>
+    <link rel="stylesheet" href="/static/css/odometer-theme-car.css" />
     <link rel="stylesheet" type="text/css" href="/static/css/tm.common.css" />
     <link rel="stylesheet" type="text/css" href="/static/css/tm.dashboard.css" />
     <script src="/static/js/jquery.min.js"></script>
@@ -20,80 +20,80 @@
     <script src="/static/js/tm.common.js"></script>
     <script src="/static/js/websocket.js"></script>
     <script>
-		var DEBUG = {{ debug }};
-		var SAMPLE_TIME = {{ sample_time }};
-		var REVERSE = {{ sector_reverse }};
-		window.jQuery || document.write(decodeURIComponent('%3Cscript src="static/jquery.min.js"%3E%3C/script%3E'))
-	</script>
-	<style>
-	.odometer.odometer-auto-theme.odometer-animating-up .odometer-ribbon-inner, .odometer.odometer-theme-car.odometer-animating-up .odometer-ribbon-inner {
-	  -webkit-transition: -webkit-transform {{ sample_time / 1000 }}s linear;
-	  -moz-transition: -moz-transform {{ sample_time / 1000 }}s linear;
-	  -ms-transition: -ms-transform {{ sample_time / 1000 }}s linear;
-	  -o-transition: -o-transform {{ sample_time / 1000 }}s linear;
-	  transition: transform {{ sample_time / 1000 }}s linear;
-	</style>
+        var DEBUG = {{ debug }};
+        var SAMPLE_TIME = {{ sample_time }};
+        var REVERSE = {{ sector_reverse }};
+        window.jQuery || document.write(decodeURIComponent('%3Cscript src="static/jquery.min.js"%3E%3C/script%3E'))
+    </script>
+    <style>
+    .odometer.odometer-auto-theme.odometer-animating-up .odometer-ribbon-inner, .odometer.odometer-theme-car.odometer-animating-up .odometer-ribbon-inner {
+      -webkit-transition: -webkit-transform {{ sample_time / 1000 }}s linear;
+      -moz-transition: -moz-transform {{ sample_time / 1000 }}s linear;
+      -ms-transition: -ms-transform {{ sample_time / 1000 }}s linear;
+      -o-transition: -o-transform {{ sample_time / 1000 }}s linear;
+      transition: transform {{ sample_time / 1000 }}s linear;
+    </style>
 </head>
 <body onload="WebSocket_Open('dashboard')" class="dx-viewport">
     <div id="reloadpage">
-        <div id="button-reloadpage"></div>
+        <div>Tripmaster Dashboard</div>
+        <div id="button-reloadpage"></div> 
     </div>
-
-	<div id="multiview-dashboard" class="tm-background">
-		<script id="mv-sector" type="text/html">
-			<div id="sector-box" class="twocolumn-box">
-				<div data-options="dxItem: {ratio: 2}">
+    <div id="multiview-dashboard" name="main" class="tm-background">
+        <script id="mv-sector" type="text/html">
+            <div id="sector-box" class="twocolumn-box">
+                <div data-options="dxItem: {ratio: 2}">
                     <div id="status-gps" class="status-indicator">
                         <i class="fas fa-satellite-dish"></i>
                     </div>
                     <div id="status-tyre" class="status-indicator">
                         <i class="fab fa-galactic-republic"></i>
                     </div>
-					<div id="circulargauge-speed" onClick="if (stageStarted) {WebSocket_Send('resetSector');};"></div>
-				</div>
-				<div data-options="dxItem: {ratio: 1}" id="right-sector">
+                    <div id="circulargauge-speed"></div>
+                </div>
+                <div data-options="dxItem: {ratio: 1}" id="right-sector">
                     <div id="button-group" class="flex-column">
                         <div class="flex-row">
                             <div id="button-togglestage"></div>
                         </div>
                         <div class="flex-row">
-                            <div id="button-countpoint"></div>
-                            <div id="button-speccountpoint"></div>
+                            <div id="button-1"></div>
+                            <div id="button-2"></div>
                         </div>
                         <div class="flex-row">
-                            <div id="button-checkpoint"></div>
-                            <div id="button-speccheckpoint"></div>
+                            <div id="button-3"></div>
+                            <div id="button-4"></div>
                         </div>
-					</div>
-				</div>
-			</div>
-			<div id="odometer-kmtotal"></div>
-			<div id="odometer-kmsector"></div>
-			<script>
-				kmtotal = new Odometer({
-				  el: document.getElementById("odometer-kmtotal"),
-				  format: "(d),d",
-				});
-				kmsector = new Odometer({
-				  el: document.getElementById("odometer-kmsector"),
-				});
-			</script>
-		</script>
-		<script id="mv-regtest" type="text/html">
-			<div id="regtest-box" class="twocolumn-box">
-				<div data-options="dxItem: {ratio: 3}">
-					<div id="circulargauge-devavgspeed"></div>
-					<div id="textbox-regtesttime"></div>
-				</div>
-				<div data-options="dxItem: {ratio: 1}" id="right-regtest">
-                    <div id="lineargauge-kmsector" onClick="showButtons()"></div>
-				</div>
-			</div>
-		
-		</script>
-	</div>
-	<script>
-		window.addEventListener("resize", resizeAndPosition);
+                    </div>
+                </div>
+            </div>
+            <div id="odometer-kmtotal"></div>
+            <div id="odometer-kmsector"></div>
+            <script>
+                kmtotal = new Odometer({
+                  el: document.getElementById("odometer-kmtotal"),
+                  format: "(d),d",
+                });
+                kmsector = new Odometer({
+                  el: document.getElementById("odometer-kmsector"),
+                });
+            </script>
+        </script>
+        <script id="mv-regtest" type="text/html">
+            <div id="regtest-box" class="twocolumn-box">
+                <div data-options="dxItem: {ratio: 3}">
+                    <div id="circulargauge-devavgspeed"></div>
+                    <div id="textbox-regtesttime"></div>
+                </div>
+                <div data-options="dxItem: {ratio: 1}" id="right-regtest">
+                    <div id="lineargauge-kmsector"></div>
+                </div>
+            </div>
+        
+        </script>
+    </div>
+    <script>
+        window.addEventListener("resize", resizeAndPosition);
     </script>
 </body>
 </html>
