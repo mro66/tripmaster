@@ -60,3 +60,26 @@
     text-align: center;
     background-color: Ivory;
 }
+
+/* Uhr */
+@font-face {
+    font-family: 'Consolas';
+    src: url('/static/css/fonts/Consolas.otf');
+}
+
+#clock-box {
+    background: black;
+    align-items: center !important;
+    font-family: 'Consolas';
+}
+#clock-box .dx-box-item-content {
+    align-items: center;
+    }
+    
+#clock {
+    font-size: 30vmin;
+}
+
+#smallclock {
+    font-size: 15vmin;
+}

@@ -1,4 +1,7 @@
-DevExpress.localization.locale("de-de");
+DevExpress.localization.locale("de");
+DevExpress.localization.loadMessages({
+    de: { "Yes": "Ja", "No": "Nein", "Cancel": "Abbrechen" }
+});
 
 // Globale Variable
 var kmLeftInSector = 0;
@@ -11,12 +14,12 @@ var stageStarted = {
             let isZero = ($("#numberbox-sectorpreset").dxNumberBox("instance").option("value") == 0);
             $("#button-setsector").dxButton("instance").option("disabled", !this.value || isZero);
         };
-        if (document.getElementById("button-setregtest") !== null) {
-            let isZero = ($("#numberbox-regtesttime").dxNumberBox("instance").option("value") == 0);
-            $("#button-setregtest").dxButton("instance").option("disabled", !this.value || isZero);
-        };
+        // if (document.getElementById("button-setregtest") !== null) {
+            // let isZero = ($("#numberbox-regtesttime").dxNumberBox("instance").option("value") == 0);
+            // $("#button-setregtest").dxButton("instance").option("disabled", !this.value || isZero);
+        // };
         if (document.getElementById("button-download") !== null) {
-            $("#button-download").dxButton("instance").option("disabled", this.value);
+            // $("#button-download").dxButton("instance").option("disabled", this.value);
         };
         // Zählpunkte und Orientierungskontrollen aktivieren - nur Dashboard
         if (document.getElementById("multiview-dashboard") !== null) {
@@ -61,6 +64,18 @@ var toggleStageButtonOptions = {
     elementAttr: {
         style: "color: var(--tm-gray)",
     },
+    onClick: function(e) {
+        audioClick.play().catch(function(error) { });
+        if (stageStarted.status) {
+            confirmDialog("Etappe beenden?").show().done(function (dialogResult) {
+                if (dialogResult) {
+                    WebSocket_Send("toggleStage");
+                }
+            });
+        } else {
+            WebSocket_Send("toggleStage");
+        }
+    },
 };    
 
 $(function(){
@@ -98,7 +113,7 @@ $(function(){
     
     function formatDistance(distance) {
         if (Math.abs(distance) < 1) {
-            return (distance * 1000) + " m";
+            return Math.round(distance * 1000) + " m";
         } else {
             return formatNumber(distance, 2) + " km";
         }
@@ -118,6 +133,12 @@ $(function(){
     
     function formatSpeed(speed) {
         return formatNumber(speed, 1) + " km/h";
+    };
+
+// Formatierung von Zeitangaben
+    
+    function formatTime(time) {
+        return formatNumber(time, 0) + " sek";
     };
 
 // Formatierung von Zahlen mit standardmäßig zwei Nachkommastellen

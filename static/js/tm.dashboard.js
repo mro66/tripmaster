@@ -21,7 +21,7 @@ var subValueIndicator = {
     },
 };
 
-// Farbverlauf der Linearen Anzeige (leider deaktiviert, da bei einem Farbwechsel die Anzeige immer zuerst auf 0 springt :-(
+// Farbverlauf der Linearen Anzeige
     function setKmSector(fracSectorDriven) {
         if (fracSectorDriven <= 10) { rgbColor = "rgb(217,83,79)" } else
         if (fracSectorDriven <= 20) { rgbColor = "rgb(222,101,79)" } else
@@ -43,23 +43,96 @@ $(function(){
     // Multiview
     $("#multiview-dashboard").dxMultiView({
         height: "100%",
-        selectedIndex: 0,
+        selectedIndex: 1,
         loop: false,
         animationEnabled: true,
         deferRendering: false,
         items: [{
+            template: $("#mv-clock"),
+        }, {
             template: $("#mv-sector"),
         }, {
             template: $("#mv-regtest"),
         }],
     });
     
-    // Box mit zwei Spalten
-    $(".twocolumn-box").dxBox({
-        direction: "row",
+    // Box
+    $(".dashboard-box").dxBox({
         width: "100%",
         height: "100%",
     });
+
+// Multiview Uhr
+
+    $("#circulargauge-cputemp").dxCircularGauge({
+        // "containerBackgroundColor": "black",
+        geometry: {
+            endAngle: 225,
+            startAngle: 315
+        },
+        rangeContainer: {
+            backgroundColor: "var(--tm-digit)",
+            offset: 8,
+            orientation: "outside",
+            width: 8,
+            ranges: [
+               {
+                color: "var(--tm-red)",
+                startValue: 80,
+                endValue: 70
+               },
+               {
+                color: "var(--tm-yellow)",
+                startValue: 70,
+                endValue: 60
+               },
+               {
+                color: "var(--tm-green)",
+                startValue: 60,
+                endValue: 40
+               },
+            ],
+           },
+        scale: {
+            endValue: 40,
+            startValue: 80,
+            label: {
+                font: {
+                    family: "Tripmaster Font",
+                    color: "var(--tm-digit)",
+                    size: 30,
+                },
+                indentFromTick: -20,
+            },
+            orientation: "inside",
+            tickInterval: 10,
+            tick: {
+                color: "var(--tm-digit)",
+                length: 16,
+                width: 4
+                },
+        },
+        title: {
+            text: "Temp",
+            verticalAlignment: "bottom",
+            font: {
+                family: "Tripmaster Font",
+                color: "var(--tm-digit)",
+                size: 30,
+            },
+        },
+        valueIndicator: {
+            color: "var(--tm-digit)",
+            indentFromCenter: 120,
+            spindleGapSize: 0,
+            spindleSize: 0,
+            offset: 0,
+            type: "triangleNeedle",
+            width: 10
+        },
+    });
+
+// Multiview Tacho
 
     $("#circulargauge-speed").dxCircularGauge({
         containerBackgroundColor: "Ivory",
@@ -163,7 +236,6 @@ $(function(){
                 },
                 customizeText: function (e) {
                     if (e.value == 100) {
-                        // $("#lineargauge-kmsector").dxLinearGauge('instance').option("subvalueIndicator.color", "var(--tm-green)");
                         return formatNumber(kmSectorPreset) + " km &#10003;";
                     } else {
                         return "-" + formatDistance(kmLeftInSector);
@@ -221,7 +293,8 @@ $(function(){
     $("#button-4").dxButton($.extend(true, {}, metalButtonOptions, {
     })); 
 
-// GLP
+// Multiview GLP
+
     // Abweichung von der Durchschnittsgeschwindigkeit
     $("#circulargauge-devavgspeed").dxCircularGauge({
         animation: {

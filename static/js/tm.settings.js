@@ -2,6 +2,9 @@ var audioWineGlass = document.createElement('audio');
 audioWineGlass.setAttribute('src', '/static/Wine_Glass.ogg');
 var countdownRunning = false;
 
+
+// Array [] von Objekten {}
+// !!! MUSS MIT POINTS DICTIONARY IN tripmaster_web.py ÜBEREINSTIMMEN !!!
 var pointList = [{
     Variable: "checkpoint:null",
     Name: "Inaktiv",
@@ -34,12 +37,23 @@ var pointList = [{
     }]
 }];
 
-var checkpointList = ["Kreisverkehr", "Ortsschild", "Stempelkontrolle", "Stummer Wächter", "Sonstige OK"];
+// Extrahiert die Orientierungskontrollen aus der pointList als Array
+function getCheckpointList() {
+    let cpl = [];
+    for (i = 0; i < pointList.length; i++) {
+        if (pointList[i].Name == "Orientierungskontrollen") {
+            for (j = 0; j < pointList[i].items.length; j++) {
+              cpl.push(pointList[i].items[j].Name);
+            };
+        };
+    };
+    return cpl;
+};
 
 // Zahlenfeld mit <<, <, >, >>
 var numberBoxOptions = {
     inputAttr: {
-        style: "font-size: 7.1vmin; text-align: center",
+        style: "font-size: 7vmin; text-align: center",
     },
     min: 0,
     value: 0,
@@ -80,6 +94,36 @@ var numberBoxOptions = {
         },
     ]
 };
+
+// Datumsfelder für Etappenstart und -ende
+var dateBoxOptions = {
+    placeholder: "00:00",
+    showClearButton: true,
+    displayFormat: "HH:mm",
+    pickerType: "rollers",
+    type: "time",
+    openOnFieldClick: true,
+    showDropDownButton: false,
+    onValueChanged: function(e) {
+        let value = e.component.option("value");
+        if (value != null) {
+            value.setSeconds(0)
+            value.setMilliseconds(0);
+            value = value.getTime();
+        } else {
+            document.getElementById("label-stagetimeto").innerHTML = "Verbleibende Zeit";
+        };
+        if (e.element.attr("id") == "datebox-stagestart") {
+            if (!stageStarted.status) {
+                WebSocket_Send("setStageStart:"+value);
+            }
+        } else if (e.element.attr("id") == "datebox-stagefinish") {
+            WebSocket_Send("setStageFinish:"+value);
+        };
+    },
+};
+
+var jumpToLastPage = false; 
 
 var dataGridOptions = {
     elementAttr: {
@@ -154,12 +198,13 @@ $(function(){
             template: $("#tab-setup"),
         }],
         onSelectionChanged: function(e) {
+            // Abschnittszähler verschieben
             if (e.component.option("selectedIndex")==0) {
                 $("#textbox-sector").appendTo("#tab0_sector");
             } else if (e.component.option("selectedIndex")==4) {
                 $("#textbox-sector").appendTo("#tab4_sector");
             }
-        }
+        },
     });
 
 // Tab Abschnitt
@@ -175,54 +220,45 @@ $(function(){
             {
                 options: {
                     onClick: function(e) {
-                        let newval = sectorPresetNumberBox.option("value") - 1;
-                        if (newval <= sectorPresetNumberBox.option("min")) {
-                            sectorPresetNumberBox.option("value", sectorPresetNumberBox.option("min"));
-                        } else {
-                            sectorPresetNumberBox.option("value", newval);
-                        };
+                        setSectorPreset(-1);
                     },
                 },
             },
             {
                 options: {
                    onClick: function(e) {
-                        let newval = sectorPresetNumberBox.option("value") - .05;
-                        if (newval <= sectorPresetNumberBox.option("min")) {
-                            sectorPresetNumberBox.option("value", sectorPresetNumberBox.option("min"));
-                        } else {
-                            sectorPresetNumberBox.option("value", newval);
-                        };
+                        setSectorPreset(-.05);
                     },
                 },
             },
             {
                 options: {
                    onClick: function(e) {
-                        let newval = sectorPresetNumberBox.option("value") + .05;
-                        if (newval >= sectorPresetNumberBox.option("max")) {
-                            sectorPresetNumberBox.option("value", sectorPresetNumberBox.option("max"));
-                        } else {
-                            sectorPresetNumberBox.option("value", newval);
-                        };
+                        setSectorPreset(.05);
                     },
                 },
             },
             {
                 options: {
                     onClick: function(e) {
-                        let newval = sectorPresetNumberBox.option("value") + 1;
-                        if (newval >= sectorPresetNumberBox.option("max")) {
-                            sectorPresetNumberBox.option("value", sectorPresetNumberBox.option("max"));
-                        } else {
-                            sectorPresetNumberBox.option("value", newval);
-                        };
+                        setSectorPreset(1);
                     },
                 },
             },
         ],
     })).dxNumberBox("instance");
 
+        function setSectorPreset(diff) {
+            let newval = parseFloat(sectorPresetNumberBox.option("value")) + diff;
+            if (newval < sectorPresetNumberBox.option("step")) {
+                sectorPresetNumberBox.option("value", sectorPresetNumberBox.option("min"));
+            } else if (newval > sectorPresetNumberBox.option("max")) {
+                sectorPresetNumberBox.option("value", sectorPresetNumberBox.option("max"));
+            } else {
+                sectorPresetNumberBox.option("value", newval);
+            };
+        };
+        
     $("#button-setsector").dxButton($.extend(true, {}, metalButtonOptions, {
         icon: "fas fa-check",
         disabled: true,
@@ -250,10 +286,13 @@ $(function(){
 
         function resetSectorPreset() {
             sectorPresetNumberBox.option("value", 0);
-            // sectorTextbox.option("value", formatDistance(0));
-            sectorPresetTextbox.option("value", "0 m");
-            sectorPresetRestTextbox.option("value", "0 m");
-            setReverse(false);
+            // sectorTextBox.option("value", formatDistance(0));
+            sectorPresetTextBox.option("value", "0 m");
+            sectorPresetRestTextBox.option("value", "0 m");
+            // Wenn der 
+            if (reverseButton.option("icon") === "fas fa-arrow-down") {
+                setReverse(false);
+            }
             if (stageStarted.status)
                 WebSocket_Send('setSectorLength:0.0');
         }
@@ -264,16 +303,13 @@ $(function(){
         elementAttr: {
             style: "color: var(--tm-green)",
         },
-        onContentReady: function(e) {
-            // setReverse(false);
-        },
         onClick: function(e) {
-            WebSocket_Send("toggleReverse");
             setReverse(e.component.option("icon") === "fas fa-arrow-up");
         },
     })).dxButton("instance");
     
         function setReverse(backwards) {
+            WebSocket_Send("toggleReverse");
             if (backwards) {
                 reverseButton.option("icon", "fas fa-arrow-down");
                 reverseButton.option("elementAttr", {"style": "color: var(--tm-red)"});
@@ -287,11 +323,11 @@ $(function(){
         };
     
     // Anzeige der km-Stände
-    var sectorTextbox = $("#textbox-sector").dxTextBox($.extend(true, {}, textBoxOptions,{
+    var sectorTextBox = $("#textbox-sector").dxTextBox($.extend(true, {}, textBoxOptions,{
         value: formatDistance(0),
     })).dxTextBox("instance");
 
-    var sectorPresetTextbox = $("#textbox-sectorpreset").dxTextBox($.extend(true, {}, textBoxOptions,{
+    var sectorPresetTextBox = $("#textbox-sectorpreset").dxTextBox($.extend(true, {}, textBoxOptions,{
         value: "0 m",
         onValueChanged: function(e) {
             if (isSoundEnabled()) {
@@ -303,55 +339,17 @@ $(function(){
         }
     })).dxTextBox("instance");
 
-    var sectorPresetRestTextbox = $("#textbox-sectorpresetrest").dxTextBox($.extend(true, {}, textBoxOptions,{
+    var sectorPresetRestTextBox = $("#textbox-sectorpresetrest").dxTextBox($.extend(true, {}, textBoxOptions,{
         value: "0 m",
     })).dxTextBox("instance");
 
     // Startzeit Etappe
-    $("#datebox-stagestart").dxDateBox({
-        placeholder: "00:00",
-        showClearButton: true,
-        displayFormat: "HH:mm",
-        pickerType: "rollers",
-        type: "time",
-        // value: new Date(),
-        openOnFieldClick: true,
-        showDropDownButton: false,
-        onValueChanged: function(e) {
-            let stagestart = e.component.option("value");
-            if (stagestart != null) {
-                stagestart.setSeconds(0)
-                stagestart.setMilliseconds(0);
-                stagestart = stagestart.getTime();
-            } else {
-                document.getElementById("label-stagetimeto").innerHTML = "Verbleibende Zeit";
-            }
-            WebSocket_Send("setStageStart:"+stagestart)
-        },
-    });
+    $("#datebox-stagestart").dxDateBox($.extend(true, {}, dateBoxOptions,{
+    }));
 
     // Zielzeit Etappe
-    $("#datebox-stagefinish").dxDateBox({
-        placeholder: "00:00",
-        showClearButton: true,
-        displayFormat: "HH:mm",
-        pickerType: "rollers",
-        type: "time",
-        // value: new Date(),
-        openOnFieldClick: true,
-        showDropDownButton: false,
-        onValueChanged: function(e) {
-            let stagefinish = e.component.option("value");
-            if (stagefinish != null) {
-                stagefinish.setSeconds(0)
-                stagefinish.setMilliseconds(0);
-                stagefinish = stagefinish.getTime();
-            } else {
-                document.getElementById("label-stagetimeto").innerHTML = "Verbleibende Zeit";
-            }
-            WebSocket_Send("setStageFinish:"+stagefinish)
-        },
-    });
+    $("#datebox-stagefinish").dxDateBox($.extend(true, {}, dateBoxOptions,{
+    }));
 
     $("#textbox-stagetimeto").dxTextBox($.extend(true, {}, textBoxOptions,{
         value: "--:--:--",
@@ -359,6 +357,7 @@ $(function(){
 
 // Tab GLP
 
+    // Start und Reset Buttons
     var setRegtestButton = $("#button-setregtest").dxButton($.extend(true, {}, metalButtonOptions, {
         icon: "fas fa-check",
         disabled: true,
@@ -369,13 +368,9 @@ $(function(){
             if (countdownRunning == false) {
                 resetSectorPreset();
                 WebSocket_Send('resetSector');
-                WebSocket_Send('startRegtest:'+getRegtestTime());
-                if (getRegtestLength() > 0) {
-                    WebSocket_Send('setRegtestLength:'+getRegtestLength());                        
-                };
-                if (getRegtestAvgSpeed() > 0) {
-                    WebSocket_Send('setAvgSpeed:'+getRegtestAvgSpeed());
-                };
+                WebSocket_Send('startRegtest:'+ parseInt(regtestTimeNumberBox.option("value")) + '&' 
+                                              + parseFloat(regtestDistanceNumberBox.option("value")) + '&' 
+                                              + parseFloat(regtestSpeedNumberBox.option("value")));
                 countdownRunning = true;
                 // Stopzeichen
                 e.component.option("icon", "far fa-times-circle");
@@ -384,7 +379,7 @@ $(function(){
                 $("#textbox-regtesttime").find(".dx-texteditor-input").css("color", "var(--tm-red)");
             } else {
                 WebSocket_Send('stopRegtest');
-                resetRegtest(false);
+                resetRegtest();
                 setTimeout(function() {
                         resetSectorPreset();
                         WebSocket_Send('resetSector');
@@ -399,18 +394,20 @@ $(function(){
             style: "color: var(--tm-red)",
         },
         onClick: function(e) {
-            resetRegtest(false);
+            resetRegtest();
         },
     })).dxButton("instance"); 
 
-        function resetRegtest(flicker = true) {
+        function resetRegtest(flicker = false) {
             countdownRunning = false;
             setRegtestButton.option("icon", "fas fa-check");
             setRegtestButton.option("elementAttr", {"style": "color: var(--tm-green)"});
-           // reset regtestStartTimeNumberbox
-            regtestLengthNumberBox.option("value", 0);
-            regtestTimeNumberbox.option("value", 0);
-            // setRegtestAvgSpeed();
+            setRegtestButton.option("disabled", true);
+            resetRegtestButton.option("disabled", true);
+           // reset regtestStartTimeNumberBox
+            resetRegtestNumberBox(regtestTimeNumberBox);
+            resetRegtestNumberBox(regtestDistanceNumberBox);
+            resetRegtestNumberBox(regtestSpeedNumberBox);
             
             var countdownText = document.getElementById("textbox-regtesttime").children[0].children[0].children[0];
             if (flicker) {
@@ -423,228 +420,186 @@ $(function(){
         };
 
     // Zeitvorgabe
-    var regtestTimeNumberbox = $("#numberbox-regtesttime").dxNumberBox($.extend(true, {}, numberBoxOptions, {
+    var regtestTimeNumberBox = $("#numberbox-regtesttime").dxNumberBox($.extend(true, {}, numberBoxOptions, {
         max: 1200,
         step: 1,
         format: "#0 sek",
         onValueChanged: function (e) {
-            setRegtestTime();
+            regtestTimeTextBox.option("value", formatTime(e.value));
         },
         buttons: [
             {
                 options: {
                     onClick: function(e) {
-                        let newval = regtestTimeNumberbox.option("value") - 20;
-                        if (newval <= regtestTimeNumberbox.option("min")) {
-                            regtestTimeNumberbox.option("value", regtestTimeNumberbox.option("min"));
-                        } else {
-                            regtestTimeNumberbox.option("value", newval);
-                        }
+                        calcRegtest(regtestTimeNumberBox, -20);
                     },
                 },
             },
             {
                 options: {
                    onClick: function(e) {
-                        let newval = regtestTimeNumberbox.option("value") - regtestTimeNumberbox.option("step");
-                        if (newval <= regtestTimeNumberbox.option("min")) {
-                            regtestTimeNumberbox.option("value", regtestTimeNumberbox.option("min"));
-                        } else {
-                            regtestTimeNumberbox.option("value", newval);
-                        }
+                        calcRegtest(regtestTimeNumberBox, -1);
                     },
                 }
             },
             {
                 options: {
                    onClick: function(e) {
-                        let newval = regtestTimeNumberbox.option("value") + regtestTimeNumberbox.option("step");
-                        if (newval >= regtestTimeNumberbox.option("max")) {
-                            regtestTimeNumberbox.option("value", regtestTimeNumberbox.option("max"));
-                        } else {
-                            regtestTimeNumberbox.option("value", newval);
-                        }
+                        calcRegtest(regtestTimeNumberBox, 1);
                     },
                   }
             },
             {
                 options: {
                     onClick: function(e) {
-                        let newval = regtestTimeNumberbox.option("value") + 20;
-                        if (newval >= regtestTimeNumberbox.option("max")) {
-                            regtestTimeNumberbox.option("value", regtestTimeNumberbox.option("max"));
-                        } else {
-                            regtestTimeNumberbox.option("value", newval);
-                        }
+                        calcRegtest(regtestTimeNumberBox, 20);
                     }
                 }
             }
         ],
     })).dxNumberBox("instance");
 
-        function getRegtestTime() {
-            return parseInt(regtestTimeNumberbox.option("value"))
-        };
-
-        function setRegtestTime() {
-            var regtestTime = getRegtestTime();
-            regtestTimeTextbox.option("value", regtestTime + " sek");
-            if (regtestTime > 0) {
-                resetRegtestButton.option("disabled", false);
-                if (stageStarted.status)
-                    setRegtestButton.option("disabled", false);
-                // setRegtestStartTime();
-            } else {
-                resetRegtestButton.option("disabled", true);
-                setRegtestButton.option("disabled", true);
-            }
-            setRegtestAvgSpeed();
-        };
-   
     // Streckenvorgabe
-    var regtestLengthNumberBox = $("#numberbox-regtestlength").dxNumberBox($.extend(true, {}, numberBoxOptions, {
+    var regtestDistanceNumberBox = $("#numberbox-regtestdistance").dxNumberBox($.extend(true, {}, numberBoxOptions, {
         max: 25,
         step: 0.05,
         format: "#0.00 km",
         onValueChanged: function(e) {
-            setRegtestLength();
+            regtestDistanceTextBox.option("value", formatDistance(e.value));
         },
         buttons: [
             {
                 options: {
                     onClick: function(e) {
-                        let newval = regtestLengthNumberBox.option("value") - 1;
-                        if (newval <= regtestLengthNumberBox.option("min")) {
-                            regtestLengthNumberBox.option("value", regtestLengthNumberBox.option("min"));
-                        } else {
-                            regtestLengthNumberBox.option("value", newval);
-                        }
+                        calcRegtest(regtestDistanceNumberBox, -1);
                     },
                 },
             },
             {
                 options: {
                    onClick: function(e) {
-                        let newval = regtestLengthNumberBox.option("value") - .05;
-                        if (newval <= regtestLengthNumberBox.option("min")) {
-                            regtestLengthNumberBox.option("value", regtestLengthNumberBox.option("min"));
-                        } else {
-                            regtestLengthNumberBox.option("value", newval);
-                        }
+                        calcRegtest(regtestDistanceNumberBox, -.05);
                     },
-                }
+                },
             },
             {
                 options: {
                    onClick: function(e) {
-                        let newval = regtestLengthNumberBox.option("value") + .05;
-                        if (newval >= regtestLengthNumberBox.option("max")) {
-                            regtestLengthNumberBox.option("value", regtestLengthNumberBox.option("max"));
-                        } else {
-                            regtestLengthNumberBox.option("value", newval);
-                        }
+                        calcRegtest(regtestDistanceNumberBox, .05);
                     },
-                  }
+                },
             },
             {
                 options: {
                     onClick: function(e) {
-                        let newval = regtestLengthNumberBox.option("value") + 1;
-                        if (newval >= regtestLengthNumberBox.option("max")) {
-                            regtestLengthNumberBox.option("value", regtestLengthNumberBox.option("max"));
-                        } else {
-                            regtestLengthNumberBox.option("value", newval);
-                        }
-                    }
-                }
-            }
+                        calcRegtest(regtestDistanceNumberBox, 1);
+                    },
+                },
+            },
         ],
     })).dxNumberBox("instance");
       
-        function getRegtestLength() {
-            return parseFloat(regtestLengthNumberBox.option("value")); //.toFixed(2); 
-        };
-        
-        function setRegtestLength() {
-            var regtestLength = getRegtestLength();
-            regtestLengthTextbox.option("value", formatDistance(regtestLength));
-            if (regtestLength > 0) {
-                resetRegtestButton.option("disabled", false);
-                // ohne Zeit keine GLP
-                // setRegtestButton.option("disabled", false);
-                // setRegtestStartTime();
-            } else {
-                resetRegtestButton.option("disabled", true);
-                // ohne Zeit keine GLP
-                // setRegtestButton.option("disabled", true);
-            }
-            setRegtestAvgSpeed();
-        };
-
     // Geschwindigkeitsvorgabe
-    var regtestAvgSpeedNumberBox = $("#numberbox-regtestavgspeed").dxNumberBox($.extend(true, {}, numberBoxOptions, {
+    var regtestSpeedNumberBox = $("#numberbox-regtestspeed").dxNumberBox($.extend(true, {}, numberBoxOptions, {
         max: 80,
         step: 0.1,
         format: "#0.0 km/h",
         onValueChanged: function(e) {
-            // setRegtestLength();
+            regtestSpeedTextBox.option("value", formatSpeed(e.value));
         },
         buttons: [
             {
                 options: {
                     onClick: function(e) {
-                        let newval = regtestAvgSpeedNumberBox.option("value") - 2;
-                        if (newval <= regtestAvgSpeedNumberBox.option("min")) {
-                            regtestAvgSpeedNumberBox.option("value", regtestAvgSpeedNumberBox.option("min"));
-                        } else {
-                            regtestAvgSpeedNumberBox.option("value", newval);
-                        }
+                        calcRegtest(regtestSpeedNumberBox, -2);
+                   },
+                },
+            },
+            {
+                options: {
+                   onClick: function(e) {
+                        calcRegtest(regtestSpeedNumberBox, -.1);
                     },
                 },
             },
             {
                 options: {
                    onClick: function(e) {
-                        let newval = regtestAvgSpeedNumberBox.option("value") - .1;
-                        if (newval <= regtestAvgSpeedNumberBox.option("min")) {
-                            regtestAvgSpeedNumberBox.option("value", regtestAvgSpeedNumberBox.option("min"));
-                        } else {
-                            regtestAvgSpeedNumberBox.option("value", newval);
-                        }
+                        calcRegtest(regtestSpeedNumberBox, .1);
                     },
-                }
-            },
-            {
-                options: {
-                   onClick: function(e) {
-                        let newval = regtestAvgSpeedNumberBox.option("value") + .1;
-                        if (newval >= regtestAvgSpeedNumberBox.option("max")) {
-                            regtestAvgSpeedNumberBox.option("value", regtestAvgSpeedNumberBox.option("max"));
-                        } else {
-                            regtestAvgSpeedNumberBox.option("value", newval);
-                        }
-                    },
-                  }
+                },
             },
             {
                 options: {
                     onClick: function(e) {
-                        let newval = regtestAvgSpeedNumberBox.option("value") + 2;
-                        if (newval >= regtestAvgSpeedNumberBox.option("max")) {
-                            regtestAvgSpeedNumberBox.option("value", regtestAvgSpeedNumberBox.option("max"));
-                        } else {
-                            regtestAvgSpeedNumberBox.option("value", newval);
-                        }
-                    }
-                }
-            }
+                        calcRegtest(regtestSpeedNumberBox, 2);
+                    },
+                },
+            },
         ],
     })).dxNumberBox("instance");
       
+    function resetRegtestNumberBox(numberbox, newval = 0) {
+        numberbox.option("value", newval);
+        numberbox.option("disabled", (newval != 0));                        
+    }
+        
+    // (A) Setzen des Wertes einer Numberbox über die Buttons, (B) Definition der GLP aus Zeit-, Strecken- und/oder Geschwindigkeitsvorgabe
+    function calcRegtest(numberbox, diff) {
+        let oldval = Number.isInteger(numberbox.option("step"))?parseInt(numberbox.option("value")):parseFloat(numberbox.option("value"))
+        let newval = oldval + diff;
+        if (newval < numberbox.option("step")) {
+            numberbox.option("value", numberbox.option("min"));
+        } else if (newval > numberbox.option("max")) {
+            numberbox.option("value", numberbox.option("max"));
+        } else {
+            numberbox.option("value", newval);
+        };
+
+        // wenn ein Feld disabled ist, wird sein Wert auf 0 gesetzt
+        let time     = !regtestTimeNumberBox.option("disabled")     * parseInt(regtestTimeNumberBox.option("value"));
+        let distance = !regtestDistanceNumberBox.option("disabled") * parseFloat(regtestDistanceNumberBox.option("value"));
+        let speed    = !regtestSpeedNumberBox.option("disabled")    * parseFloat(regtestSpeedNumberBox.option("value"));
+        
+        // wenn mindestens ein Feld > 0 ist, dann kann das Formular zurückgesetzt werden
+        if (time + distance + speed == 0) {
+            resetRegtestButton.option("disabled", true);
+            setRegtestButton.option("disabled", true);
+        } else {
+            // wenn zwei Felder > 0 sind, dann drittes Feld berechnen
+            resetRegtestButton.option("disabled", false);
+            // keine Geschwindigkeitsvorgabe: aus Strecke und Zeit berechnen
+            if ((distance > 0) && (time > 0)) {
+                resetRegtestNumberBox(regtestSpeedNumberBox, distance / time * 3600);                  
+                setRegtestButton.option("disabled", !stageStarted.status);
+            // keine Zeitvorgabe: aus Strecke und Geschwindigkeit berechnen
+            } else if ((distance > 0) && (speed > 0 )) {
+                resetRegtestNumberBox(regtestTimeNumberBox, distance / speed * 3600);
+                setRegtestButton.option("disabled", !stageStarted.status);
+            // keine Streckenvorgabe: aus Zeit und Geschwindigkeit berechnen
+            } else if ((time > 0) && (speed > 0)) {
+                resetRegtestNumberBox(regtestDistanceNumberBox, time * speed / 3600);
+                setRegtestButton.option("disabled", !stageStarted.status);
+            // Wenn nur ein Feld > 0 ist, dann die beiden anderen auf 0 setzen
+            } else if ((distance > 0) && (time == 0) && (speed == 0)) {
+                resetRegtestNumberBox(regtestTimeNumberBox);
+                resetRegtestNumberBox(regtestSpeedNumberBox);
+                setRegtestButton.option("disabled", true);
+            }  else if ((distance == 0) && (time > 0) && (speed == 0)) {
+                resetRegtestNumberBox(regtestDistanceNumberBox);
+                resetRegtestNumberBox(regtestSpeedNumberBox);
+                setRegtestButton.option("disabled", true);
+            }  else if ((distance == 0) && (time == 0) && (speed > 0)) {
+                resetRegtestNumberBox(regtestDistanceNumberBox);
+                resetRegtestNumberBox(regtestTimeNumberBox);
+                setRegtestButton.option("disabled", true);
+            }                        
+        }
+    };
 
     /* Startzeit (TODO: nicht fertig implementiert)
     
-    var regtestStartHourNumberbox = $("#numberbox-regteststarthour").dxNumberBox({
+    var regtestStartHourNumberBox = $("#numberbox-regteststarthour").dxNumberBox({
         min: -1, max: 24,
         value: 0,
         step: 1,
@@ -663,7 +618,7 @@ $(function(){
         },
     }).dxNumberBox("instance");
         
-    var regtestStartMinuteNumberbox = $("#numberbox-regteststartminute").dxNumberBox({
+    var regtestStartMinuteNumberBox = $("#numberbox-regteststartminute").dxNumberBox({
         min: -1, max: 60,
         value: 0,
         step: 1,
@@ -673,10 +628,10 @@ $(function(){
         onValueChanged: function (e) {
             if (e.value == e.component.option("max")) {
                 e.component.option("value", 0);
-                regtestStartHourNumberbox.option("value", regtestStartHourNumberbox.option("value")+1);
+                regtestStartHourNumberBox.option("value", regtestStartHourNumberBox.option("value")+1);
             } else if (e.value == e.component.option("min")) {
                 e.component.option("value", e.component.option("max")-e.component.option("step"));
-                regtestStartHourNumberbox.option("value", regtestStartHourNumberbox.option("value")-1);
+                regtestStartHourNumberBox.option("value", regtestStartHourNumberBox.option("value")-1);
             } else if (e.value == null) {
                 e.component.option("value", 0);
             }                    
@@ -684,7 +639,7 @@ $(function(){
         },
     }).dxNumberBox("instance");
         
-    var regtestStartSecondNumberbox = $("#numberbox-regteststartsecond").dxNumberBox({
+    var regtestStartSecondNumberBox = $("#numberbox-regteststartsecond").dxNumberBox({
         min: -1, max: 60,
         value: 0,
         step: 1,
@@ -694,10 +649,10 @@ $(function(){
         onValueChanged: function (e) {
             if (e.value == e.component.option("max")) {
                 e.component.option("value", 0);
-                regtestStartMinuteNumberbox.option("value", regtestStartMinuteNumberbox.option("value")+1);
+                regtestStartMinuteNumberBox.option("value", regtestStartMinuteNumberBox.option("value")+1);
             } else if (e.value == e.component.option("min")) {
                 e.component.option("value", e.component.option("max")-e.component.option("step"));
-                regtestStartMinuteNumberbox.option("value", regtestStartMinuteNumberbox.option("value")-1);
+                regtestStartMinuteNumberBox.option("value", regtestStartMinuteNumberBox.option("value")-1);
             } else if (e.value == null) {
                 e.component.option("value", 0);
             }                    
@@ -706,9 +661,9 @@ $(function(){
     }).dxNumberBox("instance");
 
     function getRegtestStartTime() {
-        var startHour = regtestStartHourNumberbox.option("value");
-        var startMinute = regtestStartMinuteNumberbox.option("value");
-        var startSecond = regtestStartSecondNumberbox.option("value");
+        var startHour = regtestStartHourNumberBox.option("value");
+        var startMinute = regtestStartMinuteNumberBox.option("value");
+        var startSecond = regtestStartSecondNumberBox.option("value");
         if ((startHour + startMinute + startSecond) > 0) {
             var startDate = new Date(); 
             startDate.setHours  (startHour);
@@ -733,21 +688,21 @@ $(function(){
     */
     
     // Anzeige
-    var regtestTimeTextbox = $("#textbox-regtesttime").dxTextBox($.extend(true, {}, textBoxOptions,{
+    var regtestTimeTextBox = $("#textbox-regtesttime").dxTextBox($.extend(true, {}, textBoxOptions,{
         value: "0 sek",
         onValueChanged: function(e) {
             var countdownText = document.getElementById("textbox-regtesttime").children[0].children[0].children[0];
-            var myValue = parseInt(e.value);
-            regtestMinutesDecimalTextbox.option("value", formatNumber(myValue/60) + " min");
-            let sek = "0" + myValue % 60;
-            regtestMinutesTextbox.option("value", parseInt(myValue/60) + ":" + sek.substr(sek.length - 2) + " min");
+            var time = parseInt(e.value);
+            regtestMinutesDecimalTextBox.option("value", formatNumber(time/60) + " min");
+            let sek = "0" + time % 60;
+            regtestMinutesTextBox.option("value", parseInt(time/60) + ":" + sek.substr(sek.length - 2) + " min");
             if (countdownRunning == true) {
-                if (myValue > 0) {
-                    regtestLengthTextbox.option("value", formatDistance(kmLeftInSector));
+                if (time > 0) {
+                    regtestDistanceTextBox.option("value", formatDistance(KM_SECTOR_PRESET_REST));
                     animationClass = "secondyellow";
                     countdownText.style.color = "var(--tm-red)";
-                    if (myValue <= 10) {
-                        if (myValue <= 5) {
+                    if (time <= 10) {
+                        if (time <= 5) {
                             animationClass = "secondred";
                         };
                         countdownText.classList.remove("flicker");
@@ -759,7 +714,7 @@ $(function(){
                     if (isSoundEnabled()) {
                         audioWineGlass.play().catch(function(error) { });
                     };
-                    resetRegtest();
+                    resetRegtest(true);
                     setTimeout(function() {
                             resetSectorPreset();
                             WebSocket_Send('resetSector');
@@ -769,41 +724,25 @@ $(function(){
         },
     })).dxTextBox("instance");
     
-    var regtestMinutesTextbox = $("#textbox-regtestminutes").dxTextBox($.extend(true, {}, textBoxOptions,{
+    var regtestMinutesTextBox = $("#textbox-regtestminutes").dxTextBox($.extend(true, {}, textBoxOptions,{
         value: "0:00 min",
     })).dxTextBox("instance");
     
-    var regtestMinutesDecimalTextbox = $("#textbox-regtestminutesdecimal").dxTextBox($.extend(true, {}, textBoxOptions,{
+    var regtestMinutesDecimalTextBox = $("#textbox-regtestminutesdecimal").dxTextBox($.extend(true, {}, textBoxOptions,{
         value: "0,00 min",
     })).dxTextBox("instance");
     
-    var regtestLengthTextbox = $("#textbox-regtestlength").dxTextBox($.extend(true, {}, textBoxOptions,{
+    var regtestDistanceTextBox = $("#textbox-regtestdistance").dxTextBox($.extend(true, {}, textBoxOptions,{
         value: "0 m",
     })).dxTextBox("instance");
             
-    var regtestAvgSpeedTextbox = $("#textbox-regtestavgspeed").dxTextBox($.extend(true, {}, textBoxOptions,{
+    var regtestSpeedTextBox = $("#textbox-regtestspeed").dxTextBox($.extend(true, {}, textBoxOptions,{
         value: formatSpeed(0),
     })).dxTextBox("instance");
     
-        function getRegtestAvgSpeed() {
-            var regtestLength = getRegtestLength();
-            var regtestTime = getRegtestTime();
-            return regtestLength / regtestTime * 60 * 60;
-        };
-        
-        function setRegtestAvgSpeed() {
-            var regtestLength = getRegtestLength();
-            var regtestTime = getRegtestTime();
-            if ((regtestLength > 0) && (regtestTime > 0)) {
-                regtestAvgSpeedTextbox.option("value", formatSpeed(regtestLength / regtestTime * 60 * 60));
-            } else {
-                regtestAvgSpeedTextbox.option("value", formatSpeed(0));
-            }
-        };
-
 // Tab Zählpunkte
 
-    $("#datagrid-countpoint").dxDataGrid($.extend(true, {}, dataGridOptions, {
+   $("#datagrid-countpoint").dxDataGrid($.extend(true, {}, dataGridOptions, {
         columns: [
             {
                 dataField: "ID",
@@ -811,22 +750,22 @@ $(function(){
                 width: "11vmin",
             },
             {
-                dataField: "Beschreibung",
+                dataField: "Name",
                 allowEditing: false,
             },
             {
-                dataField: "Sicher",
+                dataField: "Aktiv",
                 dataType: "boolean",
-                caption: "OK",
+                caption: "Akt.",
                 width: "15vmin",
             },
         ],
         summary: {
             totalItems: [
                 {
-                    column: "Sicher",
+                    column: "Aktiv",
                     summaryType: "sum",
-                    showInColumn: "Beschreibung",
+                    showInColumn: "Name",
                 }
             ],
             texts: {
@@ -834,11 +773,12 @@ $(function(){
             }
         },
         onRowUpdated: function(e) {
-            id = e.data.ID;
-            description = e.data.Beschreibung;
+            // ID zur Anzeige 1-basiert, im System 0-basiert
+            id = e.data.ID - 1;
             name = e.data.Name;
-            visibility = e.data.Sicher;
-            WebSocket_Send("changepoint:countpoint&"+id+"&"+description+"&"+name+"&"+(visibility?1:0));
+            value = e.data.Wert;
+            active = e.data.Aktiv;
+            WebSocket_Send("changepoint:countpoint&"+id+"&"+name+"&"+value+"&"+(active?1:0));
         },
     }));
 
@@ -852,38 +792,72 @@ $(function(){
                 width: "11vmin",
             },
             {
-                dataField: "Beschreibung",
+                dataField: "Name",
                 allowEditing: true,
                 lookup: {
-                    dataSource: checkpointList,
+                    dataSource: getCheckpointList(),
                 }
             },
             {
-                dataField: "Name",
+                dataField: "Wert",
                 allowEditing: true,
-                width: "21vmin",
+                width: "19vmin",
+                alignment: "center",
             },
             {
-                dataField: "Sicher",
+                dataField: "Aktiv",
                 dataType: "boolean",
-                caption: "OK",  
+                caption: "Akt.",  
                 width: "15vmin",
             },
         ],
         onRowUpdated: function(e) {
-            id = e.data.ID;
-            description = e.data.Beschreibung;
-            // Schreibt jeden Klein- in Großbuchstaben um
-            e.data.Name = e.data.Name.toUpperCase();
+            // ID zur Anzeige 1-basiert, im System 0-basiert
+            id = e.data.ID - 1;
             name = e.data.Name;
-            visibility = e.data.Sicher;           
-            WebSocket_Send("changepoint:checkpoint&"+id+"&"+description+"&"+name+"&"+(visibility?1:0));
+            // Schreibt jeden Klein- in Großbuchstaben um
+            e.data.Wert = e.data.Wert.toUpperCase();
+            value = e.data.Wert;
+            active = e.data.Aktiv;           
+            WebSocket_Send("changepoint:checkpoint&"+id+"&"+name+"&"+value+"&"+(active?1:0));
+        },
+        onContentReady: function(e){
+            if (jumpToLastPage) {  
+                jumpToLastPage = false;  
+                let totalCount = e.component.totalCount(); 
+                let pageSize = e.component.pageSize();  
+                let pageCount = Math.floor(totalCount / pageSize);  
+                if (pageCount && totalCount % pageSize) {  
+                    e.component.pageIndex(pageCount);  
+                }  
+            }
         },
     }));
 
 // Tab Setup
 
     // RasPi
+    $(".button-info").dxButton({
+        icon: "fas fa-info-circle",
+        elementAttr: {
+            style: "border-style: none; color: var(--tm-yellow)",
+        },
+        onClick: function(e) { 
+            $("#popup-info").dxPopup("show");
+        },
+    });
+    
+    $("#popup-info").dxPopup({
+        title: "Info",
+        // showTitle: true,
+        // showCloseButton: true,
+        dragEnabled: false,
+        onShown: function (e) {
+            $("#textbox-cputemp").dxTextBox($.extend(true, {}, textBoxOptions,{
+            }));
+        },
+    })
+
     $("#button-sudoreboot").dxButton($.extend(true, {}, metalButtonOptions, {
         icon: "fas fa-redo",
         disabled: false,
@@ -906,7 +880,7 @@ $(function(){
             style: "color: var(--tm-red)",
         },
         onClick: function(e) {
-            confirmDialog("RasPi anhalten").show().done(function (dialogResult) {
+            confirmDialog("RasPi herunterfahren").show().done(function (dialogResult) {
                 if (dialogResult) {
                     WebSocket_Send('sudoHalt');
                 }
@@ -964,7 +938,6 @@ $(function(){
                 },
                 onRowRemoving: function(e) {
                     filename = e.data.Dateiname;
-                    mylog(filename);
                     WebSocket_Send("deleteFile:" + filename);
                 },
             }));
@@ -1004,11 +977,9 @@ $(function(){
             style: "color: var(--tm-blue)",
         },
         onClick: function(e) {
-            confirmDialog("Reset Rallye").show().done(function (dialogResult) {
+            confirmDialog("Neue Rallye starten").show().done(function (dialogResult) {
                 if (dialogResult) {
                     WebSocket_Send('resetRallye');
-                    // stageTextbox.option("value", formatDistance(0));
-                    // rallyeTextbox.option("value", formatDistance(0));
                     location.reload();
                 }
             });
@@ -1030,7 +1001,7 @@ $(function(){
             
     $("#button-editconfiguration").dxButton({
         icon: "edit",
-        width: "25%",
+        width: "23%",
         disabled: false,
         onClick: function(e) { 
             $("#popup-editconfiguration").dxPopup("show");
@@ -1161,10 +1132,10 @@ $(function(){
     }).dxPopup("instance");
 
     // Anzeige der km-Stände
-    var stageTextbox = $("#textbox-stage").dxTextBox($.extend(true, {}, textBoxOptions,{
+    var stageTextBox = $("#textbox-stage").dxTextBox($.extend(true, {}, textBoxOptions,{
     })).dxTextBox("instance");
     
-    var rallyeTextbox = $("#textbox-rallye").dxTextBox($.extend(true, {}, textBoxOptions,{
+    var rallyeTextBox = $("#textbox-rallye").dxTextBox($.extend(true, {}, textBoxOptions,{
     })).dxTextBox("instance");
 
 });

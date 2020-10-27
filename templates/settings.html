@@ -19,8 +19,8 @@
     <script src="/static/js/tm.common.js"></script>
 
     <script src="/static/js/websocket.js"></script>
-    <script src="https://cdn3.devexpress.com/jslib/19.1.4/js/localization/dx.messages.de.js"></script>
-    <script src="https://unpkg.com/devextreme-intl@19.1/dist/devextreme-intl.min.js"></script>
+    <!-- <script src="https://cdn3.devexpress.com/jslib/19.1.4/js/localization/dx.messages.de.js"></script> -->
+    <!-- <script src="https://unpkg.com/devextreme-intl@19.1/dist/devextreme-intl.min.js"></script> -->
     <script>
         var DEBUG = {{ debug }};
         var SAMPLE_TIME = {{ sample_time }};
@@ -103,10 +103,10 @@
                 <div id="numberbox-regtesttime"></div>
             </div>
             <div class="flex-row">
-                <div id="numberbox-regtestlength"></div>
+                <div id="numberbox-regtestdistance"></div>
             </div>
             <div class="flex-row">
-                <div id="numberbox-regtestavgspeed"></div>
+                <div id="numberbox-regtestspeed"></div>
             </div>
             
             <!-- Anzeige -->
@@ -127,13 +127,13 @@
             <div class="flex-row tm-background-output">
                 <div>Strecke</div>
                 <div class="col50">
-                    <div id="textbox-regtestlength"></div>
+                    <div id="textbox-regtestdistance"></div>
                 </div>
             </div>
             <div class="flex-row tm-background-output">
                 <div>&#216; Geschwind.</div>
                 <div class="col50">
-                    <div id="textbox-regtestavgspeed"></div>
+                    <div id="textbox-regtestspeed"></div>
                 </div>
             </div>
         </script>
@@ -156,7 +156,13 @@
         <!-- Setup -->
         <script id="tab-setup" type="text/html">
             <div class="flex-row">
-                <div>Raspberry Pi</div>
+                <div>Raspberry Pi
+                    <span class="button-info"></span>
+                    <div id="popup-info">
+                        <div class="label-key">CPU Temperatur</div>
+                        <div id="textbox-cputemp"></div>
+                    </div>
+                </div>
                 <div>
                     <div id="button-sudohalt"></div>
                     <div id="button-sudoreboot"></div>

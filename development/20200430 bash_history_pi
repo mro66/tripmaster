@@ -1,0 +1,1405 @@
+sudo halt
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install dnsmasq hostapd
+sudo systemctl stop dnsmasq
+sudo systemctl stop hostapd
+sudo reboot
+sudo nano /etc/dhcpcd.conf
+sudo service dhcpcd restart
+sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+sudo nano /etc/dnsmasq.conf
+sudo nano /etc/hostapd/hostapd.conf
+sudo nano /etc/default/hostapd
+sudo systemctl start hostapd
+sudo systemctl start dnsmasq
+sudo nano /etc/sysctl.conf
+sudo iptables -t nat -A  POSTROUTING -o eth0 -j MASQUERADE
+sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
+sudo nano /etc/rc.lcal
+sudo nano /etc/rc.local
+sudo reboot
+sudo halt
+sudo reboot
+https://s3.amazonaws.com/sunfounder/Raspberry/dragit_installer.py
+wget https://s3.amazonaws.com/sunfounder/Raspberry/dragit_installer.py
+sudo python dragit_installer.py
+sudo reboot
+sudo python dragit_installer.py
+sudo reboot
+sudo halt
+sudo bash -c "for ((i=0; i<32; i++)); do echo \$i; echo in >/sys/class/gpio/gpio\$i/direction; echo \$i >/sys/class/gpio/unexport; done"
+sudo halt
+exit
+sudo halt
+sudo reboot
+cd SunFounder_SensorKit_for_RPi2/
+sudo python 01_dule_color_led.py
+cd Python/
+sudo python 01_dule_color_led.py
+sudo nano /etc/dhcpcd.conf 
+fg
+clear
+suo nano /etc/dnsmasq.conf
+sudo nano /etc/dnsmasq.conf
+sudo reboot
+sudo apt-get update
+pigpiod -v
+sudo pigpiod
+history
+sudo nano /etc/dnsmasq.conf
+sudo nano /etc/dhcpcd.conf 
+sudo apt-get update
+sudo apt-get upgrade
+sudo reboot
+pigpiod -v
+sudo apt-get install pigpio python-pigpio python3-pigpio
+sudo halt
+ls -a
+sudo dd bs=4M if=/. of=20181124.img
+cd /dev/sbd
+sudo dd bs=4M if=/. of=20181124.img
+sudo dd bs=4M if=. of=20181124.img
+sudo apt-get -y install ntfs-3g hfsutils hfsprogs exfat-fuse 
+cd /media/
+sudo mkdir ./usbstick
+sudo blkid -o list -w /dev/null
+sudo dd bs=4M if=/dev/sdb of=raspbian.img
+sudo mount -t ntfs-3g -o utf8,uid=pi,gid=pi,noatime /dev/sdb /media/usbstick
+cd /media/
+sudo rm raspbian.img 
+sudo blkid -o list -w /dev/null 
+sudo mount -t ntfs-3g -o utf8,uid=pi,gid=pi,noatime /dev/sda /media/usbstick
+cd /media/
+sudo rm raspbian.img 
+sudo dd bs=4M if=/dev/sda | gzip > 20181124.img.gz
+sudo dd bs=4M if=/dev/sdb | gzip > 20181124.img.gz
+sudo blkid -o list -w /dev/null 
+sudo dd bs=4M if=/dev/sdb of=raspbian.img
+sudo dd bs=4M if=/dev/sda of=raspbian.img
+sudo dd bs=4M if=/dev/sda | gzip > 20181124.img.gz
+sudo dd bs=4M if=/dev/sda | sudo gzip > 20181124.img.gz
+sudo mount /dev/sba /media/usbstick/
+sudo mount /dev/sda /media/usbstick/
+sudo umount /media/pi/8\ GB\ NTFS 
+sudo mount /dev/sda /media/usbstick/
+sudo dd bs=4M if=/media/usbstick/ | gzip > 20181124.img.gz
+sudo dd bs=4M if=/dev/sda | sudo gzip > 20181124.img.gz
+sudo -i
+sudo blkid -o list -w /dev/null 
+sudo fdisk -l
+umount /media/usbstick 
+sudo umount /media/usbstick 
+sudo halt
+sudo pigpiod
+sudo halt
+sudo pigpiod
+sudo apt-get update
+sudo apt-get upgrade
+sudo reboot
+sudo apt-get update
+sudo apt-get upgrade
+sudo apt-get install python3-bottle
+history
+pigpio -v
+sudo systemctl enable pigpiod
+sudo reboot
+pigpio -v
+sudo pigpiod
+pigpiod -v
+git clone git@github.com:Lawouach/WebSocket-for-Python.git
+sudo apt-get install python-pip
+sudo pip install ws4py
+pip list
+sudo python web_bottle.py 
+pigpiod -v
+sudo apt-get update
+sudo apt-get upgrade 
+sudo apt-get update
+sudo apt-get upgrade 
+sudo apt-get install phython3-tornado
+sudo apt-get install python3-tornado
+exit
+ls
+cd Python/
+ls
+sudo python3 tripmaster_web.py 
+exit
+history 
+sudo apt-get update
+sudo apt-get upgrade 
+sudo nano /etc/dhcpcd.conf
+sudo apt-get update
+sudo apt-get upgrade 
+sudo apt-get install dnsmasq hostapd
+sudo systemctl stop dnsmasq
+sudo systemctl stop hostapd
+sudo service dhcpcd restart
+sudo nano /etc/dnsmasq.conf
+sudo nano /etc/hostapd/hostapd.conf
+sudo nano /etc/default/hostapd
+sudo systemctl start hostapd
+sudo systemctl start dnsmasq
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+sudo systemctl start hostapd
+sudo systemctl start dnsmasq
+sudo systemctl start hostapd
+sudo systemctl start dnsmasq
+sudo systemctl start hostapd
+sudo systemctl start hostapd
+sudo systemctl start dnsmasq
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+sudo systemctl start hostapd
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+sudo systemctl start hostapd
+history 
+sudo nano /etc/hosts
+sudo systemctl start hostapd
+sudo nano /etc/hosts
+sudo systemctl enable hostapd
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+ls
+cd tripmaster/
+ls
+sudo python3 read_RPM.py 
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+history 
+sudo nano /etc/hostapd/hostapd.conf
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+cd tripmaster/
+ls
+sudo python3 read_RPM.py 
+sudo python3 test.py 
+cd tripmaster/
+sudo python3 test.py 
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+cd tripmaster/
+sudo python3 test.py 
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+cd tripmaster/
+sudo python3 test.py 
+sudo python3 /home/pi/tripmaster/test.py 
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+sudo python3 /home/pi/tripmaster/read_RPM.py 
+sudo python3 /home/pi/tripmaster/test.py 
+sudo python3 /home/pi/tripmaster/read_RPM.py 
+sudo python3 /home/pi/tripmaster/test.py 
+sudo python3 /home/pi/tripmaster/read_RPM.py 
+sudo python3 /home/pi/tripmaster/test.py 
+sudo python3 /home/pi/tripmaster/read_RPM.py 
+sudo python3 /home/pi/tripmaster/test.py 
+sudo python3 /home/pi/tripmaster/read_RPM.py 
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+sudo python3 /home/pi/tripmaster/test.py 
+sudo python3 /home/pi/tripmaster/read_RPM.py 
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+sudo python3 /home/pi/tripmaster/test.py 
+sudo python3 /home/pi/tripmaster/read_RPM.py 
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+sudo python3 /home/pi/tripmaster/test.py 
+sudo python3 /home/pi/tripmaster/read_RPM.py 
+sudo python3 /home/pi/tripmaster/test.py 
+sudo python3 /home/pi/tripmaster/read_RPM.py 
+sudo python3 /home/pi/tripmaster/test.py 
+sudo python3 /home/pi/tripmaster/read_RPM.py 
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+sudo python3 /home/pi/tripmaster/read_RPM.py 
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+sudo python3 /home/pi/tripmaster/test.py 
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+sudo python3 /home/pi/tripmaster/test.py 
+sudo python3 /home/pi/tripmaster/read_RPM.py 
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+sudo raspi-config 
+sudo apt-get update 
+sudo apt-get upgrade 
+sudo apt-get update 
+sudo apt-get upgrade 
+sudo apt-get install minicom gpsd gpsd-clients
+sudo apt-get update --fix-missing
+sudo apt-get install minicom gpsd gpsd-clients
+sudo nano /boot/config.txt 
+sudo reboot 
+stty -F /dev/ttyAMA0 9600
+stty -F /dev/ttyAMA0
+minicom -b 9600 -o -D /dev/ttyAMA0 
+stty -F /dev/ttyAMA0
+minicom -b 9600 -o -D /dev/ttyAMA0 
+sudo nano /boot/config.txt 
+stty -F /dev/ttyAMA0
+minicom -b 9600 -o -D /dev/ttyAMA0 
+sudo nano /etc/default/gpsd 
+sudo gpsd /dev/ttyAMA0 -F /var/run/gpsd.sock -n
+sudo reboot 
+cgps -s
+minicom -b 9600 -o -D /dev/ttyAMA0 
+stty -F /dev/ttyAMA0
+minicom -b 9600 -o -D /dev/ttyAMA0 
+cgps -s
+stty -F /dev/ttyAMA0
+minicom -b 9600 -o -D /dev/ttyAMA0 
+cgps -s
+gpsmon 
+exit
+vcgencmd measure_temp
+sudo apt install hostapd bridge-utils 
+sudo apt-get update 
+sudo apt-get upgrade 
+sudo nano /etc/dhcpcd.conf 
+sudo nano /etc/network/interfaces
+sudo ifup br0
+sudo systemctl restart dhcpd
+sudo nano /etc/hostapd/hostapd.conf 
+sudo systemctl unmask hostapd
+sudo systemctl enable hostapd
+sudo systemctl start hostapd
+ipconfig
+sudo nano /etc/hostapd/hostapd.conf 
+sudo nano /etc/network/interfaces
+sudo nano /etc/dhcpcd.conf 
+history 
+history sudo reboot 
+sudo reboot
+history 
+sudo python3 /home/pi/tripmaster/test_gps.py 
+sudo apt-get install python{,3}-rpi.gps
+sudo -H pip3 install gps3
+sudo python3 /home/pi/tripmaster/test_gps.py 
+history 
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+sudo python3 /home/pi/tripmaster/test_gps.py 
+pip3 install gps
+sudo python3 /home/pi/tripmaster/test_gps.py 
+pip3 install gpsd-py3
+sudo python3 /home/pi/tripmaster/test_gps.py 
+history 
+cgps -s
+sudo python3 /home/pi/tripmaster/test_gps.py 
+pip3 install gpsd-py3
+sudo pip3 install gpsd-py3
+sudo python3 /home/pi/tripmaster/test_gps.py 
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+sudo python3 /home/pi/tripmaster/test_gps.py 
+pip3 install gpsd-py3
+sudo python3 /home/pi/tripmaster/test_gps.py 
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+exit
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+exit
+history 
+cgps -s
+exit
+ls -c
+cd tripmaster/
+tail -f datafile.csv 
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+cd tripmaster/
+tail -f datafile.csv 
+cd tripmaster/
+tail -f datafile.csv 
+sudo hslt
+sudo halt
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+sudo halt
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+cgps -s
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+cgps -s
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+history 
+sudo python3 /home/pi/tripmaster/test_gps.py 
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+sudo python3 /home/pi/tripmaster/test_gps.py 
+sudo python3 /home/pi/tripmaster/tripmaster_web.py 
+nohup sudo python3 /home/pi/tripmaster/tripmaster_web.py &
+ps aux | grep python
+sudo reboot
+ps aux | grep python
+sudo nohup python3 /home/pi/tripmaster/tripmaster_web.py &
+sudo kill -9 1071
+ps aux | grep python
+sudo kill -9 1075
+sudo nohup python3 /home/pi/tripmaster/tripmaster_web.py &
+ps aux | grep python
+sudo kill -9 1122
+ps aux | grep python
+ps aux | grep python3
+sudo kill -9 1126
+sudo nohup python3 /home/pi/tripmaster/tripmaster_web.py > my.log 2>&1 &
+echo $! > save_pid.txt
+tail -f my.log
+more save_pid.txt 
+sudo kill -9 'cat save_pid.txt'
+sudo kill -9 cat save_pid.txt
+nohup python3 /home/pi/tripmaster/tripmaster_web.py > my.log 2>&1 &
+more save_pid.txt 
+ps aux | grep python3
+sudo kill -9 1250
+sudo kill -9 1254
+rm save_pid.txt 
+nohup python3 /home/pi/tripmaster/tripmaster_web.py > my.log 2>&1 &
+echo $! > save_pid.txt
+more save_pid.txt 
+sudo kill -9 $(cat save_pid.txt)
+sudo kill -9 $cat save_pid.txt
+sudo kill -9 $(cat save_pid.txt)
+ps aux | grep python3
+ps aux | grep python
+nohup python3 /home/pi/tripmaster/tripmaster_web.py > my.log 2>&1 &
+ps aux | grep python
+sudo nohup python3 /home/pi/tripmaster/tripmaster_web.py 1> /dev/null  2>&1 &
+sudo kill -9 1796
+ps aux | grep python
+sudo kill -9 1800
+clear
+sudo nohup python3 /home/pi/tripmaster/tripmaster_web.py > my.log 2>&1
+sudo nohup python3 /home/pi/tripmaster/tripmaster_web.py 1>/dev/null  2>&1 &
+ps aux | grep python
+ps aux | grep python3
+sudo kill -9 1845
+sudo kill -9 1849
+sudo nohup python3 /home/pi/tripmaster/tripmaster_web.py  > /dev/null  2>&1 & echo $! > run.pid
+cat run.pid | pgrep -P $!
+sudo kill -9 1984
+ps aux | grep python3
+sudo nohup python3 /home/pi/tripmaster/tripmaster_web.py  > /dev/null  2>&1 & echo $! > run.pid
+cat run.pid | pgrep -P $!
+kill -9 $(cat run.pid | pgrep -P $!)
+kill -9 `cat run.pid | pgrep -P $!`
+sudo kill -9 $(cat run.pid | pgrep -P $!)
+more run.pid 
+sudo nohup python3 /home/pi/tripmaster/tripmaster_web.py  > /dev/null  2>&1 & echo $! > run.pid
+sudo kill -9 $(cat run.pid | pgrep -P $!)
+clear
+sudo /home/pi/tripmaster/tripmaster_web.py
+sudo chmod +x /home/pi/tripmaster/tripmaster_web.py
+sudo /home/pi/tripmaster/tripmaster_web.py
+sudo chmod +x /home/pi/tripmaster/tripmaster_web.py
+sudo /home/pi/tripmaster/tripmaster_web.py
+ls
+cd tripmaster/
+ls
+ls -a
+ls -l
+sudo /home/pi/tripmaster/tripmaster_web.py
+sudo nano /etc/rc.local
+sudo reboot
+ls
+ls -a
+ls -l
+sudo nano /etc/rc.local
+sudo reboot
+cd /
+ls
+sudo kill -9 $(cat run.pid | pgrep -P $!)
+sudo kill -9 $(cat /run.pid | pgrep -P $!)
+cd $home
+ls
+cd tripmaster/
+ls
+sudo kill -9 $(cat run.pid | pgrep -P $!)
+more run.pid 
+histo
+history 
+ps aux | grep python3
+more run.pid 
+sudo kill 1016
+ps aux | grep python3
+sudo nohup /home/pi/tripmaster/tripmaster_web.py  > /dev/null  2>&1 & echo $! > /home/pi/tripmaster/run.pid
+cat run.pid | pgrep -P $!
+pgrep -P 1383
+cat run.pid
+pgrep -P $(cat run.pid)
+sudo kill -9 &(pgrep -P $(cat run.pid))
+sudo kill -9 pgrep -P $(cat run.pid)
+pgrep -P $(cat run.pid) > child.pid
+more child.pid 
+sudo kill -9 $(cat child.pid)
+cat run.pid
+sudo nohup /home/pi/tripmaster/tripmaster_web.py  > /dev/null  2>&1 & echo $! > /home/pi/tripmaster/run.pid
+cat run.pid
+pgrep -P $(cat run.pid) > run.pid
+cat run.pid
+sudo kill -9 $(cat run.pid)
+cd tripmaster/
+ls -l
+cat run.pid 
+ps aux | grep python3
+sudo kill -9 $(cat run.pid)
+history 
+sudo nano /etc/rc.local
+sudo reboot
+cd /trimaster
+ls
+cd /tripmaster
+cd tripmaster/
+cat run.pid 
+cat child.pid 
+history 
+ps aux | grep python3
+cat child.pid 
+cat run.pid 
+sudo kill -9 &(cat ./child.pid)
+sudo kill -9 &(cat child.pid)
+sudo kill -9 $(cat run.pid)
+sudo kill -9 $(cat child.pid)
+/etc/rc.d/rc.local
+sudo /etc/rc.local
+sudo kill -9 $(cat child.pid)
+cat child.pid
+cat ./child.pid
+ls
+more child.pid 
+sudo kill -9 $(cat child.pid)
+sudo kill -9 $(cat run.pid)
+ps aux | grep python3
+sudo kill -9 1295
+sudo /etc/rc.local
+ps aux | grep python3
+pgrep -P $(cat ./run.pid) > ./child.pid
+ps aux | grep python3
+sudo kill -9 1529
+sudo /etc/rc.local
+ps aux | grep python3
+sudo kill -9 $(cat child.pid)
+cd tripmaster/
+ls
+mv run.pid 
+sudo rm run.pid 
+sudo rm child.pid 
+cat run.pid 
+cat child.pid 
+cat run.pid 
+more /etc/rc.local 
+sudo nano /etc/rc.local 
+sudo reboot
+cd tripmaster/
+cat run.pid 
+ps aux | grep python3
+sudo kill -9 $(cat child.pid)
+sudo kill -9 $(cat run.pid)
+sudo /etc/rc.local
+sudo kill -9 $(cat run.pid)
+sudo nano /etc/rc.local 
+sudo nano ./kill_tripmaster.sh
+sudo chmod +x ./kill_tripmaster.sh 
+ls -l
+sudo cp ./kill_tripmaster.sh /usr/local/sbin/
+sudo /etc/rc.local
+sudo kill_tripmaster.sh 
+sudo reboot
+cd tripmaster/
+cat kill_tripmaster.sh 
+cd tripmaster/
+tail -f tripmaster.out 
+sudo kill_tripmaster.sh 
+sudo /etc/rc.local
+sudo kill_tripmaster.sh 
+sudo /etc/rc.local
+sudo kill_tripmaster.sh 
+sudo /home/pi/tripmaster/tripmaster_web.py
+sudo /home/pi/tripmaster/tripmaster_web.py > /home/pi/tripmaster/tripmaster.out
+sudo /home/pi/tripmaster/tripmaster_web.pypy
+sudo /home/pi/tripmaster/tripmaster_web.py
+sudo /home/pi/tripmaster/test_log.py
+sudo python3 /home/pi/tripmaster/test_log.py
+cd tripmaster/
+tail -f tripmaster.log 
+sudo tail -f tripmaster.log 
+ps aux | grep python3
+sudo /home/pi/tripmaster/tripmaster_web.py
+sudo reboot
+ps aux | grep python3
+exit
+sudo kill_tripmaster.sh 
+sudo halt
+sudo kill_tripmaster.sh 
+sudo halt
+cd tripmaster/
+sudo tail -f tripmaster.log 
+cd tripmaster/
+tail -f tripmaster.log 
+sudo kill_tripmaster.sh 
+tail -f tripmaster.log 
+sudo cp kill_tripmaster.sh start_tripmaster.sh
+sudo nano start_tripmaster.sh 
+./start_tripmaster.sh 
+sudo ./start_tripmaster.sh 
+Traceback (most recent call last):
+NameError: name 'B' is not defined
+sudo ./start_tripmaster.sh 
+tail -f ./tripmaster/tripmaster.log 
+cgps -s
+tail -f ./tripmaster/tripmaster.log 
+exit
+sudo ./tripmaster/start_tripmaster.sh 
+ps aux | grep python3
+sudo kill -9 12878
+sudo ./tripmaster/start_tripmaster.sh 
+sudo halt
+sudo tail -f ./tripmaster/tripmaster.log 
+sudo apt-get install python3-pip
+sudo pip-3.2 install pytz
+sudo tail -f ./tripmaster/tripmaster.log 
+sudo /etc/rc.local
+sudo tail -f tripmaster.log 
+sudo tail -f ./tripmaster/tripmaster.log 
+sudo kill_tripmaster.sh 
+ps aux | grep python3
+sudo kill -9 6809
+ps aux | grep python3
+sudo /etc/rc.local
+sudo tail -f ./tripmaster/tripmaster.log 
+sudo kill_tripmaster.sh 
+ps aux | grep python3
+cd tripmaster/
+ls -l
+sudo ./start_tripmaster.sh 
+cgps -s
+sudo ./start_tripmaster.sh 
+sudo halt
+cgps -s
+sudo halt
+cgps -s
+sudo halt
+sudo tail -f ./tripmaster/tripmaster.log 
+sudo halt
+cgps -s
+sudo tail -f ./tripmaster/tripmaster.log 
+sudo kill_tripmaster.sh 
+sudo /etc/rc.local
+cgps -s
+exit
+sudo halt
+cgps -s
+exit
+ps aux | grep python3
+cd tripmaster
+ls
+cat run.pid
+cgps -s
+exit
+sudo halt
+cgps -s
+sudo tail -f ./tripmaster/tripmaster.log 
+sudo kill_tripmaster.sh 
+sudo /etc/rc.local
+cd tripmaster
+ls
+sudo cp start_tripmaster.sh restart_tripmaster.sh 
+sudo nano restart_tripmaster.sh 
+ls -l
+cat kill_tripmaster.sh 
+cat restart_tripmaster.sh 
+sudo nano restart_tripmaster.sh 
+cat /etc/rc.local 
+sudo nano restart_tripmaster.sh 
+sudo ./restart_tripmaster.sh 
+sudo kill_tripmaster
+sudo kill_tripmaster.sh
+sudo nano restart_tripmaster.sh 
+sudo ./restart_tripmaster.sh 
+ps aux | grep python3
+sudo kill -9 1289
+sudo ./restart_tripmaster.sh 
+exit
+cd tripmaster
+sudo tail -f ./tripmaster/tripmaster.log 
+cd..
+cd ..
+sudo tail -f ./tripmaster/tripmaster.log 
+cgps -s
+sudo tail -f ./tripmaster/tripmaster.log 
+cd tripmaster
+sudo ./restart_tripmaster.sh 
+cgps -s
+exit
+cgps -s
+exit
+sudo halt
+cgps -s
+sudo halt
+sudo tail -f ./tripmaster/tripmaster.log 
+date
+exit
+cgps -s
+date
+sudo timedatectl set-time '2017-10-02 21:59'
+sudo ./restart_tripmaster.sh 
+sudo ./tripmaster/restart_tripmaster.sh 
+history
+ps aux | grep python3
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f ./tripmaster/geofile.csv 
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f ./tripmaster/tripmaster.log 
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f ./tripmaster/tripmaster.log 
+kill_tripmaster.sh 
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+ps aux | grep python3
+sudo tail -f ./tripmaster/tripmaster.log 
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+clear
+sudo ./tripmaster/start_tripmaster.sh
+ps aux 
+ps aux | grep date
+clear
+date -u -s 2019-05-12 21:26:40+02:00
+date -u -s '2019-05-12 21:26:40+02:00'
+sudo date -u -s '2019-05-12 21:26:40+02:00'
+clear
+sudo ./tripmaster/start_tripmaster.sh
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo shutdown -h now
+sudo tail -f ./tripmaster/tripmaster.log 
+cgps -s
+ps
+ps aux
+top
+sudo tail -f ./tripmaster/tripmaster.log 
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+ps aux | grep date
+ps aux | grep python3
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo reboot
+sudo kill_tripmaster.sh 
+ps aux | grep python3
+sudo kill -9 1642
+sudo ./tripmaster/start_tripmaster.sh
+sudo reboot
+ps aux | grep python3
+sudo ./tripmaster/start_tripmaster.sh
+sudo halt
+sudo tail -f /home/pi/tripmaster/tripmaster.log
+exit
+sudo halt
+cgps -s
+sudo halt
+cgps -s
+sudo halt
+cgps -s
+sudo tail -f /home/pi/tripmaster/tripmaster.log
+cgps -s
+ps aux | grep python3
+sudo tail -f /home/pi/tripmaster/tripmaster.log
+sudo halt
+sudo tail -f /home/pi/tripmaster/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo /home/pi/tripmaster/tripmaster_web.py
+cd tripmaster/
+ls
+cat start_tripmaster.sh 
+
+ps aux | grep python3
+sudo /home/pi/tripmaster/tripmaster_web.py
+./start_tripmaster.sh 
+sudo ./start_tripmaster.sh 
+sudo chmod +x /home/pi/tripmaster/start_tripmaster.sh 
+sudo ./start_tripmaster.sh 
+sudo chmod +x /home/pi/tripmaster/tripmaster_web.py
+sudo ./start_tripmaster.sh 
+ps aux | grep python3
+sudo tail -f /home/pi/tripmaster/tripmaster.log
+sudo reboot
+sudo kill_tripmaster.sh 
+sudo ./start_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+cgps -s
+sudo reboot
+sudo tail -f /home/pi/tripmaster/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+ps aux | grep python3
+sudo tail -f /home/pi/tripmaster/tripmaster.log
+sudo reboot
+ps aux | grep python3
+sudo tail -f /home/pi/tripmaster/tripmaster.log
+ps aux | grep python3
+sudo tail -f /home/pi/tripmaster/tripmaster.log
+sudo ./tripmaster/start_tripmaster.sh
+sudo halt
+sudo tail -f /home/pi/tripmaster/tripmaster.log
+ps aux | grep python3
+sudo ./tripmaster/start_tripmaster.sh
+sudo reboot
+sudo tail -f /home/pi/tripmaster/tripmaster.log
+sudo kill_tripmaster.sh 
+ps aux | grep python3
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f /home/pi/tripmaster/tripmaster.log
+sudo reboot
+sudo update
+sudo apt-get update 
+pip install simplekml
+sudo apt-get update 
+pip install simplekml
+sudo apt-get update 
+sudo apt-get upgrade 
+sudo reboot
+sudo apt-get upgrade 
+sudo reboot
+sudo apt-get upgrade 
+sudo apt-get update 
+sudo apt-get upgrade 
+exit
+sudo tail -f /home/pi/tripmaster/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+pip uninstall simplekml
+sudo pip install simplekml
+sudo ./tripmaster/start_tripmaster.sh
+sudo pip uninstall simplekml
+sudo python3 -m pip install simplekml
+sudo ./tripmaster/start_tripmaster.sh
+cgps -s
+sudo tail -f /home/pi/tripmaster/tripmaster.log
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+ps aux | grep python3
+sudo ./tripmaster/start_tripmaster.sh
+sudo kill_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo ./tripmaster/start_tripmaster.sh
+sudo kill_tripmaster.sh 
+ps aux | grep python3
+sudo kill -9 25153
+sudo kill -9 15913
+ps aux | grep python3
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+ps aux | grep python3
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+exit
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+cgps -s
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo halt
+cgps -s
+exit
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+ps aux | grep python3
+sudo ./tripmaster/start_tripmaster.sh
+sudo halt
+cgps -s
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo shutdown --poweroff
+sudo shutdown --poweroff --now
+sudo shutdown --poweroff -now
+sudo shutdown --poweroff -n
+sudo shutdown -h now
+cgps -s
+sudo reboot
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+exit
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo ./tripmaster/start_tripmaster.sh
+python -v
+python3 -v
+sudo ./tripmaster/start_tripmaster.sh
+exit
+sudo pip install fastkml
+apt-get install libgeos-dev
+sudo apt-get install libgeos-dev
+sudo pip install -r requirements.txt
+sudo pip install shapely
+ls
+cd tripmaster/
+ls
+sudo python3 /home/pi/tripmaster/CreateKml.py 
+sudo pip install python3-fastkml
+sudo python /home/pi/tripmaster/CreateKml.py 
+sudo apt-get install python3-fastkml
+sudo apt-get install python3-shapely
+sudo python3 /home/pi/tripmaster/CreateKml.py 
+sudo apt-get install python3-lxml
+sudo python3 /home/pi/tripmaster/CreateKml.py 
+sudo apt-get uninstall python3-lxml
+sudo apt-get remove python3-lxml
+sudo apt-get remove python3-shapely
+sudo apt-get remove python3-fastkml
+sudo apt-get remove fastkml
+sudo pip uninstall shapely
+sudo pip uninstall fastkml
+history 
+sudo apt-get remove libgeos-dev
+sudo apt-get update
+sudo pip3 install pykml
+history 
+sudo apt-get install python3-lxml
+sudo pip3 install pykml
+sudo apt autoremove
+history 
+sudo python3 /home/pi/tripmaster/CreateKml.py 
+sudo pip3 install urllib2
+cd /usr/local/lib/python3.5/dist-packages/pykml
+cp parser.py parser_.py
+sudo cp parser.py parser_.py
+ls
+sudo nano parser.py 
+cd $home
+cd tripmaster/
+sudo python3 /home/pi/tripmaster/CreateKml.py 
+cat ./CreateKml.py 
+history 
+python --version
+python3 --version
+history 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+exit
+ps aux | grep python3
+sudo ./tripmaster/start_tripmaster.sh
+sudo nano /usr/local/lib/python3.5/dist-packages/pykml/factory.py
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+ps aux | grep python3
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo ./tripmaster/start_tripmaster.sh
+cgps -s
+ps aux | grep python3
+kill_tripmaster.sh 
+sudo kill_tripmaster.sh 
+cd tripmaster/
+./start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo halt
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+exit
+sudo kill_tripmaster.sh 
+./tripmaster/start_tripmaster.sh 
+sudo halt
+cgps -s
+sudo kill_tripmaster.sh 
+./tripmaster/start_tripmaster.sh 
+cgps -s
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo halt
+sudo kill_tripmaster.sh 
+./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+./tripmaster/start_tripmaster.sh 
+ps aux | grep python3
+./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo halt
+sudo kill_tripmaster.sh 
+./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+ps aux | grep python3
+./tripmaster/start_tripmaster.sh 
+ps aux | grep python3
+sudo kill_tripmaster.sh 
+ps aux | grep python3
+./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+ps aux | grep python3
+./tripmaster/start_tripmaster.sh 
+sudo halt
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+cgps -s
+sudo kill_tripmaster.sh 
+ps aux | grep python3
+./tripmaster/start_tripmaster.sh 
+sudo reboot
+cgps -s
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+./tripmaster/start_tripmaster.sh 
+ps aux | grep python3
+./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+ps aux | grep python3
+sudo kill -9 3126
+ps aux | grep python3
+./tripmaster/start_tripmaster.sh 
+ps aux | grep python3
+sudo kill -9 10639
+./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+ps aux | grep python3
+cgps -s
+./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+ps aux | grep python3
+./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+exit
+sudo kill_tripmaster.sh 
+./tripmaster/start_tripmaster.sh 
+ps aux | grep python3
+sudo halt
+exit
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+exit
+sudo kill_tripmaster.sh 
+./tripmaster/start_tripmaster.sh 
+sudo halt
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+./tripmaster/start_tripmaster.sh 
+sudo kill_tripmaster.sh 
+ps aux | grep python3
+sudo kill -9 1477
+ps aux | grep python3
+./tripmaster/start_tripmaster.sh 
+exit
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+ps aux | grep python3
+sudo reboot
+sudo kill_tripmaster.sh 
+./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+ps aux | grep python3
+sudo kill -9 869
+./tripmaster/start_tripmaster.sh 
+ps aux | grep python3
+./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+./tripmaster/start_tripmaster.sh 
+./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+./tripmaster/start_tripmaster.sh 
+ps aux | grep python3
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+ps aux | grep python3
+./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+ps aux | grep python3
+./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+ps aux | grep python3
+sudo kill_tripmaster.sh 
+./tripmaster/start_tripmaster.sh 
+ls
+cd tripmaster/
+ls
+cat start_tripmaster.sh 
+sudo python3 ./tripmaster_web.py 
+sudo python3 ./tripmaster_web.py debug
+sudo ./tripmaster_web.py
+sudo chmod +x /home/pi/tripmaster/tripmaster_web.py
+sudo ./tripmaster_web.py
+cat start_tripmaster.sh 
+./tripmaster/start_tripmaster.sh 
+cd..
+cd ...
+sudo ./tripmaster/start_tripmaster.sh
+cd $home
+sudo ./tripmaster/start_tripmaster.sh
+clear
+sudo ./tripmaster/start_tripmaster.sh
+sudo halt
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo reboot
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+exit
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo halt
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo halt
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo ./tripmaster/start_tripmaster_debug.sh
+ls
+cd tripmaster/
+sudo chown root ./restart_tripmaster_debug.sh 
+cd ..
+sudo ./tripmaster/restart_tripmaster_debug.sh
+sudo nano ./tripmaster/restart_tripmaster_debug.sh 
+sudo ./tripmaster/restart_tripmaster_debug.sh
+ps aux | grep python3
+sudo ./tripmaster/start_tripmaster.sh
+sudo halt
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f /home/pi/tripmaster/out/tripmaster.logsudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+ps aux | grep python3
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+clear
+sudo ./tripmaster/start_tripmaster.sh
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo ./tripmaster/restart_tripmaster.sh 
+exit
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+cd tripmaster/
+ls
+cat ./tripmaster_web.py 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo apt-get update
+sudo apt-get upgrade 
+sudo ./tripmaster/start_tripmaster.sh
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+cgps -s
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo reboot
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+cgps -s
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+exit
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+
+
+sudo ./tripmaster/start_tripmaster.sh
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+cgps -s
+exit
+sudo halt
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo apt-get update
+sudo apt-get upgrade
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh
+history 
+sudo apt-get update
+sudo apt-get upgrade
+sudo ./tripmaster/start_tripmaster_2.sh 
+ls
+cd tripmaster/
+ls
+sudo ./tripmaster/start_tripmaster_2.sh 
+cd ..
+sudo ./tripmaster/start_tripmaster_2.sh 
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_2.sh 
+sudo ./tripmaster/start_tripmaster_2.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_2.sh 
+sudo halt
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_2.sh 
+sudo ./tripmaster/start_tripmaster.sh 
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_2.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo apt-get update
+sudo apt-get upgrade 
+sudo dpkg --configure -a
+sudo apt-get upgrade 
+sudo apt-get update
+sudo apt-get upgrade 
+exit
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+exit
+history 
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_2.sh 
+halt
+sudo halt
+sudo kill_tripmaster.sh 
+sudo apt-get install python3-thonny
+sudo apt-get update
+sudo apt-get upgrade
+sudo kill_tripmaster.sh 
+sudo halt
+history 
+more ./tripmaster/start_tripmaster_2.sh 
+sudo kill_tripmaster.sh 
+sudo halt
+sudo kill_tripmaster.sh 
+history 
+sudo python /home/pi/tripmaster/test.py 
+echo $PWD'>'
+python test.py
+cd ./tripmaster
+echo $PWD'>'
+python ./test.py
+sudo pyhon3
+sudo python3
+exit
+echo $PWD'>'
+cd tripmaster
+echo $PWD'>'
+ls
+echo $PWD'>'
+sudo kill_tripmaster.sh 
+exit
+sudo kill_tripmaster.sh 
+sudo halt
+sudo kill_tripmaster.sh 
+history
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo halt
+sudo kill_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+more ./tripmaster/start_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh 
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh 
+exit
+sudo ./tripmaster/start_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo halt
+exit
+sudo pip3 install schedule
+sudo pip3 uninstall schedule
+sudo kill_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+exit
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh 
+sudo kill_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh 
+exit
+sudo halt
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster.sh 
+sudo /home/pi/tripmaster/tripmaster_to_kml.py
+sudo /home/pi/tripmaster/tripmaster_to_kml.py fuck
+sudo /home/pi/tripmaster/tripmaster_to_kml.py fuck.dat
+sudo /home/pi/tripmaster/tripmaster_to_kml.py
+exit
+sudo kill_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+ls
+cd tripmaster/
+ls
+sudo chmod +x /home/pi/tripmaster/tripmaster_to_kml.py 
+ls
+sudo /home/pi/tripmaster/tripmaster_to_kml.py 
+sudo nano ./kill_tripmaster.sh
+sudo chmod +x ./kill_tripmaster.sh
+sudo nano ./start_tripmaster.sh
+sudo chmod +x ./start_tripmaster.sh 
+sudo chmod +x ./start_tripmaster_debug.sh 
+cd ..
+sudo ./tripmaster/start_tripmaster_debug.sh 
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_debug.sh 
+cd ./tripmaster/__pycache__/
+ls
+sudo del tripmaster_classes.cpython-35.pyc 
+sudo rm tripmaster_classes.cpython-35.pyc 
+cd ..
+sudo ./tripmaster/start_tripmaster_debug.sh 
+cd ./tripmaster/
+sudo rm ./__pycache__/
+cd ./__pycache__/
+sudo rm *.*
+ls
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+cd ./tripmaster/
+sudo rm tripmaster_classes.cpython-35.pyc 
+cd ./__pycache__/
+sudo rm tripmaster_classes.cpython-35.pyc 
+cd ./tripmaster/
+ls
+sudo ./tripmaster_to_kml.py 
+sudo ./tripmaster/start_tripmaster_debug.sh 
+cd ..
+sudo ./tripmaster/start_tripmaster_debug.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+cd /usr/local/sbin/
+ls
+more ./kill_tripmaster.sh 
+cd $home
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+more ./kill_tripmaster.sh 
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_debug.sh 
+sudo reboot
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_debug.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+exit
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_debug.sh 
+sudo ./tripmaster/start_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_debug.sh 
+sudo halt
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_debug.sh 
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_debug.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_debug.sh 
+/etc/rc.local 
+sudo ./tripmaster/start_tripmaster.sh 
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_debug.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_debug.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_debug.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+clear
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_debug.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_debug.sh 
+sudo halt
+
+sudo apt-get update
+sudo apt-get upgrade
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_debug.sh 
+clear
+sudo ./tripmaster/start_tripmaster_debug.sh 
+sudo kill_tripmaster.sh 
+/etc/rc.local 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo kill_tripmaster.sh 
+sudo halt
+sudo kill_tripmaster.sh 
+sudo halt
+sudo kill_tripmaster.sh 
+sudo halt
+sudo kill_tripmaster.sh 
+sudo halt
+sudo kill_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo ./tripmaster/start_tripmaster_debug.sh 
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_debug.sh 
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_debug.sh 
+sudo kill_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+lsusb
+uname -a
+sudo apt update && sudo apt -y upgrade && sudo apt -y dist-upgrade
+uname -a
+sudo wget http://downloads.fars-robotics.net/wifi-drivers/install-wifi -O /usr/bin/install-wifi
+sudo chmod +x /usr/bin/install-wifi
+sudo install-wifi -h
+sudo install-wifi
+sudo ./tripmaster/start_tripmaster_debug.sh 
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_debug.sh 
+sudo ./tripmaster/start_tripmaster_debug.sh 
+lsusb
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo apt update && sudo apt -y upgrade && sudo apt -y dist-upgrade
+exit
+sudo ./tripmaster/start_tripmaster_debug.sh 
+sudo kill_tripmaster.sh 
+sudo tail -f /home/pi/tripmaster/out/tripmaster.log
+sudo nano /etc/sysctl.conf 
+iptables
+sudo nano /etc/network/if-up.d/router.sh
+sudo chmod -x /etc/network/if-up.d/router.sh 
+sudo nano /etc/dnsmasq.conf
+sudo kill_tripmaster.sh 
+sudo ./tripmaster/start_tripmaster_debug.sh 

@@ -32,7 +32,7 @@ html, body {
 }
 
 .dx-field-value .dx-widget, .dx-item, .dx-texteditor-input {
-    font-size: 7.1vmin;
+    font-size: 5.5vmin;
 }
 
 .tm-background {
@@ -45,6 +45,10 @@ html, body {
     color: inherit;
     width: auto;
     height: auto;
+}
+
+.dx-button-content .dx-icon-edit {
+    font-size: 6vmin;
 }
 
 #reloadpage .dx-button-content .dx-icon {

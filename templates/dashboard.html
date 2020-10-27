@@ -40,8 +40,16 @@
         <div id="button-reloadpage"></div> 
     </div>
     <div id="multiview-dashboard" name="main" class="tm-background">
+        <script id="mv-clock" type="text/html">
+            <div id="clock-box" class="dashboard-box">
+                <div data-options="dxItem: {ratio: 1}">
+                    <div id="smallclock"></div>
+                    <div id="circulargauge-cputemp"></div>
+                </div>
+            </div>        
+        </script>
         <script id="mv-sector" type="text/html">
-            <div id="sector-box" class="twocolumn-box">
+             <div id="sector-box" class="dashboard-box">
                 <div data-options="dxItem: {ratio: 2}">
                     <div id="status-gps" class="status-indicator">
                         <i class="fas fa-satellite-dish"></i>
@@ -80,7 +88,7 @@
             </script>
         </script>
         <script id="mv-regtest" type="text/html">
-            <div id="regtest-box" class="twocolumn-box">
+            <div id="regtest-box" class="dashboard-box">
                 <div data-options="dxItem: {ratio: 3}">
                     <div id="circulargauge-devavgspeed"></div>
                     <div id="textbox-regtesttime"></div>
@@ -88,8 +96,7 @@
                 <div data-options="dxItem: {ratio: 1}" id="right-regtest">
                     <div id="lineargauge-kmsector"></div>
                 </div>
-            </div>
-        
+            </div>        
         </script>
     </div>
     <script>

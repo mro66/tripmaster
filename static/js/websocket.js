@@ -55,30 +55,33 @@ function WebSocket_Open(page) {
         var message = evt.data;
         var values = message.split(':');
         if (values[0] == "data") {
-            mylog(message);
-            // 1,     2,    3,   4        5,        6,        7,         8,                9,                     10,               
-            // INDEX, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_STAGE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_PRESET_REST, FRAC_SECTOR_DRIVEN, 
+            // mylog(message);
+            // 1,    2,    3,   4        5,        6,        7,         8,                9,                     10,               
+            // TIME, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_STAGE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_PRESET_REST, FRAC_SECTOR_DRIVEN, 
             // 11,          12,       13,  14,  15,          16,           17,            18,             19,                20
             // DEV_AVG_KMH, GPS_MODE, LON, LAT, HAS_SENSORS, IS_TIME_SYNC, STAGE_STARTED, STAGE_FRACTIME, STAGE_TIMETOSTART, STAGE_TIMETOFINISH
-            INDEX = values[1]; 
-            KMH = values[3]; 
-            AVG_KMH = parseFloat(values[4]); 
-            KM_RALLYE = parseFloat(values[5]);
-            KM_STAGE = parseFloat(values[6]);
-            KM_SECTOR = parseFloat(values[7]);
-            KM_SECTOR_PRESET = parseFloat(values[8]);
+            // 21
+            // CPU_TEMP
+            TIME                  = values[1].replace(/-/g, ":");; 
+            KMH                   = values[3]; 
+            AVG_KMH               = parseFloat(values[4]); 
+            KM_RALLYE             = parseFloat(values[5]);
+            KM_STAGE              = parseFloat(values[6]);
+            KM_SECTOR             = parseFloat(values[7]);
+            KM_SECTOR_PRESET      = parseFloat(values[8]);
             KM_SECTOR_PRESET_REST = parseFloat(values[9]);
-            FRAC_SECTOR_DRIVEN = parseFloat(values[10]);
-            DEV_AVG_KMH = parseFloat(values[11]);
-            GPS_MODE = parseInt(values[12]); 
-            LON = values[13]; 
-            LAT = values[14]; 
-            HAS_SENSORS = parseInt(values[15]);
-            IS_TIME_SYNC = parseInt(values[16]);
-            STAGE_STARTED = (parseInt(values[17]) != 0), 
-            STAGE_FRACTIME = parseInt(values[18]), 
-            STAGE_TIMETOSTART = parseInt(values[19]);
-            STAGE_TIMETOFINISH = values[20];
+            FRAC_SECTOR_DRIVEN    = parseFloat(values[10]);
+            DEV_AVG_KMH           = parseFloat(values[11]);
+            GPS_MODE              = parseInt(values[12]); 
+            LON                   = values[13]; 
+            LAT                   = values[14]; 
+            HAS_SENSORS           = parseInt(values[15]);
+            IS_TIME_SYNC          = parseInt(values[16]);
+            STAGE_STARTED         = (parseInt(values[17]) != 0), 
+            STAGE_FRACTIME        = parseInt(values[18]), 
+            STAGE_TIMETOSTART     = parseInt(values[19]);
+            STAGE_TIMETOFINISH    = parseInt(values[20]);
+            CPU_TEMP              = parseFloat(values[21]);
 
             // Tacho
             if (document.getElementById("circulargauge-speed") !== null) {
@@ -178,13 +181,14 @@ function WebSocket_Open(page) {
                 if (STAGE_STARTED) {
                     $("#button-togglestage").dxButton("instance").option("disabled", false);
                 } else {
-                    if (STAGE_TIMETOSTART < 0) {
+                    if (STAGE_TIMETOSTART > 0) {
                         $("#button-togglestage").dxButton("instance").option("disabled", true);                        
                     } else {
                         $("#button-togglestage").dxButton("instance").option("disabled", (IS_TIME_SYNC == 0));                        
                     }
                 }
             };
+            // Bei jedem Aufruf die globale JS Variable setzen 
             if (isset(stageStarted.status)) {
                 stageStarted.status = STAGE_STARTED;
             };
@@ -193,9 +197,9 @@ function WebSocket_Open(page) {
             if (document.getElementById("textbox-stagetimeto") !== null) {
                 let stagetimeto = "--:--:--";
                 $("#textbox-stagetimeto").find(".dx-texteditor-input").css("color", "");
-                if (STAGE_TIMETOSTART < 0) {
+                if (STAGE_TIMETOSTART > 0) {
                     document.getElementById("label-stagetimeto").innerHTML = "Bis zum Start";
-                    stagetimeto = new Date(-STAGE_TIMETOSTART * 1000).toISOString().substr(11, 8)
+                    stagetimeto = new Date(STAGE_TIMETOSTART * 1000).toISOString().substr(11, 8)
                     $("#textbox-stagetimeto").find(".dx-texteditor-input").css("color", "var(--tm-red)");                    
                 } else if (STAGE_FRACTIME > 0) {                    
                     if (STAGE_TIMETOFINISH < 0) {
@@ -212,6 +216,53 @@ function WebSocket_Open(page) {
             if (document.getElementById("datebox-stagestart") !== null) {
                 // Etappenstartzeit darf nicht eingegeben werden, wenn Etappe schon läuft
                 $("#datebox-stagestart").dxDateBox("instance").option("openOnFieldClick", !STAGE_STARTED);
+            };
+            
+            // Anzeige auf der Uhr
+            if (document.getElementById("clock") !== null) {
+                // mylog("STAGE_TIMETOSTART: " + STAGE_TIMETOSTART)
+                let clock = document.getElementById("clock");
+                let smallclock = document.getElementById("smallclock");
+                if (STAGE_TIMETOSTART > 0) {
+                    if (STAGE_TIMETOSTART < 5*60)
+                        clock.style.color = "var(--tm-red)";
+                    else if (STAGE_TIMETOSTART < 15*60)
+                        clock.style.color = "var(--tm-yellow)";
+                    else if (STAGE_TIMETOSTART < 30*60)
+                        clock.style.color = "var(--tm-green)";
+                    else
+                        clock.style.color = "var(--tm-gray)"; 
+                    stagetimeto = new Date(STAGE_TIMETOSTART * 1000).toISOString().substr(11, 8);
+                    clock.innerHTML = stagetimeto;
+                    smallclock.style.display = "block"; 
+                    smallclock.style.color = "var(--tm-gray)"; 
+                    smallclock.innerHTML = TIME;
+                    if (STAGE_TIMETOSTART == 1) {
+                        setTimeout(function() {
+                            $("#multiview-dashboard").dxMultiView("instance").option("selectedIndex", 1);
+                        }, 900);         
+                    }                        
+                } else if (STAGE_FRACTIME > 0) {
+                    if (STAGE_TIMETOFINISH > 30*60)
+                        clock.style.color = "var(--tm-green)";
+                    else if (STAGE_TIMETOFINISH > 0)
+                        clock.style.color = "var(--tm-yellow)";
+                    else
+                        clock.style.color = "var(--tm-red)";
+                    stagetimeto = new Date(STAGE_TIMETOFINISH * 1000).toISOString().substr(11, 8);
+                    if (STAGE_TIMETOFINISH < 0) 
+                        stagetimeto = new Date(-STAGE_TIMETOFINISH * 1000).toISOString().substr(11, 8)
+                    else
+                        stagetimeto = new Date(STAGE_TIMETOFINISH * 1000).toISOString().substr(11, 8)
+                    clock.innerHTML = stagetimeto;
+                    smallclock.style.display = "block"; 
+                    smallclock.style.color = "var(--tm-gray)"; 
+                    smallclock.innerHTML = TIME;
+                } else {
+                    smallclock.style.display = "none"; 
+                    clock.style.color = "var(--tm-gray)"; 
+                    clock.innerHTML = TIME;
+                }
             };
             
             // Entfernungstextboxen
@@ -238,13 +289,22 @@ function WebSocket_Open(page) {
             // Gesamt
             if (document.getElementById("textbox-rallye") !== null) {
                 $("#textbox-rallye").dxTextBox("instance").option("value", formatDistance(KM_RALLYE));
-            } 
+            };
             // Abweichung der durchschnittlichen Geschwindigkeit von der Vorgabe
             if ((document.getElementById("circulargauge-devavgspeed") !== null)) {
-                devAvgSpeed = $('#circulargauge-devavgspeed').dxCircularGauge("instance");
-                devAvgSpeed.value(DEV_AVG_KMH);
-                devAvgSpeed.subvalues([DEV_AVG_KMH]);
-            } 
+                devSpeed = $('#circulargauge-devavgspeed').dxCircularGauge("instance");
+                devSpeed.value(DEV_AVG_KMH);
+                devSpeed.subvalues([DEV_AVG_KMH]);
+            };
+            // CPU Temperatur des RasPi
+            if ((document.getElementById("textbox-cputemp") !== null)) {
+                if($("#textbox-cputemp").dxTextBox("instance").option("visible") == true) {
+                    $("#textbox-cputemp").dxTextBox("instance").option("value", CPU_TEMP);
+                };
+            };
+            if ((document.getElementById("circulargauge-cputemp") !== null)) {
+                $("#circulargauge-cputemp").dxCircularGauge("instance").option("value", CPU_TEMP);
+            };
         }
         else if (values[0] == "countdown") {
             // mylog(message);
@@ -256,10 +316,10 @@ function WebSocket_Open(page) {
                 if (document.getElementById("textbox-regtestlength") !== null) {
                     $("#textbox-regtestlength").dxTextBox("instance").option("value", formatDistance(KM_SECTOR_PRESET_REST));
                 }
-                if (document.getElementById("textbox-regtestavgspeed") !== null) {
+                if (document.getElementById("textbox-regtestspeed") !== null) {
                     let speedDeviation = formatSpeed(DEV_AVG_KMH);
                     if (DEV_AVG_KMH > 0) speedDeviation = "+" + speedDeviation;
-                    $('#textbox-regtestavgspeed').dxTextBox("instance").option("value", speedDeviation);
+                    $('#textbox-regtestspeed').dxTextBox("instance").option("value", speedDeviation);
                 } 
             }
         } else if (values[0] == "avgspeed") {
@@ -279,7 +339,7 @@ function WebSocket_Open(page) {
                 };
             } 
         } else {
-            // mylog('from TM: '+message);
+            mylog('TM ->: '+message);
         
             TEXT = values[0].replace("&#058;", ":");
             TYPE = values[1]; // ("info", "warning", "error" or "success")
@@ -305,8 +365,8 @@ function WebSocket_Open(page) {
                                 "style": "color: " + iconcolor,
                             },
                         });
-                        // Nur Dashboard
-                        if (document.getElementById("multiview-dashboard") !== null) {
+                        // Nur die vier "Punkt"-Buttons auf dem Dashboard
+                        if ((document.getElementById("multiview-dashboard") !== null) && (id !== "button-togglestage")) {
                             let pointcategory = buttonopts[4];
                             let pointtype = buttonopts[5];
                             if (pointtype == 'null') {
@@ -320,7 +380,7 @@ function WebSocket_Open(page) {
                                     },
                                 })
                             };
-                        };                          
+                        };                            
                     };
                 // Dateiliste zum Download/Löschen
                 } else if (COMMAND.startsWith("downloadfiles")) {
@@ -343,38 +403,45 @@ function WebSocket_Open(page) {
                         let pointDataGrid = $("#datagrid-" + pointtype).dxDataGrid("instance");
                         pointDataGrid.getDataSource().store().insert(
                             {
-                                ID: parseInt(pointdata[1]),
-                                Beschreibung: pointdata[2],
-                                Name: pointdata[3],
-                                Sicher: pointdata[4] == 1?true:false,
+                                // ID zur Anzeige 1-basiert, im System 0-basiert
+                                ID:    parseInt(pointdata[1]) + 1,
+                                Name:  pointdata[2],
+                                Wert:  pointdata[3],
+                                Aktiv: pointdata[4] == 1?true:false,
                             })
                         .done(function (dataObj, key) { /* Process the key and data object here*/ })
                         .fail(function (error) {/* Handle the "error" here */});
                         pointDataGrid.refresh();
+                        // Wenn eine OK eingegeben wurde, zur Seite mit Datagrid springen wg Dateneingabe
                         if ((pointtype == "checkpoint") && (document.getElementById("tabpanel-settings") !== null)) {
                             $("#tabpanel-settings").dxTabPanel("instance").option("selectedIndex", 3)
+                            if (isset(jumpToLastPage)) jumpToLastPage = true;
                         };
                     };
                 };
                 // Nur Dashboard
                 if (document.getElementById("multiview-dashboard") !== null) {
-                    if (COMMAND == "regTestStarted") {
+                    if (COMMAND == "switchToClock") {
+                        $("#multiview-dashboard").dxMultiView("instance").option("selectedIndex", 0);
+                    } else if (COMMAND == "switchToMain") {
                         $("#multiview-dashboard").dxMultiView("instance").option("selectedIndex", 1);
+                    } else if (COMMAND == "regTestStarted") {
+                        $("#multiview-dashboard").dxMultiView("instance").option("selectedIndex", 2);
                     } else if (COMMAND == "regTestStopped") {
                         setTimeout(function() {
-                            $("#multiview-dashboard").dxMultiView("instance").option("selectedIndex", 0);
+                            $("#multiview-dashboard").dxMultiView("instance").option("selectedIndex", 1);
                             AVG_KMH_PRESET = 0;
                             $('#circulargauge-devavgspeed').dxCircularGauge("instance").option("scale.label.customizeText", function(arg) {
                                 return formatSpeed(AVG_KMH_PRESET);
                             });
                         }, 2000);
-                    } else if (COMMAND == "sectorReset") {
+                    } else if ((COMMAND == "sectorReset") || (COMMAND == "sectorLengthreset")) {
                         setTimeout(function() {
                             buttonsToFront();
                         }, 2000);                        
                     } else if (COMMAND == "sectorLengthset") {
                         if (document.getElementById("button-group") !== null) {
-                            $("#multiview-dashboard").dxMultiView("instance").option("selectedIndex", 0)
+                            $("#multiview-dashboard").dxMultiView("instance").option("selectedIndex", 1)
                             linearGaugeToFront();
                         };
                     }
@@ -388,7 +455,7 @@ function WebSocket_Open(page) {
 function WebSocket_Send(data) {
     if (wss_status == "opened") {
         wss.send(data);
-        mylog('to TM: '+data);
+        mylog('-> TM: '+data);
     }
 }
 
@@ -405,13 +472,5 @@ function isset(strVariableName) {
 function mylog(message) {
     if (isset(DEBUG) && DEBUG == 1) {
         console.log(message);
-        if (document.getElementById("Log") !== null) {
-            var logthingy;
-            logthingy = document.getElementById("Log");
-            if( logthingy.innerHTML.length > 5000 )
-                logthingy.innerHTML = logthingy.innerHTML.slice(logthingy.innerHTML.length-5000);
-            logthingy.innerHTML = logthingy.innerHTML+"<br/>"+message;
-            logthingy.scrollTop = logthingy.scrollHeight*2;
-        }
     }
 }
