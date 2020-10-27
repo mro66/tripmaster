@@ -1,6 +1,5 @@
 $(function(){
 
-
 	// Zwei Spalten Layout
 		
 	var twoColumnBox = $("#box-twocolumn").dxBox({
@@ -120,31 +119,26 @@ function resizeAndPosition() {
         },
 	});
 	
-	// Odometer
+	speedCircularGauge.render();
+	
+	// Odometer an der Mitte des Tachos ausrichten
 	//top ...
 	// kmsector
-	var halfOdoHeight = odoKmSector.clientHeight / 2;
-	odoKmSector.style.top = window.innerHeight / 2.55 - halfOdoHeight + "px";
+	var x = document.getElementsByClassName("dxg-spindle-hole")[0].getAttribute('cx');
+	var y = document.getElementsByClassName("dxg-spindle-hole")[0].getAttribute('cy');
+	var spindleSize = speedCircularGauge.option("valueIndicator.spindleSize");
+	odoKmSector.style.top = parseFloat(y) - parseFloat(spindleSize) - parseFloat(odoKmSector.clientHeight) + "px";
 	// kmtotal
-	halfOdoHeight = odoKmTotal.clientHeight / 2;
-	odoKmTotal.style.top = window.innerHeight / 1.55 + halfOdoHeight + "px";
+	odoKmTotal.style.top = parseFloat(y) + parseFloat(spindleSize) + "px";
 	// ... und left
 	// kmsector
 	var halfOdoWidth = odoKmSector.clientWidth / 2;
-	odoKmSector.style.left = (window.innerWidth /3 ) - halfOdoWidth + "px";
+	odoKmSector.style.left = parseFloat(x) - parseFloat(halfOdoWidth) + "px";
 	odoKmSector.style.visibility = "visible";
 	// kmtotal
 	halfOdoWidth = odoKmTotal.clientWidth / 2;
-	odoKmTotal.style.left = (window.innerWidth /3 ) - halfOdoWidth + "px";
+	odoKmTotal.style.left = parseFloat(x) - parseFloat(halfOdoWidth) + "px";
 	odoKmTotal.style.visibility = "visible";
+	
 };
 
-function fullScreen() {
-	if (screenfull.enabled) {
-		screenfull.toggle();
-		// screen.orientation.lock("landscape-secondary");
-	} 
-};
-function showScreensize() {
-	DevExpress.ui.notify("Breite: "+window.innerWidth+", Höhe: "+window.innerHeight, "info");
-};

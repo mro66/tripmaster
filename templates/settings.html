@@ -5,20 +5,24 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-	<link rel="stylesheet" type="text/css" href="/static/dx.common.css" />
-	<link rel="stylesheet" type="text/css" href="/static/dx.light.css" />
-    <link rel="dx-theme" data-theme="generic.light" href="/static/dx.light.css" />
-    <link rel="stylesheet" type="text/css" href="/static/tm.common.css" />
-    <link rel="stylesheet" type="text/css" href="/static/tm.settings.css" />
-    <script src="/static/jquery.min.js"></script>
-    <script src="/static/dx.all.js"></script>
-    <script src="/static/tm.settings.js"></script>
-    <script src="/static/tm.common.js"></script>
-    <script src="/static/websocket.js"></script>
+	<link rel="manifest" href="/static/json/tm.settings.json">
+	<link rel="stylesheet" type="text/css" href="/static/css/dx.common.css" />
+	<link rel="stylesheet" type="text/css" href="/static/css/dx.light.css" />
+    <link rel="dx-theme" data-theme="generic.light" href="/static/css/dx.light.css" />
+
+    <link rel="stylesheet" type="text/css" href="/static/css/tm.common.css" />
+    <link rel="stylesheet" type="text/css" href="/static/css/tm.settings.css" />
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/dx.all.js"></script>
+    <script src="/static/js/tm.settings.js"></script>
+    <script src="/static/js/tm.common.js"></script>
+
+    <script src="/static/js/websocket.js"></script>
+    <script src="/static/js/screenfull.min.js"></script>
     <script>
 		var DEBUG = {{ debug }};
 		var SAMPLE_TIME = {{ sample_time }};
-		var SECTOR_REVERSE = {{ sector_reverse }};
+		var SECTOR_REVERSE = ('{{ sector_reverse }}' === 'False');
 		window.jQuery || document.write(decodeURIComponent('%3Cscript src="static/jquery.min.js"%3E%3C/script%3E'))
 		
 		var TYRE_SIZE = {{ tyre_size }};
@@ -28,24 +32,24 @@
 	<div id="button-reloadpage"></div>
 	<div id="settings" class="main">
 		<div id="tabPanelContainer">
-			<script id="etappeTab" type="text/html">
+			<script id="abschnittTab" type="text/html">
 				<div class="dx-fieldset">
 					<div class="dx-field">
 						<div class="dx-field-value">
 							<div id="button-resetsector"></div>
 						</div>
 					</div>
-					<div class="dx-field flex-row">
-						<div class="dx-field-value">
-							<div id="selectbox-sectorkm"></div>
-						</div>
-						<div class="dx-field-value">
-							<div id="selectbox-sector100m"></div>
-						</div>
-					</div>
 					<div class="dx-field">
 						<div class="dx-field-value">
 							<div id="button-setsector"></div>
+						</div>
+					</div>
+					<div class="dx-field flex-row">
+						<div class="dx-field-value">
+							<div id="numberbox-sector1000m"></div>
+						</div>
+						<div class="dx-field-value">
+							<div id="numberbox-sector100m"></div>
 						</div>
 					</div>
 				</div>
@@ -55,17 +59,17 @@
 						<div id="lineargauge-kmsector"></div>
 					</div>
 					<div data-options="dxItem: {ratio: 0.9}">
-						<div class="dx-field-label">Länge Etappe</div>
+						<div class="dx-field-label">Vorgabe</div>
 						<div class="dx-field-value">
 							<div id="textbox-sectorpreset"></div>
 						</div>
-						<div class="dx-field-label">Seit letzem Reset</div>
+						<div class="dx-field-label">Zähler</div>
 						<div class="dx-field-value">
 							<div id="textbox-sector"></div>
 						</div>
 						<div class="dx-field-label">Umkehren</div>
 						<div class="dx-field-value">
-							<div id="radio-group-sectorreverse"></div>
+							<div id="switch-sectorreverse"></div>
 						</div>
 					</div>
 				</div>
@@ -89,7 +93,7 @@
 					<div class="dx-field flex-row">
 						<div class="dx-field-label">Pausieren</div>
 						<div class="dx-field-value">
-							<div id="radio-group-pausetripmaster"></div>
+							<div id="switch-pausetripmaster"></div>
 						</div>
 					</div>
 					<div class="dx-field flex-row">

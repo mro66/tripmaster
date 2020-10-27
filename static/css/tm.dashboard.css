@@ -10,15 +10,8 @@
 /* Odometer */
 
 #odometer-kmtotal, #odometer-kmsector {
-	font-size: 4vw;
+	font-size: 4.5vw;
 	position: absolute;
 	visibility: hidden;
     z-index: 0;
 }
-
-._dx-toast-content {
-	font-size: 2vw;
-	min-width: 100%;
-	width: 100%;
-}
-

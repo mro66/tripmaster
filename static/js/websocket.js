@@ -46,10 +46,11 @@ function WebSocket_Open(page) {
     ws.onmessage = function(evt) {
 		var message = evt.data;
         var values = message.split(':');
-        if (values[0] == "data") { 
+        if (values[0] == "data") {
+			// 1, 2,    3,   4        5,        6,         7,                8,                      9 
 			// T, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN
 
-			// mylog('<- '+message);
+			// mylog(message);
 			// Tacho
 			if (document.getElementById("circulargauge-speed") !== null) {
 				speedGauge = $('#circulargauge-speed').dxCircularGauge('instance');
@@ -66,7 +67,7 @@ function WebSocket_Open(page) {
 			} 
 			if (document.getElementById("odometer-kmsector") !== null) {
 				document.getElementById("odometer-kmsector").innerHTML = parseFloat(values[6]).toLocaleString('de-DE');
-			// Linearanzeige: restliche km in der Etappe
+			// Linearanzeige: restliche km im Abschnitt
 			} 
 			if (document.getElementById("lineargauge-kmsector") !== null) {
 				kmSectorPreset = values[7];
@@ -74,7 +75,7 @@ function WebSocket_Open(page) {
 				setKmSector(values[9]);
 			} 
 			// Textboxen
-			// Länge der Etappe
+			// Länge des Abschnitts
 			if (document.getElementById("textbox-sectorpreset") !== null) {
 				$("#textbox-sectorpreset").dxTextBox('instance').option("value", formatDistance(values[7]));
 			} 
@@ -89,15 +90,7 @@ function WebSocket_Open(page) {
 			// values[2] = command
 			// values[3] = parameter
 			// values[4] = value
-			if (values.length == 3) {
-				if (document.getElementById("radio-group-pausetripmaster") !== null) {
-					if (values[2] === "masterStart") {
-						$("#radio-group-pausetripmaster").dxRadioGroup('instance').option("value", yesno[1]);
-					} else if (values[2] === "masterPause") {
-						$("#radio-group-pausetripmaster").dxRadioGroup('instance').option("value", yesno[0]);
-					}
-				}
-			} else if (values.length == 5) {
+			if (values.length == 5) {
 				if (document.getElementById("numberbox-tyre-size") !== null) {
 					$("#numberbox-tyre-size").dxNumberBox('instance').opion("value", parseFloat(values[4]));
 				}

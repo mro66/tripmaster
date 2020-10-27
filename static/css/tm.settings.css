@@ -1,0 +1,27 @@
+/* TabPanel */
+.dx-tab, .dx-switch, .dx-field-label {
+	font-size: 5vw;
+}
+
+/* Setup Tab */
+.setupTab .dx-field-label {
+	font-size: 6vw;
+}
+
+/* Button */
+.dx-button, .dx-viewport .dx-field-value:not(.dx-switch):not(.dx-button),
+.dx-viewport .dx-field-label {
+    float: none;
+    width: 100%;
+}
+
+/* TextBox */
+.dx-textbox-red {
+	border: 1px #d9534f solid ;
+}
+
+/* Switch */
+
+.dx-field-value:not(.dx-widget) > .dx-switch {
+    float: none;
+}

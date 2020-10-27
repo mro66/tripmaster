@@ -2,9 +2,11 @@ var kmLeftInSector = 0;
 var kmSectorPreset = 0;
 var windowDiagonal = Math.sqrt(Math.pow(window.innerHeight, 2) + Math.pow(window.innerWidth, 2))/1000;
 
-var yesno = ["ja", "nein"];
-var onoff = ["an", "aus"];
-
+var audioElement = document.createElement('audio');
+audioElement.setAttribute('src', '/static/Wine_Glass.ogg');
+audioElement.muted = true;
+var played = false;
+    
 $(function(){
 
     // Reload nach Abbruch der WebSocket Verbindung
@@ -14,12 +16,12 @@ $(function(){
 			type: "danger",
 			visible: false,
 			width: "90%",
-			onClick: function(self) {
+			onClick: function(e) {
 			   location.reload();
 			 },
 		});   
 	
-	// Lineare Anzeige des Etappenfortschritts
+	// Lineare Anzeige des Abschnittfortschritts
 	
 		var kmSectorLinearGauge = $("#lineargauge-kmsector").dxLinearGauge({
 		   animation: {
@@ -30,6 +32,7 @@ $(function(){
 				orientation: "vertical"
 			},
 			height: "100%",
+			width: "100%",
 			value: 0,
 			subvalues: [],
 			subvalueIndicator: {
@@ -42,8 +45,8 @@ $(function(){
 						size: "5vw",
 						color: "Ivory",
 					},
-					customizeText: function (self) {
-						if (self.value == 100) {
+					customizeText: function (e) {
+						if (e.value == 100) {
 							return formatNumber(kmSectorPreset) + " km &#10003;";
 						} else  {
 							return "-" + formatDistance(kmLeftInSector);
@@ -54,17 +57,28 @@ $(function(){
 			scale: {
 				tickInterval: 20,
 				label: {
-					customizeText: function (self) {
-						return self.value+" %";
+					customizeText: function (e) {
+						return e.value+" %";
 					},
 					font: {
-						size: "6vw",
+						size: "5vw",
 						color: "gray",
 					},
 				},
 			},
 			size: {
 				height: "100%",
+			},
+			onOptionChanged: function (e) {
+				if (e.value == 100) {
+					if (played == false) {
+						audioElement.muted = false;
+						played = true;
+						audioElement.play();
+					}
+				} else {
+					played = false;
+				}
 			},
 		}).dxLinearGauge("instance");
 		
@@ -105,11 +119,11 @@ $(function(){
 // Formatierung von Zahlen mit einer Nachkommastelle
 
 	function formatNumber(value) {
-		return parseFloat(value).toLocaleString('de-DE', {minimumFractionDigits: 1, maximumFractionDigits: 1})
+		return parseFloat(value).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})
 	}
 
 // DEBUG
 
-	function debugmsg (msg) {
+	function mynotify(msg) {
 		DevExpress.ui.notify(msg, "info");
 	};

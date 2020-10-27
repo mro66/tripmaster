@@ -1,23 +1,23 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>Tripmaster Dashboard</title>
+    <title>Dashboard</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-	<link rel="stylesheet" type="text/css" href="/static/dx.common.css" />
-	<link rel="stylesheet" type="text/css" href="/static/dx.light.css" />
-    <link rel="dx-theme" data-theme="generic.light" href="/static/dx.light.css" />
-	<link rel="stylesheet" href="/static/odometer-theme-car.css" />
-    <link rel="stylesheet" type="text/css" href="/static/tm.common.css" />
-    <link rel="stylesheet" type="text/css" href="/static/tm.dashboard.css" />
-    <script src="/static/jquery.min.js"></script>
-    <script src="/static/dx.all.js"></script>
-    <script src="/static/tm.dashboard.js"></script>
-    <script src="/static/tm.common.js"></script>
-    <script src="/static/odometer.js"></script>
-    <script src="/static/websocket.js"></script>
-    <script src="/static/screenfull.min.js"></script>
+	<link rel="manifest" href="/static/json/tm.dashboard.json">
+	<link rel="stylesheet" type="text/css" href="/static/css/dx.common.css" />
+	<link rel="stylesheet" type="text/css" href="/static/css/dx.light.css" />
+    <link rel="dx-theme" data-theme="generic.light" href="/static/css/dx.light.css" />
+	<link rel="stylesheet" href="/static/css/odometer-theme-car.css" />
+    <link rel="stylesheet" type="text/css" href="/static/css/tm.common.css" />
+    <link rel="stylesheet" type="text/css" href="/static/css/tm.dashboard.css" />
+    <script src="/static/js/jquery.min.js"></script>
+    <script src="/static/js/dx.all.js"></script>
+    <script src="/static/js/tm.dashboard.js"></script>
+    <script src="/static/js/tm.common.js"></script>
+    <script src="/static/js/odometer.js"></script>
+    <script src="/static/js/websocket.js"></script>
     <script>
 		var DEBUG = {{ debug }};
 		var SAMPLE_TIME = {{ sample_time }};
@@ -33,22 +33,21 @@
 	  transition: transform {{ sample_time / 1000 }}s linear;
 	</style>
 </head>
-<body onload="WebSocket_Open('dashboard')" class="dx-viewport demo-container">
+<body onload="WebSocket_Open('dashboard')" class="dx-viewport">
 	<div id="button-reloadpage"></div>
 	
-	<span class="main">
-	<div id="odometer-kmsector"></div>
-	<div id="odometer-kmtotal" class="odometer"></div>
-    
-	<div id="box-twocolumn">
-        <div class="tm-background" data-options="dxItem: {ratio: 2}">
-			<div id="circulargauge-speed" onClick="fullScreen();"></div>
-        </div>
-        <div class="tm-background" data-options="dxItem: {ratio: 1}">
-			<div id="lineargauge-kmsector" onClick="WebSocket_Send('resetSector');"></div>
-        </div>
-    </div>
-	</span>
+	<div class="main" onClick="WebSocket_Send('resetSector');">
+		<div id="box-twocolumn">
+			<div class="tm-background" data-options="dxItem: {ratio: 2}">
+				<div id="circulargauge-speed"></div>
+			</div>
+			<div class="tm-background" data-options="dxItem: {ratio: 1}">
+				<div id="lineargauge-kmsector"></div>
+			</div>
+		</div>
+		<div id="odometer-kmsector"></div>
+		<div id="odometer-kmtotal" class="odometer"></div>
+	</div>
 	
 	<script>
 		window.addEventListener("resize", resizeAndPosition);
@@ -58,6 +57,12 @@
 		od = new Odometer({
 		  el: odoKmSector,
 		  digits: 4,
+		});
+		
+		$(document).ready(function() {
+			var audioElement = document.createElement('audio');
+			audioElement.setAttribute('src', '/static/Wine_Glass.ogg');
+			audioElement.play();
 		});
 	</script>
 </body>

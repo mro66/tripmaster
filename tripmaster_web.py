@@ -52,10 +52,10 @@ TYRE_SIZE = config.getint("Settings", "Radumfang") / 100
 AVG_KMH = 0.0
 # Vorgegebene  Durchschnittsgeschwindigkeit
 AVG_KMH_PRESET = 0.0
-# Zurückgelegte Kilometer - gesamt und Etappe
+# Zurückgelegte Kilometer - gesamt und Abschnitt
 KM_TOTAL = 0.0
 KM_SECTOR = 0.0
-# Vorgegebene Etappenlänge
+# Vorgegebene Abschnittlänge
 KM_SECTOR_PRESET = 0.0
 # Rückwärtszählen beim Verfahren
 SECTOR_REVERSE = 1
@@ -86,15 +86,15 @@ def getRPM():
     MS = UMIN / 60 * TYRE_SIZE
     # Geschwindigkeit in Kilometer pro Stunde
     KMH = MS * 3.6
-    # Zurückgelegte Kilometer - gesamt und Etappe (Rückwärtszählen beim Umdrehen)
+    # Zurückgelegte Kilometer - gesamt und Abschnitt (Rückwärtszählen beim Umdrehen)
     KM_TOTAL += MS * SAMPLE_TIME / 1000
     KM_SECTOR += MS * SAMPLE_TIME / 1000 * SECTOR_REVERSE
-    # % zurückgelegte Strecke in der Etappe
+    # % zurückgelegte Strecke im Abschnitt
     FRAC_SECTOR_DRIVEN = 0
     if KM_SECTOR_PRESET > 0:
         FRAC_SECTOR_DRIVEN = int(min(KM_SECTOR / KM_SECTOR_PRESET * 100, 100))
-    # noch zurückzulegende Strecke in der Etappe (mit der 0.005 wird der Wert 0 in der TextCloud vermieden)
-    KM_SECTOR_TO_BE_DRIVEN = max(KM_SECTOR_PRESET - KM_SECTOR, 0) + 0.005
+    # noch zurückzulegende Strecke im Abschnitt (mit der 0.005 wird der Wert 0 in der TextCloud vermieden)
+    KM_SECTOR_TO_BE_DRIVEN = max(KM_SECTOR_PRESET - KM_SECTOR, 0) #0.005)
         
     if T > 0.0:
         # Durchschnittliche Geschwindigkeit in Kilometer pro Stunde
@@ -142,7 +142,7 @@ def startTheMaster(client):
         timed.start()
         timers.append(timed)
         theMaster = client
-        messageToAllClients(client.wsClients, "Tripmaster gestartet!:success:masterStart")
+        messageToAllClients(client.wsClients, "Tripmaster gestartet!:success")
     
 ### WebSocket server tornado <-> WebInterface
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
@@ -166,7 +166,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             startTheMaster(self)
     # the client sent a message
     def on_message(self, message):
-        global theMaster, KM_SECTOR, KM_SECTOR_PRESET, SECTOR_REVERSE, TYRE_SIZE
+        global theMaster, T, KM_TOTAL, KM_SECTOR, KM_SECTOR_PRESET, SECTOR_REVERSE, TYRE_SIZE
         printDEBUG("Message from WebIf: >>>"+message+"<<<")
         # command:param
         message = message.strip()
@@ -186,21 +186,29 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                     if timer:
                         timer.cancel()
                 theMaster = None
-                messageToAllClients(self.wsClients, "Tripmaster pausiert:warning:masterPause")
-        # Etappensteuerung
+                messageToAllClients(self.wsClients, "Tripmaster pausiert:warning")
+        # Abschnittsteuerung
         elif command == "resetSector":
             KM_SECTOR = 0.0
             KM_SECTOR_PRESET = 0.0
-            messageToAllClients(self.wsClients, "Etappe zurückgesetzt!:success")
+            messageToAllClients(self.wsClients, "Abschnittzähler auf Null!:success")
         elif command == "setSectorLength":
             KM_SECTOR_PRESET = float(param)
-            messageToAllClients(self.wsClients, "Etappe auf "+locale.format("%.1f", KM_SECTOR_PRESET)+" km gesetzt!:success")
+            messageToAllClients(self.wsClients, "Abschnitt auf "+locale.format("%.2f", KM_SECTOR_PRESET)+" km gesetzt!:success")
         elif command == "toggleSectorReverse":
             SECTOR_REVERSE = SECTOR_REVERSE * -1
             if SECTOR_REVERSE == -1:
-                messageToAllClients(self.wsClients, "Verfahren! Etappenzähler rückwärts:warning")
+                messageToAllClients(self.wsClients, "Verfahren! Abschnittzähler rückwärts:warning")
             else:
-                messageToAllClients(self.wsClients, "Etappenzähler wieder normal:info")
+                messageToAllClients(self.wsClients, "Abschnittzähler wieder normal:success")
+        # Abschnittsteuerung
+        elif command == "resetTripmaster":
+            T = 0.0
+            KM_TOTAL = 0.0
+            KM_SECTOR = 0.0
+            KM_SECTOR_PRESET = 0.0
+            SECTOR_REVERSE = 1
+            messageToAllClients(self.wsClients, "Tripmaster zurückgesetzt!:success")
         # Parameterverwaltung
         elif command in parameters:
             config.set("Settings", command, param)
@@ -225,11 +233,13 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 class Web_Application(tornado.web.Application):
     def __init__(self):
-        handlers = [   
-              (r"/dashboard.html", DashboardHandler),
-              (r"/settings.html", SettingsHandler),
-              (r"/static/(.*)", StaticHandler),
-              (r'/(favicon.ico)', StaticHandler, {"path": ""}),
+        handlers = [
+            (r"/", IndexHandler),
+            (r"/dashboard.html", DashboardHandler),
+            (r"/settings.html", SettingsHandler),
+            (r"/static/(.*)", StaticHandler),
+            (r"/static/js/(.*)", StaticHandler),
+            (r'/(favicon.ico)', StaticHandler, {"path": ""}),
           ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
@@ -239,6 +249,14 @@ class Web_Application(tornado.web.Application):
         )
         tornado.web.Application.__init__(self, handlers, **settings)
 
+class IndexHandler(tornado.web.RequestHandler):
+    #called every time someone sends a GET HTTP request
+    @tornado.web.asynchronous
+    def get(self):
+        self.render(
+            "index.html"
+        )
+
 class DashboardHandler(tornado.web.RequestHandler):
     #called every time someone sends a GET HTTP request
     @tornado.web.asynchronous
@@ -247,18 +265,22 @@ class DashboardHandler(tornado.web.RequestHandler):
             "dashboard.html",
             debug = DEBUG,
             sample_time = int(SAMPLE_TIME * 1000),
-            sector_reverse = max(SECTOR_REVERSE, 0)
+            sector_reverse = max(SECTOR_REVERSE, 0),
         )
 
 class SettingsHandler(tornado.web.RequestHandler):
     #called every time someone sends a GET HTTP request
     @tornado.web.asynchronous
     def get(self):
+        if SECTOR_REVERSE == 1:
+            sector_reverse = False
+        else:
+            sector_reverse = True
         self.render(
             "settings.html",
             debug = DEBUG,
             sample_time = int(SAMPLE_TIME * 1000),
-            sector_reverse = max(SECTOR_REVERSE, 0),
+            sector_reverse = sector_reverse,
             
             tyre_size = config.get("Settings", "Radumfang"),
         )
@@ -275,6 +297,8 @@ class StaticHandler(tornado.web.RequestHandler):
             self.set_header("Content-Type", "text/javascript")
         elif filename.endswith(".png"):
             self.set_header("Content-Type", "image/png")
+        if filename.endswith(".json"):
+            self.set_header("Content-Type", "application/json")
         self.write(self.file) 
 
 try:
