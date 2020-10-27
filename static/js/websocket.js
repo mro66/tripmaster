@@ -1,5 +1,7 @@
+// WebSocket
 var wss;
 var wss_status = "closed";
+
 function set_wss_status(status) {
     wss_status = status;
     if (document.getElementById("connectionStatus") !== null) {
@@ -48,10 +50,10 @@ function WebSocket_Open(page) {
         var values = message.split(':');
         if (values[0] == "data") {
 			// mylog(message);
-			// 1, 2,    3,   4        5,        6,         7,         8,                9,                      10 
-			// T, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN
+	// 1, 2,    3,   4        5,        6,         7,         8,                9,                      10                  11
+	// T, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN, DEV_AVG_KMH
 			KMH = values[3]; AVG_KMH = values[4]; KM_TOTAL = values[5]; KM_RALLYE = values[6]; KM_SECTOR = values[7];
-			KM_SECTOR_PRESET = values[8]; KM_SECTOR_TO_BE_DRIVEN = values[9]; FRAC_SECTOR_DRIVEN = values[10];
+			KM_SECTOR_PRESET = values[8]; KM_SECTOR_TO_BE_DRIVEN = values[9]; FRAC_SECTOR_DRIVEN = values[10]; DEV_AVG_KMH = values[11];
 			// Tacho
 			if (document.getElementById("circulargauge-speed") !== null) {
 				speedGauge = $('#circulargauge-speed').dxCircularGauge('instance');
@@ -59,8 +61,6 @@ function WebSocket_Open(page) {
 				speedGauge.value(KMH);
 				// ... die Durchschnittsgeschwindigkeit der Nebenwert des Tachos 
 				speedGauge.subvalues([AVG_KMH]);
-				// Vorgegebene  Durchschnittsgeschwindigkeit TODO
-				var AVG_KMH_PRESET = 90.0;
 			} 
 			// Odometer, mit , als Dezimaltrennzeichen
 			if (document.getElementById("odometer-kmtotal") !== null) {
@@ -94,14 +94,31 @@ function WebSocket_Open(page) {
 			if (document.getElementById("textbox-totalcounter") !== null) {
 				$("#textbox-totalcounter").dxTextBox('instance').option("value", formatDistance(KM_TOTAL));
 			} 
+			// Abweichung der durchschnitlichen Geschwindigkeit von der Vorgabe
+			if ((document.getElementById("circulargauge-devavgspeed") !== null)) {
+				devAvgSpeed = $('#circulargauge-devavgspeed').dxCircularGauge('instance');
+				devAvgSpeed.value(DEV_AVG_KMH);
+				devAvgSpeed.subvalues([DEV_AVG_KMH]);
+			} 
 		} else if (values[0] == "countdown") {
+			// mylog(message);
 			var countdown = values[1]
 			if (document.getElementById("textbox-regtestseconds") !== null) {
 				$("#textbox-regtestseconds").dxTextBox('instance').option("value", countdown + " sek");
 			}
-			
+		} else if (values[0] == "avgspeed") {
+			// mylog(message);
+			if (document.getElementById("circulargauge-devavgspeed") !== null) {
+				AVG_KMH_PRESET = parseFloat(values[1]);
+				$('#circulargauge-devavgspeed').dxCircularGauge('instance').option("scale.label.customizeText", function(arg) {return formatSpeed(AVG_KMH_PRESET);});
+			} 
+		} else if (values[0] == "config") {
+			mylog(message);
+			if (document.getElementById("config") !== null) {
+				document.getElementById("config").innerHTML = values[1];
+			} 
 		} else {
-			mylog('<-: '+message);
+			// mylog('<-: '+message);
 		
 			TEXT = values[0];
 			TYPE = values[1]; // ("info", "warning", "error" or "success")
@@ -115,7 +132,9 @@ function WebSocket_Open(page) {
 					if (COMMAND == "regTestStarted") {
 						$("#multiview-dashboard").dxMultiView('instance').option("selectedIndex", 1);
 					} else if (COMMAND == "regTestStopped") {
-						$("#multiview-dashboard").dxMultiView('instance').option("selectedIndex", 0);
+						AVG_KMH_PRESET = 0;
+						$('#circulargauge-devavgspeed').dxCircularGauge('instance').option("scale.label.customizeText", function(arg) {return formatSpeed(AVG_KMH_PRESET);});
+						setTimeout(function() {$("#multiview-dashboard").dxMultiView('instance').option("selectedIndex", 0)}, 2000);
 					}
 				};
 			};

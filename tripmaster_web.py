@@ -13,7 +13,7 @@ import threading
 #-------------------------------------------------------------------
 # Einstellungen des Tripmasters
 # Komma als Dezimaltrennzeichen
-locale.setlocale(locale.LC_ALL, 'de_DE.UTF-8')
+locale.setlocale(locale.LC_ALL, "de_DE.UTF-8")
 
 # Konfigurationseditor
 config = configparser.RawConfigParser()
@@ -21,8 +21,8 @@ config = configparser.RawConfigParser()
 config.optionxform = str
 configFileName = "/home/pi/tripmaster/tripmaster.ini"
 config.read(configFileName)
-# alle gespeicherten Parameter
-parameters = dict(config.items('Settings'))
+# aktive Konfiguration
+ACTIVE_CONFIG = config.get("Settings", "aktiv")
 
 # Importe - für VM kommentieren
 # import pigpio
@@ -47,8 +47,23 @@ T_SECTOR = 0.0
 # Umdrehungen pro Minute
 UMIN = 0.0
 MS = 0.0
-# Reifenumfang
-TYRE_SIZE = config.getint("Settings", "Radumfang") / 100
+# Anzahl Sensoren
+N_SENSORS = 0
+# Übersetzung Abtriebswelle - Achswelle (z. B. Differenzial beim Jaguar)
+TRANSMISSION_RATIO = 0.0
+# Reifenumfang in m
+TYRE_SIZE = 0.0
+# Liest die Parameter der aktiven Konfiguration
+def readConfig():
+    global N_SENSORS, TRANSMISSION_RATIO, TYRE_SIZE
+    N_SENSORS = config.getint(ACTIVE_CONFIG, "Sensoren")
+    TRANSMISSION_RATIO = eval(config.get(ACTIVE_CONFIG, "Übersetzung"))
+    TYRE_SIZE = config.getint(ACTIVE_CONFIG, "Radumfang") / 100
+    ret = "Konfiguration - " + ACTIVE_CONFIG
+    for (each_key, each_val) in config.items(ACTIVE_CONFIG):
+        ret += "<br>" + each_key + " - " + each_val
+    return ret
+readConfig()
 # Durchschnittsgeschwindigkeit in Kilometer pro Stunde
 AVG_KMH = 0.0
 # Vorgegebene  Durchschnittsgeschwindigkeit
@@ -90,7 +105,7 @@ def WebRequestHandler(requestlist):
     returnlist = ""
     for request in requestlist:
         request = request.strip()
-        requestsplit = request.split(':')
+        requestsplit = request.split(":")
         requestsplit.append("dummy")
         command = requestsplit[0]
         param = requestsplit[1]
@@ -106,16 +121,16 @@ def WebRequestHandler(requestlist):
     return returnlist
 
 def getRPM():
-    global UMIN, T, T_SECTOR, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, REVERSE, AVG_KMH
+    global UMIN, T, T_SECTOR, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, REVERSE, AVG_KMH, AVG_KMH_PRESET
     # UMIN ermitteln
     # UMIN = int(UMIN_READER.RPM() + 0.5)
     #... ohne Sensor
-    UMIN = 1000 + math.sin((T * 5)/180 * math.pi) * 1000
+    UMIN = 2000 + math.sin((T * 5)/180 * math.pi) * 1000
     # Messzeitpunkt gesamt und Etappe
     T += SAMPLE_TIME
     T_SECTOR += SAMPLE_TIME
     # Geschwindigkeit in Meter pro Sekunde
-    MS = UMIN / 60 * TYRE_SIZE
+    MS = UMIN / TRANSMISSION_RATIO / 60 * TYRE_SIZE
     # Geschwindigkeit in Kilometer pro Stunde
     KMH = MS * 3.6
     # Zurückgelegte Kilometer - Gesamt, Rallye und Etappe (Rückwärtszählen beim Umdrehen außer bei Gesamt)
@@ -132,13 +147,19 @@ def getRPM():
     if T_SECTOR > 0.0:
         # Durchschnittliche Geschwindigkeit in Kilometer pro Stunde in der Etappe
         AVG_KMH = KM_SECTOR * 1000 / T_SECTOR * 3.6
-    return "data:{0:0.1f}:{1:0.1f}:{2:0.1f}:{3:0.1f}:{4:0.2f}:{5:0.2f}:{6:0.2f}:{7:0.2f}:{8:0.2f}:{9:}".format(T, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN)
+        # Abweichung der durchschnitlichen Geschwindigkeit von der Vorgabe
+        DEV_AVG_KMH = 0.0
+        if AVG_KMH_PRESET > 0.0:
+            DEV_AVG_KMH = AVG_KMH - AVG_KMH_PRESET
+    return "data:{0:0.1f}:{1:0.1f}:{2:0.1f}:{3:0.1f}:{4:0.2f}:{5:0.2f}:{6:0.2f}:{7:0.2f}:{8:0.2f}:{9:}:{10:0.1f}".format(T, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_TO_BE_DRIVEN, FRAC_SECTOR_DRIVEN, DEV_AVG_KMH)
 
 def startTheMaster(client):
     timed = threading.Timer(SAMPLE_TIME, pushSensorData, [client.wsClients, "RPM", "{:.1f}".format(SAMPLE_TIME)] )
     timed.start()
     timers.append(timed)
     messageToAllClients(client.wsClients, "Tripmaster gestartet!:success:masterStarted")
+    messageToAllClients(client.wsClients,"config:" +readConfig())
+
     
 def pushSensorData(clients, what, when):
     what = str(what)
@@ -155,14 +176,16 @@ def startRegtest(client):
     timers.append(timed)
     
 def pushRegtestData(clients, what, when):
+    global AVG_KMH_PRESET
     what = str(what)
     when = float(when)
     message = WebRequestHandler(what.splitlines())
-    secondsLeft = int(message)
-    if secondsLeft == 0:
+    countdown = int(message)
+    if countdown == 0:
         messageToAllClients(clients, "countdown:"+message)
+        AVG_KMH_PRESET = 0.0
         messageToAllClients(clients, "GLP gestoppt:success:regTestStopped")
-    elif secondsLeft > 0:
+    elif countdown > 0:
         messageToAllClients(clients, "countdown:"+message)
         timed = threading.Timer( when, pushRegtestData, [clients, what, when] )
         timed.start()
@@ -191,11 +214,11 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             startTheMaster(theMaster)
     # the client sent a message
     def on_message(self, message):
-        global theMaster, T, T_SECTOR, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, REVERSE, TYRE_SIZE, COUNTDOWN
+        global theMaster, T, T_SECTOR, KM_TOTAL, KM_RALLYE, KM_SECTOR, KM_SECTOR_PRESET, REVERSE, ACTIVE_CONFIG, COUNTDOWN, AVG_KMH_PRESET
         printDEBUG("Message from WebIf: >>>"+message+"<<<")
         # command:param
         message = message.strip()
-        messagesplit = message.split(':')
+        messagesplit = message.split(":")
         messagesplit.append("dummyparam")
         command = messagesplit[0]
         param = messagesplit[1]
@@ -233,9 +256,14 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         elif command == "startRegtest":
             COUNTDOWN = int(param)
             startRegtest(self)
-            messageToAllClients(self.wsClients, param+" sek GLP gestartet:success:regTestStarted")
+            messageToAllClients(self.wsClients, "GLP gestartet:success:regTestStarted")
+        elif command == "setAvgSpeed":
+            AVG_KMH_PRESET = float(param)
+            messageToAllClients(self.wsClients, "avgspeed:" + param)
         elif command == "stopRegtest":
             COUNTDOWN = 0
+            AVG_KMH_PRESET = 0.0
+            messageToAllClients(self.wsClients, "countdown:0")
             messageToAllClients(self.wsClients, "GLP gestoppt:success:regTestStopped")
         # Einstellungen
         elif command == "resetTripmaster":
@@ -246,13 +274,13 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             KM_SECTOR_PRESET = 0.0
             REVERSE = 1
             messageToAllClients(self.wsClients, "Tripmaster zurückgesetzt!:success")
-        elif command in parameters:
-            config.set("Settings", command, param)
-            if command == "Radumfang":
-                TYRE_SIZE = int(param)/100
-            with open(configFileName, 'w') as configfile:    # save
+        elif command == "Konfiguration":
+            ACTIVE_CONFIG = param
+            config.set("Settings", "aktiv", ACTIVE_CONFIG)
+            with open(configFileName, "w") as configfile:    # save
                 config.write(configfile)
-            self.write_message(command + " auf '"+ param +"' gesetzt:success")
+            self.write_message("config:" +readConfig())
+            self.write_message(command + " auf '"+ ACTIVE_CONFIG +"' gesetzt:success")
         else:
             self.write_message("Unbekannter Befehl: " + command)
         
@@ -274,7 +302,7 @@ class Web_Application(tornado.web.Application):
             (r"/dashboard.html", DashboardHandler),
             (r"/settings.html", SettingsHandler),
             (r"/static/(.*)", StaticHandler),
-            (r'/(favicon.ico)', StaticHandler, {"path": ""}),
+            (r"/(favicon.ico)", StaticHandler, {"path": ""}),
           ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
@@ -317,7 +345,7 @@ class SettingsHandler(tornado.web.RequestHandler):
             sample_time = int(SAMPLE_TIME * 1000),
             sector_reverse = sector_reverse,
             
-            tyre_size = config.get("Settings", "Radumfang"),
+            active_config = ACTIVE_CONFIG,
         )
 
 # deliver static files to page

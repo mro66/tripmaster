@@ -1,5 +1,6 @@
 // Bildschirmdiagonale zum Skalieren
 var windowDiagonal = Math.sqrt(Math.pow(window.innerHeight, 2) + Math.pow(window.innerWidth, 2))/1000;
+var AVG_KMH_PRESET = 0;
 
 $(function(){
 
@@ -58,7 +59,7 @@ $(function(){
             orientation: "inside",
             label: {
         		font: {color: "gray", size: "4vw", family: "Tripmaster Font" },
-                 indentFromTick: -20 * windowDiagonal,
+                indentFromTick: -20 * windowDiagonal,
            }
         },
         rangeContainer: {
@@ -118,50 +119,118 @@ $(function(){
 		},
 	}));
 		
-    $("#circulargauge-devavgspeed").dxCircularGauge({
-        geometry: {
-            startAngle: 150,
-            endAngle: 30
-        },
-		size: {
-			height: window.innerHeight * 0.7,
+	$("#circulargauge-devavgspeed").dxCircularGauge({
+		animation: {
+			enabled: true,
+			easing: "linear"
 		},
-        scale: {
-            startValue: -25,
-            endValue: 25,
-            tickInterval: 10,
-            tick: {
-                length: 6 * windowDiagonal,
-                width: 3 * windowDiagonal,
-            },
-            label: {
-                indentFromTick: 10 * windowDiagonal,
-                font: { 
-					color: "gray", 
-					size: "2.5vw", 
-					family: "Tripmaster Font", 
+		geometry: {
+			startAngle: 150,
+			endAngle: 30
+		},
+		size: {
+			height: window.innerHeight * 0.7
+		},
+		scale: {
+			startValue: -25,
+			endValue: 25,
+			tickInterval: 30,
+			tick: {
+				length: 6 * windowDiagonal,
+				width: 3 * windowDiagonal
+			},
+			minorTickInterval: 10,
+			minorTick: {
+				length: 6 * windowDiagonal,
+				width: 3 * windowDiagonal,
+				visible: true
+			},
+			label: {
+				visible: true,
+				indentFromTick: -120 * windowDiagonal,
+				useRangeColors: true,
+				font: {
+					size: "4.5vw",
+					family: "Tripmaster Font",
 					weight: "lighter"
 				},
-                customizeText: function(arg) {
-                    return arg.valueText + " km/h";
-                }
-            }
-        },
-        rangeContainer: {
-            width: 7 * windowDiagonal,
-        },
-        valueIndicator: {
-            type: "TriangleNeedle",
-            offset: 0,
-            color: "var(--tm-red)",
-            baseValue: 0,
-            width: 13 * windowDiagonal,
+				customizeText: function(arg) {
+					return formatSpeed(0);
+				}
+			}
+		},
+		rangeContainer: {
+			width: 7 * windowDiagonal,
+			palette: [
+				"var(--tm-red)",
+				"var(--tm-yellow)",
+				"var(--tm-green)",
+				"var(--tm-yellow)",
+				"var(--tm-red)"
+			],
+			ranges: [
+				{ startValue: -25, endValue: -15 },
+				{ startValue: -15, endValue: -5 },
+				{ startValue: -5, endValue: 5 },
+				{ startValue: 5, endValue: 15 },
+				{ startValue: 15, endValue: 25 }
+			]
+		},
+		value: 0,
+		valueIndicator: {
+			type: "rangeBar",
+			color: "var(--tm-blue)",
+			baseValue: 0,
+			offset: 60 * windowDiagonal,
+			size: 10 * windowDiagonal,
+			text: {
+				indent: 15 * windowDiagonal,
+				font: {
+					color: "var(--tm-blue)",
+					size: "3vw",
+					family: "Tripmaster Font"
+				},
+				customizeText: function(arg) {
+					prefix = "";
+					if((arg.value == 25.0) || (arg.value == -25.0)) {
+						return "";
+					} else {
+						return prefix + formatSpeed(arg.value + AVG_KMH_PRESET);
+					};
+				}
+			}
+		},
+		subvalues: [0],
+		subvalueIndicator: {
+			type: "TriangleNeedle",
+			offset: 60 * windowDiagonal,
+			baseValue: 0,
+			color: "var(--tm-blue)",
+			width: 13 * windowDiagonal,
 			indentFromCenter: 150 * windowDiagonal,
-			spindleSize: 0,
-        },
-        value: 0,
-		redrawOnResize: true,
-    });
+			spindleSize: 0
+		},
+		// redrawOnResize: true,
+		onOptionChanged: function(e) {
+			mylog(document.querySelectorAll('#circulargauge-devavgspeed .dxg-text'));
+			var subValueIndicator = document.querySelectorAll('#circulargauge-devavgspeed .dxg-subvalue-indicator')[0];
+			var valueIndicator = document.querySelectorAll('#circulargauge-devavgspeed .dxg-value-indicator')[0];
+			var valueIndicatorText = document.querySelectorAll('#circulargauge-devavgspeed .dxg-text')[0];
+			if(Math.abs(e.value) > 15) {
+				subValueIndicator.setAttribute('fill', "var(--tm-red)");
+				valueIndicator.setAttribute('fill', "var(--tm-red)");
+				valueIndicatorText.setAttribute('fill', "var(--tm-red)");
+			} else if(Math.abs(e.value) > 5) {
+				subValueIndicator.setAttribute('fill', "var(--tm-yellow)");
+				valueIndicator.setAttribute('fill', "var(--tm-yellow)");
+				valueIndicatorText.setAttribute('fill', "var(--tm-yellow)");
+			} else {
+				subValueIndicator.setAttribute('fill', "var(--tm-green)");
+				valueIndicator.setAttribute('fill', "var(--tm-green)");
+				valueIndicatorText.setAttribute('fill', "var(--tm-green)");
+			}			
+		},
+	});
 
 	$("#textbox-regtestseconds").dxTextBox($.extend(true, {}, textBoxOptions,{
 		value: "0 sek",

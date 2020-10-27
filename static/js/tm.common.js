@@ -109,7 +109,7 @@ $(function(){
 		if (Math.abs(distance) < 1) {
 			return (distance * 1000) + " m";
 		} else {
-			return formatNumber(distance) + " km";
+			return formatNumber(distance, 2) + " km";
 		}
 	};
 	
@@ -123,10 +123,16 @@ $(function(){
 		}
 	};
 
-// Formatierung von Zahlen mit zwei Nachkommastellen
+// Formatierung von Geschwindigkeitsangaben
+	
+	function formatSpeed(speed) {
+		return formatNumber(speed, 1) + " km/h";
+	};
 
-	function formatNumber(value) {
-		return parseFloat(value).toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+// Formatierung von Zahlen mit standardmäßig zwei Nachkommastellen
+
+	function formatNumber(value, digits=2) {
+		return parseFloat(value).toLocaleString('de-DE', {minimumFractionDigits: digits, maximumFractionDigits: digits})
 	}
 
 // DEBUG

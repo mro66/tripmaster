@@ -38,12 +38,7 @@ $(function(){
 		    onClick: function(e) {
 				// sector1000mNumberbox.reset();
 				// sector100mNumberbox.reset();
-				$("#lineargauge-kmsector").dxLinearGauge('instance').option("value", 0);
-				$("#lineargauge-kmsector").dxLinearGauge('instance').option("subvalues", []);
-				sectorPresetTextbox.option("value", "-,-- km");
-				sectorCounterTextbox.option("value", formatDistance(0));
-				reverseSwitch.option("value", false);
-				WebSocket_Send('resetSector');
+				resetSector();
 			},
 		}); 
 		
@@ -114,6 +109,15 @@ $(function(){
 			}
 		};
 		
+		function resetSector() {
+			$("#lineargauge-kmsector").dxLinearGauge('instance').option("value", 0);
+			$("#lineargauge-kmsector").dxLinearGauge('instance').option("subvalues", []);
+			sectorPresetTextbox.option("value", "0 m");
+			sectorCounterTextbox.option("value", formatDistance(0));
+			reverseSwitch.option("value", false);
+			WebSocket_Send('resetSector');
+		}
+		
         var reverseSwitch = $("#switch-reverse").dxSwitch({
 			onValueChanged: function(e) {
 				WebSocket_Send("toggleReverse");
@@ -171,13 +175,7 @@ $(function(){
 			text: "Zurücksetzen",
 			disabled: true,
 		    onClick: function(e) {
-				regtestMinuteNumberbox.reset();
-				regtestSecondNumberbox.reset();
-				regtest1000mNumberbox.reset();
-				regtest100mNumberbox.reset();
-				// regtestStartHourNumberbox.reset();
-				// regtestStartMinuteNumberbox.reset();
-				// regtestStartSecondNumberbox.reset();
+				resetRegtest();
 			},
 		}).dxButton("instance"); 
 		
@@ -187,7 +185,14 @@ $(function(){
 			disabled: true,
 			onClick: function(e) {
 				if (countdownRunning == false) {
+					resetSector();
 					WebSocket_Send('startRegtest:'+getRegtestTime());
+					if (getRegtestLength() > 0) {
+						WebSocket_Send('setSectorLength:'+getRegtestLength());						
+					};
+					if (getRegtestAvgSpeed() > 0) {
+						WebSocket_Send('setAvgSpeed:'+getRegtestAvgSpeed());
+					};
 					countdownRunning = true;
 					e.component.option("text", "Stoppen");
 					resetRegtestButton.option("disabled", true);
@@ -195,6 +200,7 @@ $(function(){
 				} else {
 					WebSocket_Send('stopRegtest');
 					resetRegtest();
+					setTimeout(resetSector, 2000);
 					var texteditorInput = document.getElementById("textbox-regtestseconds").children[0].children[0];
 					texteditorInput.classList.remove("flicker");
 					texteditorInput.classList.remove("secondyellow");
@@ -208,6 +214,11 @@ $(function(){
 			countdownRunning = false;
 			regtestMinuteNumberbox.reset();
 			regtestSecondNumberbox.reset();
+			regtest1000mNumberbox.reset();
+			regtest100mNumberbox.reset();
+			// regtestStartHourNumberbox.reset();
+			// regtestStartMinuteNumberbox.reset();
+			// regtestStartSecondNumberbox.reset();
 		};
 
 
@@ -417,12 +428,12 @@ $(function(){
 		var regtestSecondsTextbox = $("#textbox-regtestseconds").dxTextBox($.extend(true, {}, textBoxOptions,{
 			value: "0 sek",
 			onValueChanged: function(e) {
-				// var texteditorInput = $("#textbox-regtestseconds").find(".dx-texteditor-input");
 				var texteditorInput = document.getElementById("textbox-regtestseconds").children[0].children[0];
 				var myValue = parseInt(e.value);
 				regtestMinutesTextbox.option("value", formatNumber(myValue/60) + " min");
 				if (countdownRunning == true) {
 					if (myValue > 0) {
+						regtestLengthTextbox.option("value", formatDistance(kmLeftInSector));
 						animationClass = "secondyellow";
 						texteditorInput.style.color = "var(--tm-red)";
 						if (myValue <= 10) {
@@ -445,6 +456,7 @@ $(function(){
 						texteditorInput.classList.add("flicker");
 						texteditorInput.style.color = "black";
 						resetRegtest();
+						setTimeout(resetSector, 2000);
 					}
 				};
 			},
@@ -455,20 +467,26 @@ $(function(){
 		})).dxTextBox("instance");
 		
 		var regtestLengthTextbox = $("#textbox-regtestlength").dxTextBox($.extend(true, {}, textBoxOptions,{
-			value: "0,00 km",
+			value: "0 m",
 		})).dxTextBox("instance");
 				
 		var regtestAvgSpeedTextbox = $("#textbox-regtestavgspeed").dxTextBox($.extend(true, {}, textBoxOptions,{
-			value: "--,-- kmh",
+			value: formatSpeed(0),
 		})).dxTextBox("instance");
+		
+		function getRegtestAvgSpeed() {
+			var regtestLength = getRegtestLength();
+			var regtestTime = getRegtestTime();
+			return regtestLength / regtestTime * 60 * 60;
+		};
 		
 		function setRegtestAvgSpeed() {
 			var regtestLength = getRegtestLength();
 			var regtestTime = getRegtestTime();
 			if ((regtestLength > 0) && (regtestTime > 0)) {
-				regtestAvgSpeedTextbox.option("value", formatNumber(regtestLength / regtestTime * 60 * 60) + " kmh");
+				regtestAvgSpeedTextbox.option("value", formatSpeed(regtestLength / regtestTime * 60 * 60));
 			} else {
-				regtestAvgSpeedTextbox.option("value", "--,-- kmh");
+				regtestAvgSpeedTextbox.option("value", formatSpeed(0));
 			}
 		};
 
@@ -498,26 +516,17 @@ $(function(){
 			},
         }).dxSwitch("instance");
         
-		var tyreSizeNumberBox = $("#numberbox-tyresize").dxNumberBox({
-			min: 0, max: 200,
-			value: TYRE_SIZE,
-			format: "#0 cm",
-			width: "70%",
-			onFocusIn: function (e) {
-				setTyreSizeButton.option("disabled", false);
-			},
-		}).dxNumberBox("instance");
-		
-		var setTyreSizeButton = $("#button-settyresize").dxButton({
-			icon: "save",
-			width: "25%",
-			disabled: true,
-			onClick: function(e) { 
-				WebSocket_Send('Radumfang:'+tyreSizeNumberBox.option("value"));
-				TYRE_SIZE = tyreSizeNumberBox.option("value");
-				e.component.option("disabled", true);
-			},
-		}).dxButton("instance");
+		$("#selectbox-configuration").dxSelectBox({
+			dataSource: [
+				"Jaguar",
+				"Audi",
+				"Trabant"
+			],
+			value: ACTIVE_CONFIG,
+			onValueChanged: function(e) {
+				WebSocket_Send('Konfiguration:'+e.component.option("value"));
+			}
+		});
 				
 		$("#button-reset-tripmaster").dxButton({
 			text: "Tripmaster zurücksetzen",
