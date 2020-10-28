@@ -214,14 +214,14 @@ POINTS = {
      }
 
 class POINT:
-    def __init__(self, lon, lat, type = None, subtype = None):
+    def __init__(self, lon, lat, ptype = None, subtype = None):
         self.id     = None
         self.lon    = lon
         self.lat    = lat
         self.value  = None       # z. B. Buchstabe von Ortsschildern
         self.active = 1
-        if (type != None):
-            self.type    = type
+        if (ptype != None):
+            self.type    = ptype
             self.subtype = subtype
         else:
             self.type = "track"
@@ -283,30 +283,30 @@ class SECTION:
         self.setPoint(lon, lat)
         logger.debug("Abschnitt " + str(self.id) + " gestoppt:  " + locale.format_string("%.2f", lon) + "/" + locale.format_string("%.2f", lat))
 
-    def setPoint(self, lon, lat, type = None, subtype = None):
+    def setPoint(self, lon, lat, ptype = None, subtype = None):
         # Bounding Box von Deutschland: (5.98865807458, 47.3024876979, 15.0169958839, 54.983104153)),
         if (15.1 > lon > 5.9) and (55.0 > lat > 47.3):
-            newPoint = POINT(lon, lat, type, subtype)
-            if (type == 'countpoint'):
+            newPoint = POINT(lon, lat, ptype, subtype)
+            if (ptype == 'countpoint'):
                 self.countpoints.append(newPoint)
                 newPoint.id = self.countpoints.index(newPoint)
-            elif (type == 'checkpoint'):
+            elif (ptype == 'checkpoint'):
                 self.checkpoints.append(newPoint)
                 newPoint.id = self.checkpoints.index(newPoint)
             else:
                 self.points.append(newPoint)
                 newPoint.id = self.points.index(newPoint)
-                # if DEBUG and (type is None):
+                # if DEBUG and (ptype is None):
                     # logger.debug("Trackpunkt " + str(newPoint.id) + ": " + locale.format_string("%.4f", lon) + "/" + locale.format_string("%.4f", lat))
             pickleData()
             return newPoint.id
 
-    def changePoint(self, type, id, active, value):
-        if type == "countpoint":
-            self.countpoints[id].active = active
-        elif type == "checkpoint":
-            self.checkpoints[id].active = active
-            self.checkpoints[id].value = value
+    def changePoint(self, ptype, i, active, value):
+        if ptype == "countpoint":
+            self.countpoints[i].active = active
+        elif ptype == "checkpoint":
+            self.checkpoints[i].active = active
+            self.checkpoints[i].value = value
         pickleData()
 
     # Nur für Abschnitt/SECTOR: Holt Koordinate des letzten Listeneintrags
@@ -458,7 +458,7 @@ def messageToAllClients(clients, message):
         if client:
             try:
                 client.write_message(message)
-            except BufferError as err:
+            except BufferError:
                 logger.error("BufferError beim Aussenden einer Message zum Client")
 
 #-------------------------------------------------------------------
@@ -825,41 +825,41 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         elif (command == "countpoint") or (command == "checkpoint"):
             currentPos = self.getGPS();
             if currentPos is not None:
-                type    = command
-                subtype = param
-                id      = STAGE.setPoint(currentPos.lon, currentPos.lat, type, subtype)
-                messageToAllClients(self.wsClients, POINTS[subtype].name + " registriert:success:" + type + "Registered#" + str(id) + "#" + POINTS[subtype].name + "##1")
+                ptype    = command
+                subptype = param
+                i        = STAGE.setPoint(currentPos.lon, currentPos.lat, ptype, subptype)
+                messageToAllClients(self.wsClients, POINTS[subptype].name + " registriert:success:" + ptype + "Registered#" + str(i) + "#" + POINTS[subptype].name + "##1")
 
         # Punkte ändern
         elif command == "changepoint":
             paramsplit = param.split("&")
-            type       = paramsplit[0]
-            id         = int(paramsplit[1])
+            ptype      = paramsplit[0]
+            i          = int(paramsplit[1])
             name       = paramsplit[2]
             value      = paramsplit[3]
             active     = int(paramsplit[4])
 
-            STAGE.changePoint(type, id, active, value)
+            STAGE.changePoint(ptype, i, active, value)
 
             # ID zur Anzeige 1-basiert, im System 0-basiert
-            self.write_message("ID " + str(id+1) + " - " + name + " geändert:success")
+            self.write_message("ID " + str(i+1) + " - " + name + " geändert:success")
 
         # Alle Punkte beim Start laden
         elif command == "getAllPoints":
             for countpoint in STAGE.countpoints:
-                # id im System 0-basiert
-                id     = countpoint.id
+                # i im System 0-basiert
+                i      = countpoint.id
                 # or '') konvertiert None in ''
                 value  = str(countpoint.value or '')
                 name   = POINTS[countpoint.subtype].name
                 active = countpoint.active
-                self.write_message("::countpointRegistered#" + str(id) + "#" + name + "#" + value + "#" + str(active))
+                self.write_message("::countpointRegistered#" + str(i) + "#" + name + "#" + value + "#" + str(active))
             for checkpoint in STAGE.checkpoints:
-                id     = checkpoint.id
+                i      = checkpoint.id
                 value  = str(checkpoint.value or '')
                 name   = POINTS[checkpoint.subtype].name
                 active = checkpoint.active
-                self.write_message("::checkpointRegistered#" + str(id) + "#" + name + "#" + value + "#" + str(active))
+                self.write_message("::checkpointRegistered#" + str(i) + "#" + name + "#" + value + "#" + str(active))
 
         # Abschnitt zurücksetzen
         elif command == "resetSector":
