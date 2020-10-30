@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
 from __future__ import print_function
-from datetime import datetime, timedelta
-from gpiozero import CPUTemperature
-from ina219 import INA219, DeviceRangeError
+from datetime import datetime
+from gpiozero import CPUTemperature, DigitalInputDevice, DigitalOutputDevice
+from ina219 import INA219       
 from logging.handlers import RotatingFileHandler
-from psutil import cpu_percent, cpu_count
+from psutil import cpu_percent
 from read_RPM import reader
 from tornado.options import options
-import asyncio
+# import asyncio
 import configparser
 import glob
 import gpsd
@@ -19,7 +19,6 @@ import os.path
 import pickle
 import pigpio
 import pytz
-import RPi.GPIO as GPIO
 import simplekml
 import subprocess
 import sys
@@ -65,21 +64,19 @@ pickleFile = tripmasterPath + '/out/pickle.dat'
 outputFile = tripmasterPath + '/out/output.txt'
 
 ### Konfiguration Antriebswellensensor(en)
-# Beim Restarten kommt die Fehlermeldung "channel already in use"
-GPIO.setwarnings(False)
-# Einrichten der BCM GPIO Nummerierung
-GPIO.setmode(GPIO.BCM)
 # GPIO Pins der Sensoren
 GPIO_PIN_1 = 17 # weiß
 GPIO_PIN_2 = 18 # blau
-# Setup als input
-GPIO.setup(GPIO_PIN_1, GPIO.IN)
-GPIO.setup(GPIO_PIN_2, GPIO.IN)
-# GPIO Pin des Lüfters
-GPIO_PIN_FAN = 27
-# Setup als output Pin und setze auf LOW (= Lüfter aus)
-GPIO.setup(GPIO_PIN_FAN, GPIO.OUT)
-GPIO.output(GPIO_PIN_FAN, GPIO.LOW)
+
+# DigitalInputDevice setzt standardmäßig pull_up=False, d.h. is_active ist True, wenn Pin ist HIGH
+# Reedsensor 1 an Pin 17 (weiß)
+REED1 = DigitalInputDevice(GPIO_PIN_1, pull_up=True)
+# Reedsensor 2 an Pin 18 (blau)
+REED2 = DigitalInputDevice(GPIO_PIN_2, pull_up=True)
+
+# DigitalOutputDevice setzt standardmäßig active_high=True (on() -> HIGH) und initial_value=False
+# Der Lüfter an Pin 27. 
+FAN = DigitalOutputDevice(27)
 
 # Verbindung zu pigpio Deamon
 pi = None
@@ -496,8 +493,8 @@ def syncTime(GPS_CURRENT):
 def getData():
     global STAGE, SECTOR, IS_TIME_SYNC, HAS_SENSORS, INDEX, AVG_KMH, PI_STATUS, UBATWARNING
 
-    # Ein 0 V Potential an einem der GPIO Pins aktiviert die Antriebswellensensoren
-    if ((GPIO.input(GPIO_PIN_1) == 0) or (GPIO.input(GPIO_PIN_2) == 0)) and not HAS_SENSORS:
+    # Ein 0 V Potential an einem der beiden Reedsensoren aktiviert die Antriebswellensensoren
+    if (REED1.is_active or REED2.is_active) and not HAS_SENSORS:
         HAS_SENSORS = True
         logger.info("Antriebswellensensor(en) automatisch aktiviert!")
 
@@ -524,11 +521,11 @@ def getData():
 
         # Lüfter an bei über 70°C
         if (CPU_TEMP > 70.0):
-            GPIO.output(GPIO_PIN_FAN, GPIO.HIGH)
+            FAN.on()
         # Lüfter aus bei unter 58°C
         else:
             if (CPU_TEMP < 58.0):
-                GPIO.output(GPIO_PIN_FAN, GPIO.LOW)
+                FAN.off()
 
         # Gleitendes Mittel der Akkuspannung
         UBAT = PI_STATUS.calcUBAT()
@@ -1062,7 +1059,7 @@ class DownloadHandler(tornado.web.RequestHandler):
             self.set_header("Content-Type", "text/txt")
         self.write(self.file)
 
-def startTornado(*args, **kwargs):
+def startTornado():
     global WebServer, WebsocketServer
 
     logger.info("Starte Tripmaster V3.0")
@@ -1109,9 +1106,6 @@ def stopTornado():
     for timer in timers:        #for index, timer in enumerate(timers):
         if timer:
             timer.cancel()
-
-    # GPIOs zurücksetzen
-    GPIO.cleanup()
 
     WebsocketServer.stop()
     logger.debug("WebServer gestoppt")
