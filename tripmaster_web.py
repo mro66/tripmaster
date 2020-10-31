@@ -8,7 +8,8 @@ from logging.handlers import RotatingFileHandler
 from psutil import cpu_percent
 from read_RPM import reader
 from tornado.options import options
-# import asyncio
+from tornado.platform.asyncio import AsyncIOMainLoop
+import asyncio
 import configparser
 import glob
 import gpsd
@@ -27,7 +28,7 @@ import time
 import tornado.web
 import tornado.websocket
 import tornado.httpserver
-import tornado.ioloop
+# import tornado.ioloop
 
 #-------------------------------------------------------------------
 
@@ -90,9 +91,9 @@ PULSES_PER_REV = 1.0
 gpsd.connect()
 
 ### Spannungsmessung
-SHUNT_OHM = 0.1
-MAX_STROMSTAERKE = 0.4
-ina = INA219(SHUNT_OHM, MAX_STROMSTAERKE)
+SHUNT_RESISTANCE = 0.1
+MAX_CURRENT = 0.4
+ina = INA219(SHUNT_RESISTANCE, MAX_CURRENT)
 ina.configure(ina.RANGE_16V, ina.GAIN_1_40MV)
 
 ### Konfiguration Fahrzeug
@@ -1066,12 +1067,15 @@ def startTornado():
     logger.info("DEBUG: " + str(DEBUG))
     logger.debug("Tornado-Version: " + tornado.version)
 
+    AsyncIOMainLoop().install()
+    
     # WebServer
     WebServer = tornado.httpserver.HTTPServer(Web_Application(), ssl_options={
         "certfile": tripmasterPath+"/certs/servercert.pem",
         "keyfile": tripmasterPath+"/certs/serverkey.pem",
     })
     WebServer.listen(443)
+    WebServer.start()
     logger.debug("WebServer gestartet")
 
     # WebsocketServer
@@ -1081,11 +1085,13 @@ def startTornado():
         "keyfile": tripmasterPath+"/certs/serverkey.pem",
     })
     WebsocketServer.listen(WebsocketPort)
+    WebsocketServer.start()
     logger.debug("WebsocketServer gestartet")
 
     # Tornado starten
     logger.debug("Starte Tornado")
-    tornado.ioloop.IOLoop.current().start()
+#     tornado.ioloop.IOLoop.current().start()
+    asyncio.get_event_loop().run_forever()
 
 def stopTornado():
 
@@ -1113,7 +1119,8 @@ def stopTornado():
     logger.debug("WebsocketServer gestoppt")
 
     logger.debug("Beende Tornado")
-    tornado.ioloop.IOLoop.current().stop()
+    asyncio.get_event_loop().stop()
+#     tornado.ioloop.IOLoop.current().stop()
 
 if __name__ == "__main__":
     try:

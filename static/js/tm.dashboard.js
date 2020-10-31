@@ -130,7 +130,11 @@ $(function(){
         onInitialized: function(e) {
             e.element.click(function() {
                 var ubat = String($("#circulargauge-ubat").dxCircularGauge("instance").option("value")).replace('.', ',');
-                DevExpress.ui.notify("Die Akkuspannung beträgt " + ubat + "V", "info")
+                if (ubat == "5") {
+                	DevExpress.ui.notify("Stromversorgung über Netzteil", "info");
+                } else {
+                	DevExpress.ui.notify("Die Akkuspannung beträgt " + ubat + "V", "info");
+            	}
             });
         },
     }));
