@@ -291,34 +291,34 @@ class SECTION:
 
     def setPoint(self, lon, lat, ptype, subtype):
         # Bounding Box von Deutschland: (5.98865807458, 47.3024876979, 15.0169958839, 54.983104153)),
-        if (15.1 > lon > 5.9) and (55.0 > lat > 47.3):
-            newPoint = POINT(lon, lat, ptype, subtype)
-            if (ptype == 'countpoint'):
-                self.countpoints.append(newPoint)
-                newPoint.id = self.countpoints.index(newPoint)
-            elif (ptype == 'checkpoint'):
-                self.checkpoints.append(newPoint)
-                newPoint.id = self.checkpoints.index(newPoint)
-            elif (ptype == 'stage'):
-                self.points.append(newPoint)
-                newPoint.id = self.points.index(newPoint)
-            # Trackpoints
-            elif (ptype == 'sector'):
-                if (len(self.points) > 0):
-                    self.points.pop(0)
-                self.points.append(newPoint)
-                newPoint.id = self.points.index(newPoint) # ist immer 0!
-                # in TrackCSV speichern
-                with open(trackFile, 'a') as tf:
-                    trackWriter = csv.writer(tf)
-                    trackWriter.writerow([self.parent_id, self.id, lon, lat])
-#                 logger.debug("Trackpunkt " + str(newPoint.id) + ": " + locale.format_string("%.4f", lon) + "/" + locale.format_string("%.4f", lat))
-#                 logger.debug("parent.id: {0:}, self.id: {1:}, lon: {2:0.4f}, lat {3:0.4f} ".format(self.parent_id, self.id, lon, lat))
+        # if (15.1 > lon > 5.9) and (55.0 > lat > 47.3):
+        newPoint = POINT(lon, lat, ptype, subtype)
+        if (ptype == 'countpoint'):
+            self.countpoints.append(newPoint)
+            newPoint.id = self.countpoints.index(newPoint)
+        elif (ptype == 'checkpoint'):
+            self.checkpoints.append(newPoint)
+            newPoint.id = self.checkpoints.index(newPoint)
+        elif (ptype == 'stage'):
+            self.points.append(newPoint)
+            newPoint.id = self.points.index(newPoint)
+        # Trackpoints
+        elif (ptype == 'sector'):
+            if (len(self.points) > 0):
+                self.points.pop(0)
+            self.points.append(newPoint)
+            newPoint.id = self.points.index(newPoint) # ist immer 0!
+            # in TrackCSV speichern
+            with open(trackFile, 'a') as tf:
+                trackWriter = csv.writer(tf)
+                trackWriter.writerow([self.parent_id, self.id, lon, lat])
+#             logger.debug("Trackpunkt " + str(newPoint.id) + ": " + locale.format_string("%.4f", lon) + "/" + locale.format_string("%.4f", lat))
+#             logger.debug("parent.id: {0:}, self.id: {1:}, lon: {2:0.4f}, lat {3:0.4f} ".format(self.parent_id, self.id, lon, lat))
 
-            else:
-                logger.error("Unbekannter oder fehlender Punkttyp (ptype)")
-            pickleData()
-            return newPoint.id
+        else:
+            logger.error("Unbekannter oder fehlender Punkttyp (ptype)")
+        pickleData()
+        return newPoint.id
 
     def changePoint(self, ptype, i, active, value):
         if ptype == "countpoint":
@@ -658,9 +658,9 @@ def getData():
 
     if DEBUG:
         GPS_CURRENT.mode   = 3
-        GPS_CURRENT.lon    =  8.0 + INDEX/5000
-        GPS_CURRENT.lat    = 50.0 + INDEX/5000
-        GPS_CURRENT.hspeed = 20
+        GPS_CURRENT.lon    = 10.45 + INDEX/5000
+        GPS_CURRENT.lat    = 51.16 + INDEX/7500
+        GPS_CURRENT.hspeed = 15
         IS_TIME_SYNC       = True
 
     # Umdrehungen der Antriebswelle(n) pro Minute
@@ -797,13 +797,15 @@ def pushSpeedData(clients, what, when):
         when    = SAMPLE_TIME - diff.total_seconds() # * f  # float(when)
         # logger.debug(now.strftime('%H-%M-%S.%f')[:-3] + "\twhen\t{0:0.6f}\tdiff\t{1:0.3f}".format(when, diff.total_seconds()))
         timed   = threading.Timer( when, pushSpeedData, [clients, what, when] )
+        timed.daemon = True
         timed.start()
-        timers.append(timed)
+#         timers.append(timed)
 
 def startRegtest(client):
     timed = threading.Timer(1.0, pushRegtestData, [client.wsClients, "regTest", "1.0"] )
+    timed.daemon = True
     timed.start()
-    timers.append(timed)
+#     timers.append(timed)
 
 def pushRegtestData(clients, what, when):
     global AVG_KMH_PRESET
@@ -818,8 +820,9 @@ def pushRegtestData(clients, what, when):
     elif countdown > 0:
         messageToAllClients(clients, "countdown:"+message)
         timed = threading.Timer( when, pushRegtestData, [clients, what, when] )
+        timed.daemon = True
         timed.start()
-        timers.append(timed)
+#         timers.append(timed)
 
 ### WebSocket server tornado <-> WebInterface
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
@@ -846,8 +849,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             UMIN_READER_2 = reader(pi, GPIO_PIN_2, PULSES_PER_REV)
             # Timer starten
             timed = threading.Timer(SAMPLE_TIME, pushSpeedData, [self.wsClients, "getData", "{:.1f}".format(SAMPLE_TIME)] )
+            timed.daemon = True
             timed.start()
-            timers.append(timed)
+#             timers.append(timed)
             if (DEBUG):
                 messageToAllClients(self.wsClients, "Tripmaster DEBUG gestartet!:success")
             else:
@@ -1095,8 +1099,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             return GPS_CURRENT
         else:
             if DEBUG:
-                GPS_CURRENT.lon = 8.0 + INDEX/5000
-                GPS_CURRENT.lat = 50.0 + INDEX/5000
+                GPS_CURRENT.lon = 10.45 + INDEX/5000
+                GPS_CURRENT.lat = 51.16 + INDEX/7500
                 return GPS_CURRENT
             messageToAllClients(self.wsClients, "GPS ungenau! Wiederholen:error")
             return None
@@ -1228,10 +1232,11 @@ def stopTornado():
         # if currentPos is not None:
             # STAGE.endStage(currentPos.lon, currentPos.lat)
 
+#     logger.debug("str(len(timers)): " + str(len(timers)))
     # Tripmaster stoppen
-    for timer in timers:        #for index, timer in enumerate(timers):
-        if timer:
-            timer.cancel()
+#     for timer in timers:        #for index, timer in enumerate(timers):
+#         if timer:
+#             timer.cancel()
 
     WebsocketServer.stop()
     logger.debug("WebServer gestoppt")
@@ -1244,7 +1249,7 @@ def stopTornado():
 
 if __name__ == "__main__":
     try:
-        timers = list()
+#         timers = list()
         # If you want Tornado to leave the logging configuration alone so you can manage it yourself
         options.logging = None
 
