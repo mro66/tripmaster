@@ -34,14 +34,18 @@ import tornado.httpserver
 
 #-------------------------------------------------------------------
 
-WebServer = None
-WebsocketServer = None
-WebsocketPort = 7070
-
+### --- Konfiguration DEBUG ---
 DEBUG = False
 # Kommandozeilenargument
 if len(sys.argv) > 1:
     DEBUG = (sys.argv[1] == "debug")
+DEBUG_GPS_INDEX = 0
+
+### --- Konfiguration Tornado ---
+WebServer = None
+WebsocketServer = None
+WebsocketPort = 7070
+timerThreadStarted = False
 
 ### --- Konfiguration Tripmaster ---
 # Komma als Dezimaltrennzeichen
@@ -50,7 +54,7 @@ locale.setlocale(locale.LC_ALL, "de_DE.UTF-8")
 tz_utc = pytz.timezone('UTC')
 tz_berlin = pytz.timezone('Europe/Berlin')
 
-### Konfiguration Logger/Output
+### --- Konfiguration Logger/Output ---
 # Programmpfad für Dateiausgaben
 tripmasterPath = os.path.dirname(os.path.abspath(__file__))
 logging.basicConfig(
@@ -286,7 +290,7 @@ class SECTION:
         return newsector
 
     def endSector(self, lon, lat):
-        # self.setPoint(lon, lat, "sector", "sector_finish")
+        self.setPoint(lon, lat, "sector", "sector_finish")
         logger.debug("Abschnitt " + str(self.id) + " gestoppt:  " + locale.format_string("%.2f", lon) + "/" + locale.format_string("%.2f", lat))
 
     def setPoint(self, lon, lat, ptype, subtype):
@@ -603,6 +607,18 @@ def syncTime(GPS_CURRENT):
     else:
         return False
 
+def getGPSCurrent():
+    global DEBUG_GPS_INDEX
+    # Aktuelle Position
+    GPS_CURRENT = gpsd.get_current()
+    if DEBUG:
+        DEBUG_GPS_INDEX   += 1
+        GPS_CURRENT.mode   = 3
+        GPS_CURRENT.lon = 10.45 + DEBUG_GPS_INDEX/5000
+        GPS_CURRENT.lat = 51.16 + DEBUG_GPS_INDEX/7500
+        GPS_CURRENT.hspeed = 15
+    return GPS_CURRENT
+
 def getData():
     global STAGE, SECTOR, IS_TIME_SYNC, HAS_SENSORS, INDEX, AVG_KMH, PI_STATUS, UBATWARNING
 
@@ -615,7 +631,7 @@ def getData():
     INDEX  += 1
 
     # Aktuelle GPS Position
-    GPS_CURRENT = gpsd.get_current()
+    GPS_CURRENT = getGPSCurrent()
     
     # Berechne gleitende Mittel der Systemparameter...
     PI_STATUS.setStatus()
@@ -657,10 +673,6 @@ def getData():
     CPU_TEMP = CPU_LOAD
 
     if DEBUG:
-        GPS_CURRENT.mode   = 3
-        GPS_CURRENT.lon    = 10.45 + INDEX/5000
-        GPS_CURRENT.lat    = 51.16 + INDEX/7500
-        GPS_CURRENT.hspeed = 15
         IS_TIME_SYNC       = True
 
     # Umdrehungen der Antriebswelle(n) pro Minute
@@ -754,9 +766,6 @@ def getData():
             STAGE_TIMETOFINISH = STAGE.finish - int(datetime.timestamp(datetime.now()))
             STAGE_FRACTIME = round((1 - STAGE_TIMETOFINISH / STAGE.getDuration()) * 100)
     else:
-#         logger.debug("Wenn Etappe nicht läuft, zurücksetzen von Etappen- und Abschnittstrecke")
-#         STAGE.km = 0.0
-#         SECTOR.km = 0.0
         if STAGE.start > 0:
             STAGE_TIMETOSTART = STAGE.start - int(datetime.timestamp(datetime.now()))
 
@@ -799,13 +808,11 @@ def pushSpeedData(clients, what, when):
         timed   = threading.Timer( when, pushSpeedData, [clients, what, when] )
         timed.daemon = True
         timed.start()
-#         timers.append(timed)
 
 def startRegtest(client):
     timed = threading.Timer(1.0, pushRegtestData, [client.wsClients, "regTest", "1.0"] )
     timed.daemon = True
     timed.start()
-#     timers.append(timed)
 
 def pushRegtestData(clients, what, when):
     global AVG_KMH_PRESET
@@ -822,7 +829,6 @@ def pushRegtestData(clients, what, when):
         timed = threading.Timer( when, pushRegtestData, [clients, what, when] )
         timed.daemon = True
         timed.start()
-#         timers.append(timed)
 
 ### WebSocket server tornado <-> WebInterface
 class WebSocketHandler(tornado.websocket.WebSocketHandler):
@@ -834,14 +840,15 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         return True
 
     def open(self, page):
-        global pi, UMIN_READER_1, UMIN_READER_2
+        global timerThreadStarted, pi, UMIN_READER_1, UMIN_READER_2
         self.stream.set_nodelay(True)
         # Jeder WebSocket Client wird der Liste wsClients hinzugefügt
         self.wsClients.append(self)
         # Die ID ist der Index in der Liste wsClients
         self.id = "Client #" + str(self.wsClients.index(self) + 1) + " (" + page + ")"
-        # Wenn es der erste Client ist, alles initialisieren
-        if len(self.wsClients) == 1:
+        
+        # Wenn es der Timer Thread noch nicht gestartet ist, alles initialisieren
+        if timerThreadStarted == False:
             # Verbinden mit pigpio
             pi = pigpio.pi()
             # UMIN_READER starten
@@ -851,12 +858,12 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             timed = threading.Timer(SAMPLE_TIME, pushSpeedData, [self.wsClients, "getData", "{:.1f}".format(SAMPLE_TIME)] )
             timed.daemon = True
             timed.start()
-#             timers.append(timed)
+            timerThreadStarted = True
+            logger.info("Timer Thread gestartet")
             if (DEBUG):
                 messageToAllClients(self.wsClients, "Tripmaster DEBUG gestartet!:success")
             else:
                 messageToAllClients(self.wsClients, "Tripmaster gestartet!:success")
-            logger.info("Erster WebSocket Client verbunden")
 
         # Die Buttondefinition aus der INI-Datei lesen
         for b in range(4):
@@ -1093,15 +1100,11 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
     def getGPS(self):
         # Aktuelle Position
-        GPS_CURRENT = gpsd.get_current()
+        GPS_CURRENT = getGPSCurrent()
         # Mindestens ein 2D Fix
         if GPS_CURRENT.mode >= 2:
             return GPS_CURRENT
         else:
-            if DEBUG:
-                GPS_CURRENT.lon = 10.45 + INDEX/5000
-                GPS_CURRENT.lat = 51.16 + INDEX/7500
-                return GPS_CURRENT
             messageToAllClients(self.wsClients, "GPS ungenau! Wiederholen:error")
             return None
 
@@ -1232,12 +1235,6 @@ def stopTornado():
         # if currentPos is not None:
             # STAGE.endStage(currentPos.lon, currentPos.lat)
 
-#     logger.debug("str(len(timers)): " + str(len(timers)))
-    # Tripmaster stoppen
-#     for timer in timers:        #for index, timer in enumerate(timers):
-#         if timer:
-#             timer.cancel()
-
     WebsocketServer.stop()
     logger.debug("WebServer gestoppt")
     WebServer.stop()
@@ -1249,7 +1246,6 @@ def stopTornado():
 
 if __name__ == "__main__":
     try:
-#         timers = list()
         # If you want Tornado to leave the logging configuration alone so you can manage it yourself
         options.logging = None
 
