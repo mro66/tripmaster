@@ -57,34 +57,28 @@ function WebSocket_Open(page) {
         var values = message.split(':');
         if (values[0] == "data") {
             // mylog(message);
-            // 1,    2,    3,   4        5,        6,        7,         8,                9,                     10,               
-            // TIME, UMIN, KMH, AVG_KMH, KM_TOTAL, KM_STAGE, KM_SECTOR, KM_SECTOR_PRESET, KM_SECTOR_PRESET_REST, FRAC_SECTOR_DRIVEN, 
-            // 11,          12,       13,  14,  15,          16,           17,            18,             19,                20
-            // DEV_AVG_KMH, GPS_MODE, LON, LAT, HAS_SENSORS, IS_TIME_SYNC, STAGE_STARTED, STAGE_FRACTIME, STAGE_TIMETOSTART, STAGE_TIMETOFINISH
-            // 21        22    23
-            // CPU_TEMP, UBAT, UBATWARNING
-            TIME                  = values[1].replace(/-/g, ":");; 
-            KMH                   = values[3]; 
-            AVG_KMH               = parseFloat(values[4]); 
-            KM_RALLYE             = parseFloat(values[5]);
-            KM_STAGE              = parseFloat(values[6]);
-            KM_SECTOR             = parseFloat(values[7]);
-            KM_SECTOR_PRESET      = parseFloat(values[8]);
-            KM_SECTOR_PRESET_REST = parseFloat(values[9]);
-            FRAC_SECTOR_DRIVEN    = parseFloat(values[10]);
-            DEV_AVG_KMH           = parseFloat(values[11]);
-            GPS_MODE              = parseInt(values[12]); 
-            LON                   = values[13]; 
-            LAT                   = values[14]; 
-            HAS_SENSORS           = parseInt(values[15]);
-            IS_TIME_SYNC          = parseInt(values[16]);
-            STAGE_STARTED         = (parseInt(values[17]) != 0), 
-            STAGE_FRACTIME        = parseInt(values[18]), 
-            STAGE_TIMETOSTART     = parseInt(values[19]);
-            STAGE_TIMETOFINISH    = parseInt(values[20]);
-            CPU_TEMP              = parseFloat(values[21]);
-            UBAT                  = parseFloat(values[22]);
-            UBATWARNING           = parseInt(values[23]);
+			TIME                  = values[1].replace(/-/g, ":");
+			KMH                   = values[2];
+			LON                   = values[3];
+			LAT                   = values[4];
+			HAS_SENSORS           = parseInt(values[5]);
+			IS_TIME_SYNC          = parseInt(values[6]);
+			STAGE_STARTED         = (parseInt(values[7]) != 0);
+			STAGE_FRACTIME        = parseInt(values[8]);
+			STAGE_TIMETOSTART     = parseInt(values[9]);
+			STAGE_TIMETOFINISH    = parseInt(values[10]);
+			KM_SECTOR             = STAGE_STARTED?parseFloat(values[11]):0.0;
+			KM_SECTOR_PRESET      = parseFloat(values[12]);
+			KM_SECTOR_PRESET_REST = parseFloat(values[13]);
+			FRAC_SECTOR_DRIVEN    = parseFloat(values[14]);
+			KM_STAGE              = STAGE_STARTED?parseFloat(values[15]):0.0;
+			KM_RALLYE             = parseFloat(values[16]);
+			AVG_KMH               = parseFloat(values[17]);
+			DEV_AVG_KMH           = parseFloat(values[18]);
+			GPS_MODE              = parseInt(values[19]);
+			CPU_TEMP              = parseFloat(values[20]);
+			UBAT                  = parseFloat(values[21]);
+			UBATWARNING           = parseInt(values[22]);
 
             // Tacho
             if (document.getElementById("circulargauge-speed") !== null) {
@@ -115,14 +109,7 @@ function WebSocket_Open(page) {
             } 
             if (document.getElementById("odometer-kmsector") !== null) {
                 let odometerKmSector = document.getElementById("odometer-kmsector");
-                // Wenn Abschnittsvorgabe eingestellt..
-                // if (KM_SECTOR_PRESET > 0) {
-                    // odometerKmSector.style.color = "var(--tm-red)";
-                    // odometerKmSector.innerHTML = parseFloat(KM_SECTOR_PRESET_REST).toLocaleString('de-DE');
-                // } else {
-                    // odometerKmSector.style.color = "var(--tm-digit)";
-                    odometerKmSector.innerHTML = parseFloat(KM_SECTOR).toLocaleString('de-DE');
-                // };
+                odometerKmSector.innerHTML = parseFloat(KM_SECTOR).toLocaleString('de-DE');
             } 
             // Linearanzeige: restliche km im Abschnitt
             if (document.getElementById("lineargauge-kmsector") !== null) {

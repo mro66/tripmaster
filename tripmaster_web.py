@@ -374,9 +374,11 @@ def saveOutput(var):
 # ----------------------------------------------------------------
 
 def saveKMZ(rallye):
+    
+    start_time = time.time()
 
     KML = simplekml.Kml(open=1)
-
+    
     # Set aller genutzten POINT subtypes, Sets haben keine(!) Duplikate
     subtypes = set();
 
@@ -407,18 +409,30 @@ def saveKMZ(rallye):
     styles["track1"].linestyle.width = 5
     styles["track1"].linestyle.color = "ff5cb85c"  # grün
 
+    logger.debug("KML Vorbereitung --- %s seconds ---" % (time.time() - start_time))
+    start_time = time.time()
+
     # Eine deepcopy des RALLYE Objektes erstellen, da die POINTS der Abschnitte zum Ausgeben überschrieben werden
     r = copy.deepcopy(rallye)
+
+    logger.debug("deepcopy des RALLYE Objektes erstellen --- %s seconds ---" % (time.time() - start_time))
+    start_time = time.time()
 
     # Gespeicherte POINTS in den Abschnitten löschen
     for stage in r.subsection:
         for sector in stage.subsection:
             sector.points.clear()    
+
+    logger.debug("Gespeicherte POINTS in den Abschnitten löschen --- %s seconds ---" % (time.time() - start_time))
+    start_time = time.time()
     
     # Inhalt der TrackCSV in eine Liste kopieren
     with open(trackFile) as csv_file:
         tracks = list(csv.reader(csv_file))
         
+    logger.debug("Inhalt der TrackCSV in eine Liste kopieren --- %s seconds ---" % (time.time() - start_time))
+    start_time = time.time()
+    
     # POINTS in die Abschnitte kopieren
     for row in tracks:
         stage_id = int(row[0])
@@ -431,6 +445,9 @@ def saveKMZ(rallye):
                     newPoint = POINT(lon, lat, "sector", "track")
                     sector.points.append(newPoint)
 
+    logger.debug("POINTS in die Abschnitte kopieren --- %s seconds ---" % (time.time() - start_time))
+    start_time = time.time()
+    
     for stage in r.subsection:
 
         sf = KML.newfolder(name="Etappe " + str(stage.id+1))
@@ -459,9 +476,14 @@ def saveKMZ(rallye):
                 newpoint = f.newpoint(coords = [(p.lon, p.lat)], name = p.value, description = POINTS[p.subtype].name)
                 newpoint.style = styles[p.subtype]
 
+    logger.debug("KML erstellen --- %s seconds ---" % (time.time() - start_time))
+    start_time = time.time()
+    
     KML_FILE = tripmasterPath+"/out/{0:%Y%m%d_%H%M}.kmz".format(datetime.now());
     KML.savekmz(KML_FILE)
 
+    logger.debug("KMZ speichern --- %s seconds ---" % (time.time() - start_time))
+    
     now = time.time()
     # Maximal fünf Sekunden warten
     last_time = now + 5
@@ -773,12 +795,13 @@ def getData():
     NOW = datetime.now().strftime('%H-%M-%S') # .%f')[:-3]
 
 
-    datastring = "data:{0:}:{1:0.1f}:{2:0.1f}:{3:0.1f}:{4:0.2f}:{5:0.2f}:{6:0.2f}:{7:0.2f}:{8:0.2f}:{9:}:{10:0.1f}:{11:}:{12:0.6f}:{13:0.6f}:{14:}:{15:}:{16:}:{17:}:{18:}:{19:}:{20:0.1f}:{21:0.2f}:{22:}".format(
-        NOW, UMIN, KMH, AVG_KMH, 
-        RALLYE.km, STAGE.km, SECTOR.km, SECTOR.preset, SECTOR_PRESET_REST, FRAC_SECTOR_DRIVEN, DEV_AVG_KMH, 
-        GPS_CURRENT.mode, GPS_CURRENT.lon, GPS_CURRENT.lat, 
-        int(HAS_SENSORS), int(IS_TIME_SYNC), int(STAGE.isStarted()), int(STAGE_FRACTIME), 
-        STAGE_TIMETOSTART, STAGE_TIMETOFINISH, CPU_TEMP, UBAT, UBATWARNING)
+    datastring = "data:{0:}:{1:0.1f}:{2:0.6f}:{3:0.6f}:{4:}:{5:}:{6:}:{7:}:{8:}:{9:}:{10:0.2f}:{11:0.2f}:{12:0.2f}:{13:}:{14:0.2f}:{15:0.2f}:{16:0.1f}:{17:0.1f}:{18:}:{19:0.1f}:{20:0.2f}:{21:}".format(
+        NOW, KMH, GPS_CURRENT.lon, GPS_CURRENT.lat, 
+        int(HAS_SENSORS), int(IS_TIME_SYNC), int(STAGE.isStarted()), 
+        int(STAGE_FRACTIME), STAGE_TIMETOSTART, STAGE_TIMETOFINISH, 
+        SECTOR.km, SECTOR.preset, SECTOR_PRESET_REST, FRAC_SECTOR_DRIVEN, STAGE.km, RALLYE.km, 
+        AVG_KMH, DEV_AVG_KMH, 
+        GPS_CURRENT.mode, CPU_TEMP, UBAT, UBATWARNING)
 
     return datastring
 
