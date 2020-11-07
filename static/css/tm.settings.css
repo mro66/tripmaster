@@ -72,6 +72,8 @@
 /* Setup Tab */
 .dx-tab .dx-icon {
     font-size: 7vmin;
+    width: 25px;
+    height: 25px;
 }
 
 /* Inputfeld in DateBox */
