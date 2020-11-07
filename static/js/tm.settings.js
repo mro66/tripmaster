@@ -10,6 +10,7 @@ var pointList = [{
     Name: "Inaktiv",
 }, {
     Name: "Zählpunkte",
+    "expanded": true,
     items: [{
         Variable: "countpoint:roundabout",
         Name: "Kreisverkehr",
@@ -19,6 +20,7 @@ var pointList = [{
     }],
 }, {
     Name: "Orientierungskontrollen",
+    "expanded": true,
     items: [{
         Variable: "checkpoint:roundabout",
         Name: "Kreisverkehr",
@@ -197,14 +199,6 @@ $(function(){
             icon: "fas fa-cogs",
             template: $("#tab-setup"),
         }],
-        onSelectionChanged: function(e) {
-            // Abschnittszähler verschieben
-            if (e.component.option("selectedIndex")==0) {
-                $("#textbox-sector").appendTo("#tab0_sector");
-            } else if (e.component.option("selectedIndex")==4) {
-                $("#textbox-sector").appendTo("#tab4_sector");
-            }
-        },
     });
 
 // Tab Abschnitt
@@ -332,7 +326,7 @@ $(function(){
             };          
         };
     
-    // Anzeige der km-Stände
+    // Anzeige km-Stand Abschnitt
     var sectorTextBox = $("#textbox-sector").dxTextBox($.extend(true, {}, textBoxOptions,{
         value: formatDistance(0),
         onContentReady: function(e) {
@@ -372,6 +366,14 @@ $(function(){
     $("#textbox-stagetimeto").dxTextBox($.extend(true, {}, textBoxOptions,{
         value: "--:--:--",
     }));
+
+    // Anzeige km-Stand Etappe
+    var stageTextBox = $("#textbox-stage").dxTextBox($.extend(true, {}, textBoxOptions,{
+    })).dxTextBox("instance");
+    
+    // Anzeige km-Stand Rallye
+    var rallyeTextBox = $("#textbox-rallye").dxTextBox($.extend(true, {}, textBoxOptions,{
+    })).dxTextBox("instance");
 
 // Tab GLP
 
@@ -1106,16 +1108,13 @@ $(function(){
         closeOnOutsideClick: true,
         height: "80%",
         deferRendering: false,
-        onShown: function (e) {         
+        onShown: function (e) {
             $("#selectbox-checkpoint").dxTreeView({
                 dataSource:  new DevExpress.data.DataSource({
                     store: pointList,
                 }),
                 displayExpr: "Name",
                 valueExpr: "Variable",
-                onContentReady: function(e) {
-                    e.component.expandAll();
-                },
                 onItemClick: function(e) {
                     let settings = e.itemData.Variable;
                     if (typeof settings !== 'undefined') {
@@ -1127,12 +1126,5 @@ $(function(){
             });
         },
     }).dxPopup("instance");
-
-    // Anzeige der km-Stände
-    var stageTextBox = $("#textbox-stage").dxTextBox($.extend(true, {}, textBoxOptions,{
-    })).dxTextBox("instance");
-    
-    var rallyeTextBox = $("#textbox-rallye").dxTextBox($.extend(true, {}, textBoxOptions,{
-    })).dxTextBox("instance");
 
 });
