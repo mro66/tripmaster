@@ -1059,7 +1059,7 @@ $(function(){
             }));
             $("#textbox-key2").dxTextBox($.extend(true, {}, inputTextBoxOptions, {
                 mask: "xxxxxxxxxxxxxxxxxxxx",
-                maskRules: {"x": /[0-9 +-/*]/},
+                maskRules: {"x": /[0-9 + - / *]/},
             }));
             WebSocket_Send('getConfig');
             $("#button-saveconfiguration").dxButton($.extend(true, {}, metalButtonOptions, {

@@ -13,25 +13,27 @@
 }
 
 /* TabPanel */
-.dx-field-label {
-    font-size: 5vmin;
+.dx-tabpanel-tabs {
+	margin-bottom: 2vmin;
 }
 
-.dx-tabpanel .dx-multiview-wrapper {
-    padding-top: 5vmin;
+.dx-tab-content, .dx-tab-text, .dx-tab .dx-icon {
+	width: 100%;
 }
 
-.dx-tabpanel .dx-tab {
-    height: 15vmin;
+.dx-tab-text {
+    line-height: 13vmin;
+}
+
+.dx-tab .dx-icon {
+    color: var(--tm-gray);
+    font-size: 7vmin;
+    margin: 0px;
 }
 
 .dx-tab-selected .dx-icon {
     color: var(--tm-blue) !important;
 }
-.dx-tab .dx-icon {
-    color: var(--tm-gray);
-}
-
 
 /* Rechte Spalte */
 .col50 {
@@ -67,13 +69,6 @@
 /* Text in der linken Spalte = erstes div Kind, Platzhalter in DateBox */
 .flex-row div:nth-child(1), .label-key, .dx-placeholder {
     font-size: 5.5vmin;
-}
-
-/* Setup Tab */
-.dx-tab .dx-icon {
-    font-size: 7vmin;
-    width: 25px;
-    height: 25px;
 }
 
 /* Inputfeld in DateBox */
