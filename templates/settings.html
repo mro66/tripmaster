@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="/static/css/dx.common.css" />
     <link rel="stylesheet" type="text/css" href="/static/css/dx.light.css" />
     <link rel="dx-theme" data-theme="generic.light" href="/static/css/dx.light.css" />
-    <link rel="stylesheet" href="/static/css/fontawesome.5.8.2.all.min.css"/>
+    <link rel="stylesheet" href="/static/css/fontawesome.all.min.css"/>
 
     <link rel="stylesheet" type="text/css" href="/static/css/tm.common.css" />
     <link rel="stylesheet" type="text/css" href="/static/css/tm.settings.css" />
@@ -168,22 +168,30 @@
         <!-- Setup -->
         <script id="tab-setup" type="text/html">
             <div class="flex-row">
-                <div>Raspberry Pi</div>
-                <div>
-                    <div id="button-sudohalt"></div>
-                    <div id="button-sudoreboot"></div>
-                </div>
-            </div>
-
-            <div class="flex-row">
-                <div>Tripmaster</div>
+                <div>Rallye</div>
                 <div>
                     <div id="button-download"></div>
                     <div id="popup-download">
                         <div id="datagrid-files"></div>
                     </div>
-                    <div id="button-togglesound"></div>
                     <div id="button-resetrallye"></div>
+                </div>
+            </div>
+
+            <div class="flex-row">
+                <div id="button-1"></div>
+                <div id="button-2"></div>
+                <div id="button-3"></div>
+                <div id="button-4"></div>
+            </div>
+            <div id="popup-setbutton">
+                <div id="selectbox-checkpoint"></div>
+            </div>
+            
+            <div class="flex-row">
+                <div>Tripmaster</div>
+                <div>
+                    <div id="button-togglesound"></div>
                 </div>
             </div>
 
@@ -213,15 +221,13 @@
             </div>
 
             <div class="flex-row">
-                <div id="button-1"></div>
-                <div id="button-2"></div>
-                <div id="button-3"></div>
-                <div id="button-4"></div>
+                <div>Raspberry Pi</div>
+                <div>
+                    <div id="button-sudohalt"></div>
+                    <div id="button-sudoreboot"></div>
+                </div>
             </div>
-            <div id="popup-setbutton">
-                <div id="selectbox-checkpoint"></div>
-            </div>
-            
+
         </script>
     </body>
 </html>
