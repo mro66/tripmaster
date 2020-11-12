@@ -215,7 +215,7 @@ POINTS = {
     "countpoint"  : POINT_ATTR("Sonstiges", "fas fa-hashtag", "blue"),
     "checkpoint"  : POINT_ATTR("Sonstige OK", "fas fa-map-marker-alt", "green"),
     # Sonstige
-    "null"        : POINT_ATTR("Keine", "fas fa-question", "red"),
+    "null"        : POINT_ATTR("Inaktiv", "fas fa-question", "lightgray"),
      }
 
 class POINT:

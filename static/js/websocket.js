@@ -268,7 +268,7 @@ function WebSocket_Open(page) {
                     smallclock.style.color = "var(--tm-gray)"; 
                     smallclock.innerHTML = TIME;
                 } else {
-                    // smallclock.style.display = "none"; 
+                    smallclock.style.display = "none"; 
                     clock.style.color = "var(--tm-gray)"; 
                     clock.innerHTML = TIME;
                 }
