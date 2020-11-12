@@ -902,9 +902,9 @@ $(function(){
     $("#popup-download").dxPopup({
         showTitle: true,
         title: "Download",
-        showCloseButton: true,
+        showCloseButton: false,
         dragEnabled: false,
-        closeOnOutsideClick: true,
+        closeOnOutsideClick: false,
         height: "80%",
         deferRendering: false,
         onShown: function (e) {         
@@ -932,7 +932,13 @@ $(function(){
                 paging: {
                     pageSize: 8,
                 },
+                loadPanel: {
+                	enabled: "auto",
+                	text: "Lade Dateien...",
+                	showIndicator: true,
+            	},
                 onInitialized: function(e) {
+                    e.component.beginCustomLoading();
                     WebSocket_Send("getFiles");
                 },
                 onRowRemoving: function(e) {
@@ -942,6 +948,7 @@ $(function(){
             }));
         },
         onHidden: function(e) {
+	        e.component.option("showCloseButton", false);
             $("#datagrid-files").dxDataGrid("dispose");
         },
     });

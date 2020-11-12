@@ -402,6 +402,8 @@ function WebSocket_Open(page) {
                         .done(function (dataObj, key) { /* Process the key and data object here*/ })
                         .fail(function (error) {/* Handle the "error" here */});
                         filesDataGrid.refresh();
+                        filesDataGrid.endCustomLoading();
+                        $("#popup-download").dxPopup("instance").option("showCloseButton", true);
                     };
                 // Punkt in jeweiligem Datagrid anzeigen
                 } else if (COMMAND.startsWith("countpointRegistered") || COMMAND.startsWith("checkpointRegistered")) {
