@@ -91,13 +91,6 @@
 }
 
 /* TextBox */
-
-
-#textbox-cputemp .dx-texteditor-input {  
-    text-align: right;  
-    width: 100%;  
-}
-
 .dx-texteditor.dx-state-readonly {
     border-color: #ddd;
 }
