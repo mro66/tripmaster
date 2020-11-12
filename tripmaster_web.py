@@ -920,12 +920,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             param = "0"
 
     # Strecke
-        # Tripmaster / Rallye zurücksetzen
-        if command == "resetRallye":
-            startRallye(False)
-
         # Verfahren
-        elif command == "reverse":
+        if command == "reverse":
             if param == 'true':
                 SECTOR.reverse = -1
                 messageToAllClients(self.wsClients, "Verfahren! km-Zähler rückwärts:warning")
@@ -1046,24 +1042,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             messageToAllClients(self.wsClients, "GLP gestoppt:success:regTestStopped")
 
     # Settings
-        # RasPi Steuerung
-        elif command == "sudoReboot":
-            messageToAllClients(self.wsClients, "Starte RasPi neu...")
-            stopTornado()
-            time.sleep(3)
-            subprocess.call("sudo reboot", shell=True)
-
-            # subprocess.Popen("sudo /etc/rc.local", shell=True)
-            # sys.exit()
-
-        elif command == "sudoHalt":
-            messageToAllClients(self.wsClients, "Fahre RasPi herunter...")
-            stopTornado()
-            time.sleep(3)
-            # subprocess.call("sudo shutdown -h now", shell=True)
-            
-            subprocess.Popen("start_tripmaster_debug.sh", shell=True)
-            sys.exit()
+        # Neue Rallye starten
+        elif command == "newRallye":
+            startRallye(False)
 
         # KMZ Dateien erstellen und herunterladen oder löschen
         elif command == "getFiles":
@@ -1080,7 +1061,33 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             except:
                 self.write_message("Fehler beim Löschen von " + param + ":error")
 
-        # Sensorkonfiguration
+        # Buttons definieren
+        elif (command.startswith("button")):
+            button        = command
+            buttonNo      = button.replace("button-", "")
+            pointCategory = param
+            pointType     = messagesplit[2]
+            # In ini abspeichern
+            config.set("Settings", button, pointCategory+":"+pointType)
+            with open(configFileName, "w") as configfile:
+                config.write(configfile)
+            messageToAllClients(self.wsClients, "Button " + buttonNo + " als '" + POINTS[pointType].name + "' definiert:success:setButtons#" + button + "#" + POINTS[pointType].icon + "#" + POINTS[pointType].iconcolor + "#" + pointCategory + "#" + pointType)
+
+        # Tripmaster
+        elif command == "startDebug":
+            messageToAllClients(self.wsClients, "Starte Tornado im DEBUG-Modus neu...")
+            stopTornado()
+            time.sleep(3)
+            subprocess.Popen("start_tripmaster_debug.sh", shell=True)
+            sys.exit()
+        elif command == "startNew":
+            messageToAllClients(self.wsClients, "Starte Tornado neu...")
+            stopTornado()
+            time.sleep(3)
+            subprocess.Popen("sudo /etc/rc.local", shell=True)
+            sys.exit()
+
+        # Konfiguration
         elif command == "changeConfig":
             ACTIVE_CONFIG = param
             config.set("Settings", "aktiv", ACTIVE_CONFIG)
@@ -1100,17 +1107,17 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             setConfig()
             self.write_message("Konfiguration '" + ACTIVE_CONFIG + "' gespeichert:success")
 
-        # Buttons definieren
-        elif (command.startswith("button")):
-            button        = command
-            buttonNo      = button.replace("button-", "")
-            pointCategory = param
-            pointType     = messagesplit[2]
-            # In ini abspeichern
-            config.set("Settings", button, pointCategory+":"+pointType)
-            with open(configFileName, "w") as configfile:
-                config.write(configfile)
-            messageToAllClients(self.wsClients, "Button " + buttonNo + " als '" + POINTS[pointType].name + "' definiert:success:setButtons#" + button + "#" + POINTS[pointType].icon + "#" + POINTS[pointType].iconcolor + "#" + pointCategory + "#" + pointType)
+        # Raspberry Pi anhalten oder neu starten
+        elif command == "sudoHalt":
+            messageToAllClients(self.wsClients, "Fahre RasPi herunter...")
+            stopTornado()
+            time.sleep(3)
+            subprocess.call("sudo shutdown -h now", shell=True)
+        elif command == "sudoReboot":
+            messageToAllClients(self.wsClients, "Starte RasPi neu...")
+            stopTornado()
+            time.sleep(3)
+            subprocess.call("sudo reboot", shell=True)
 
         # Nachricht an alle Clients senden
         elif (command == "WarningToAll"):

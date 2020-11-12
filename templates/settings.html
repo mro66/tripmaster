@@ -10,23 +10,21 @@
     <link rel="stylesheet" type="text/css" href="/static/css/dx.light.css" />
     <link rel="dx-theme" data-theme="generic.light" href="/static/css/dx.light.css" />
     <link rel="stylesheet" href="/static/css/fontawesome.all.min.css"/>
-
+	<link rel="preload" href="/static/css/fonts/Alternate Gothic.otf" as="font" crossorigin="anonymous">
+	
     <link rel="stylesheet" type="text/css" href="/static/css/tm.common.css" />
     <link rel="stylesheet" type="text/css" href="/static/css/tm.settings.css" />
     <script src="/static/js/jquery.min.js"></script>
     <script src="/static/js/dx.all.js"></script>
     <script src="/static/js/tm.settings.js"></script>
-    <script src="/static/js/tm.common.js"></script>
 
+    <script src="/static/js/tm.common.js"></script>
     <script src="/static/js/websocket.js"></script>
-    <!-- <script src="https://cdn3.devexpress.com/jslib/19.1.4/js/localization/dx.messages.de.js"></script> -->
-    <!-- <script src="https://unpkg.com/devextreme-intl@19.1/dist/devextreme-intl.min.js"></script> -->
     <script>
         var DEBUG = {{ debug }};
         var SAMPLE_TIME = {{ sample_time }};
-        var REVERSE = ('{{ sector_reverse }}' === 'True');
         window.jQuery || document.write(decodeURIComponent('%3Cscript src="static/jquery.min.js"%3E%3C/script%3E'))
-        
+        var REVERSE = ('{{ sector_reverse }}' === 'True');
         var ACTIVE_CONFIG = '{{ active_config }}';
     </script>
 </head>
@@ -170,11 +168,11 @@
             <div class="flex-row">
                 <div>Rallye</div>
                 <div>
+                    <div id="button-newrallye"></div>
                     <div id="button-download"></div>
                     <div id="popup-download">
                         <div id="datagrid-files"></div>
                     </div>
-                    <div id="button-resetrallye"></div>
                 </div>
             </div>
 
@@ -192,6 +190,8 @@
                 <div>Tripmaster</div>
                 <div>
                     <div id="button-togglesound"></div>
+                    <div id="button-startdebug"></div>
+                    <div id="button-startnew"></div>
                 </div>
             </div>
 

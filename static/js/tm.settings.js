@@ -856,38 +856,26 @@ $(function(){
 
 // Tab Setup
 
-    // RasPi
-    $("#button-sudoreboot").dxButton($.extend(true, {}, metalButtonOptions, {
-        icon: "fas fa-redo",
+	// Rallye
+	
+    // Neu starten
+    $("#button-newrallye").dxButton($.extend(true, {}, metalButtonOptions, {
+        icon: "fas fa-asterisk",
         disabled: false,
         elementAttr: {
-            style: "color: var(--tm-blue)",
+            style: "color: var(--tm-green)",
         },
         onClick: function(e) {
-            confirmDialog("RasPi neu starten").show().done(function (dialogResult) {
+            confirmDialog("Neue Rallye starten").show().done(function (dialogResult) {
                 if (dialogResult) {
-                    WebSocket_Send('sudoReboot');
-                }
-            });
-        },
-    })); 
-    
-    $("#button-sudohalt").dxButton($.extend(true, {}, metalButtonOptions, {
-        icon: "fas fa-power-off",
-        disabled: false,
-        elementAttr: {
-            style: "color: var(--tm-red)",
-        },
-        onClick: function(e) {
-            confirmDialog("RasPi herunterfahren").show().done(function (dialogResult) {
-                if (dialogResult) {
-                    WebSocket_Send('sudoHalt');
+                    WebSocket_Send('newRallye');
+                    location.reload();
                 }
             });
         },
     })); 
 
-    // Tripmaster
+	// KMZ herunterladen
     $("#button-download").dxButton($.extend(true, {}, metalButtonOptions, {
         icon: "fas fa-save",
         disabled: false,
@@ -953,6 +941,50 @@ $(function(){
         },
     });
 
+    // Buttons
+    $("#button-1").dxButton($.extend(true, {}, metalButtonOptions, pointButtonOptions, {
+    })); 
+
+    $("#button-2").dxButton($.extend(true, {}, metalButtonOptions, pointButtonOptions, {
+    })); 
+
+    $("#button-3").dxButton($.extend(true, {}, metalButtonOptions, pointButtonOptions, {
+    })); 
+
+    $("#button-4").dxButton($.extend(true, {}, metalButtonOptions, pointButtonOptions, {
+    }));
+
+    var setButtonPopup = $("#popup-setbutton").dxPopup({
+        showTitle: true,
+        title: "Buttondefinition",
+        showCloseButton: true,
+        dragEnabled: false,
+        closeOnOutsideClick: true,
+        height: "80%",
+        deferRendering: false,
+        onShown: function (e) {
+            $("#selectbox-checkpoint").dxTreeView({
+                dataSource:  new DevExpress.data.DataSource({
+                    store: pointList,
+                }),
+                displayExpr: "Name",
+                valueExpr: "Variable",
+                onItemClick: function(e) {
+                    let settings = e.itemData.Variable;
+                    if (typeof settings !== 'undefined') {
+                        let id = setButtonPopup.element().attr("name");
+                        WebSocket_Send(id +':' + settings);
+                        setButtonPopup.hide();
+                    }
+                },
+            });
+        },
+    }).dxPopup("instance");
+
+    
+    // Tripmaster
+
+	// Sound ein/aus
     $("#button-togglesound").dxButton($.extend(true, {}, metalButtonOptions, {
         icon: "fas fa-volume-mute",
         disabled: false,
@@ -976,17 +1008,43 @@ $(function(){
             return $("#button-togglesound").dxButton("instance").option("icon") === "fas fa-volume-up"
         };
 
-    $("#button-resetrallye").dxButton($.extend(true, {}, metalButtonOptions, {
+	// Tornado im DEBUG-Modus neustarten
+    $("#button-startdebug").dxButton($.extend(true, {}, metalButtonOptions, {
+        icon: "fas fa-bug",
+        disabled: false,
+        elementAttr: {
+            style: "color: var(--tm-green)",
+        },
+        onClick: function(e) {
+            confirmDialog("Neustart Server DEBUG").show().done(function (dialogResult) {
+                if (dialogResult) {
+		            document.getElementById("reloadpage").style.display = "flex";
+		            document.getElementsByName("main")[0].style.display = "none";
+                    WebSocket_Send('startDebug');
+                    setTimeout(function() {
+                        location.reload();
+                    }, 20000);                        
+                }
+            });
+        },
+    })); 
+
+	// Tornado neustarten
+    $("#button-startnew").dxButton($.extend(true, {}, metalButtonOptions, {
         icon: "fas fa-redo",
         disabled: false,
         elementAttr: {
             style: "color: var(--tm-blue)",
         },
         onClick: function(e) {
-            confirmDialog("Neue Rallye starten").show().done(function (dialogResult) {
+            confirmDialog("Neustart Server").show().done(function (dialogResult) {
                 if (dialogResult) {
-                    WebSocket_Send('resetRallye');
-                    location.reload();
+		            document.getElementById("reloadpage").style.display = "flex";
+		            document.getElementsByName("main")[0].style.display = "none";
+                    WebSocket_Send('startNew');
+                    setTimeout(function() {
+                        location.reload();
+                    }, 20000);                        
                 }
             });
         },
@@ -1093,45 +1151,39 @@ $(function(){
             }));
         },
     }).dxPopup("instance");
-
-    // Buttons
-    $("#button-1").dxButton($.extend(true, {}, metalButtonOptions, pointButtonOptions, {
-    })); 
-
-    $("#button-2").dxButton($.extend(true, {}, metalButtonOptions, pointButtonOptions, {
-    })); 
-
-    $("#button-3").dxButton($.extend(true, {}, metalButtonOptions, pointButtonOptions, {
-    })); 
-
-    $("#button-4").dxButton($.extend(true, {}, metalButtonOptions, pointButtonOptions, {
-    }));
-
-    var setButtonPopup = $("#popup-setbutton").dxPopup({
-        showTitle: true,
-        title: "Buttondefinition",
-        showCloseButton: true,
-        dragEnabled: false,
-        closeOnOutsideClick: true,
-        height: "80%",
-        deferRendering: false,
-        onShown: function (e) {
-            $("#selectbox-checkpoint").dxTreeView({
-                dataSource:  new DevExpress.data.DataSource({
-                    store: pointList,
-                }),
-                displayExpr: "Name",
-                valueExpr: "Variable",
-                onItemClick: function(e) {
-                    let settings = e.itemData.Variable;
-                    if (typeof settings !== 'undefined') {
-                        let id = setButtonPopup.element().attr("name");
-                        WebSocket_Send(id +':' + settings);
-                        setButtonPopup.hide();
-                    }
-                },
+    
+    // RasPi
+    
+    // Herunterfahren
+    $("#button-sudohalt").dxButton($.extend(true, {}, metalButtonOptions, {
+        icon: "fas fa-power-off",
+        disabled: false,
+        elementAttr: {
+            style: "color: var(--tm-red)",
+        },
+        onClick: function(e) {
+            confirmDialog("RasPi herunterfahren").show().done(function (dialogResult) {
+                if (dialogResult) {
+                    WebSocket_Send('sudoHalt');
+                }
             });
         },
-    }).dxPopup("instance");
+    })); 
 
+	// Neu starten
+    $("#button-sudoreboot").dxButton($.extend(true, {}, metalButtonOptions, {
+        icon: "fas fa-redo",
+        disabled: false,
+        elementAttr: {
+            style: "color: var(--tm-blue)",
+        },
+        onClick: function(e) {
+            confirmDialog("RasPi neu starten").show().done(function (dialogResult) {
+                if (dialogResult) {
+                    WebSocket_Send('sudoReboot');
+                }
+            });
+        },
+    })); 
+    
 });
