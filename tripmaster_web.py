@@ -82,8 +82,8 @@ REED1 = DigitalInputDevice(GPIO_PIN_1, pull_up=True)
 # Reedsensor 2 an Pin 18 (blau)
 REED2 = DigitalInputDevice(GPIO_PIN_2, pull_up=True)
 
-# DigitalOutputDevice setzt standardmäßig active_high=True (on() -> HIGH) und initial_value=False
-# Der Lüfter an Pin 27. 
+# DigitalOutputDevice setzt standardmäßig active_high=True (on() -> HIGH) und initial_value=False (device ist aus)
+# Der Lüfter an Pin 27 
 FAN = DigitalOutputDevice(27)
 
 # Verbindung zu pigpio Deamon
@@ -182,7 +182,7 @@ class PI_PARAMS:
         # (sonst würde der Pi nicht laufen)
         if ubat < 2.0:
             ubat = 5.0
-        self.UBAT = ubat
+        self.UBAT = min(ubat, 5.0)
 
     def movingAverage(self, stack, newval, maxlength):
         # Neuen Wert am Ende des Stacks einfügen
@@ -194,7 +194,8 @@ class PI_PARAMS:
         return sum(stack) / len(stack)
 
 PI_STATUS = PI_PARAMS()
-UBATWARNING = 0
+# UBAT_CAP * 25 = % Akkukapazität
+UBAT_CAP = 0
 
 class POINT_ATTR:
     def __init__(self, name, icon, iconcolor):
@@ -642,7 +643,7 @@ def getGPSCurrent():
     return GPS_CURRENT
 
 def getData():
-    global STAGE, SECTOR, IS_TIME_SYNC, HAS_SENSORS, INDEX, AVG_KMH, PI_STATUS, UBATWARNING
+    global STAGE, SECTOR, IS_TIME_SYNC, HAS_SENSORS, INDEX, AVG_KMH, PI_STATUS, UBAT_CAP
 
     # Ein 0 V Potential an einem der beiden Reedsensoren aktiviert die Antriebswellensensoren
     if (REED1.is_active or REED2.is_active) and not HAS_SENSORS:
@@ -657,45 +658,46 @@ def getData():
     
     # Berechne gleitende Mittel der Systemparameter...
     PI_STATUS.setStatus()
-    # ... CPU Auslastung
-    CPU_LOAD = PI_STATUS.CPU_LOAD
-    # ... CPU Temperatur
-    CPU_TEMP = PI_STATUS.CPU_TEMP
-    # ... Speicherauslastung
-    MEM_USED = PI_STATUS.MEM_USED
     # ... Akkuspannung
     UBAT = PI_STATUS.UBAT
+    # ... CPU Temperatur
+    CPU_TEMP = PI_STATUS.CPU_TEMP
+    # ... CPU Auslastung
+    CPU_LOAD = PI_STATUS.CPU_LOAD
+    # ... Speicherauslastung
+    MEM_USED = PI_STATUS.MEM_USED
 
 #     logger.debug("MEM LOAD TEMP BAT: " + "{0:0.2f} {1:0.2f} {2:0.2f} {3:0.2f}".format(MEM_USED, CPU_LOAD, CPU_TEMP, UBAT))
 
     # Alle 10 Durchläufe Zeit synchronisieren und den RasPi Status abfragen und speichern
     if (INDEX % 10 == 0) or (IS_TIME_SYNC == None):
-        IS_TIME_SYNC = syncTime(GPS_CURRENT)
+        IS_TIME_SYNC = DEBUG or syncTime(GPS_CURRENT)
 
         # Lüfter an bei über 70°C
         if (CPU_TEMP > 70.0):
             FAN.on()
         # Lüfter aus bei unter 58°C
-        else:
-            if (CPU_TEMP < 58.0):
-                FAN.off()
+        elif (CPU_TEMP < 58.0):
+            FAN.off()
 
-        # Warnung fallende Akkuspannung
+        # UBAT_CAP * 25 = Prozent Akkukapazität
         if (UBAT < 3.20):
-            UBATWARNING -= 1
-        elif (UBAT < 3.25):
-            UBATWARNING = 0
-        elif (UBAT < 3.30):
-            UBATWARNING = 1
+            UBAT_CAP -= 1 # abschalten!
+        elif (UBAT < 3.27):
+            UBAT_CAP = 0 # 0 %
+        elif (UBAT < 3.58):
+            UBAT_CAP = 1 # 25 %
+        elif (UBAT < 3.69):
+            UBAT_CAP = 2 # 50 %
+        elif (UBAT < 3.85):
+            UBAT_CAP = 3 # 75 %
+        elif (UBAT < 5.0):
+            UBAT_CAP = 4 # 100 %
         else:
-            UBATWARNING = 2
+            UBAT_CAP = 5 # Netzteil
 
-        saveOutput([MEM_USED, CPU_LOAD, CPU_TEMP, UBAT])
-
-    CPU_TEMP = CPU_LOAD
-
-    if DEBUG:
-        IS_TIME_SYNC       = True
+        if DEBUG:
+            saveOutput([MEM_USED, CPU_LOAD, CPU_TEMP, UBAT])
 
     # Umdrehungen der Antriebswelle(n) pro Minute
     UMIN    = 0.0
@@ -795,13 +797,13 @@ def getData():
     NOW = datetime.now().strftime('%H-%M-%S') # .%f')[:-3]
 
 
-    datastring = "data:{0:}:{1:0.1f}:{2:0.6f}:{3:0.6f}:{4:}:{5:}:{6:}:{7:}:{8:}:{9:}:{10:0.2f}:{11:0.2f}:{12:0.2f}:{13:}:{14:0.2f}:{15:0.2f}:{16:0.1f}:{17:0.1f}:{18:}:{19:0.1f}:{20:0.2f}:{21:}".format(
+    datastring = "data:{0:}:{1:0.1f}:{2:0.6f}:{3:0.6f}:{4:}:{5:}:{6:}:{7:}:{8:}:{9:}:{10:0.2f}:{11:0.2f}:{12:0.2f}:{13:}:{14:0.2f}:{15:0.2f}:{16:0.1f}:{17:0.1f}:{18:}:{19:0.2f}:{20:}:{21:0.1f}:{22:0.1f}".format(
         NOW, KMH, GPS_CURRENT.lon, GPS_CURRENT.lat, 
         int(HAS_SENSORS), int(IS_TIME_SYNC), int(STAGE.isStarted()), 
         int(STAGE_FRACTIME), STAGE_TIMETOSTART, STAGE_TIMETOFINISH, 
         SECTOR.km, SECTOR.preset, SECTOR_PRESET_REST, FRAC_SECTOR_DRIVEN, STAGE.km, RALLYE.km, 
         AVG_KMH, DEV_AVG_KMH, 
-        GPS_CURRENT.mode, CPU_TEMP, UBAT, UBATWARNING)
+        GPS_CURRENT.mode, UBAT, UBAT_CAP, CPU_TEMP, CPU_LOAD)
 
     return datastring
 
@@ -815,7 +817,7 @@ def calcGPSdistance(lambda1, lambda2, phi1, phi2):
     return math.sqrt(x*x + y*y) * 6371
 
 def pushSpeedData(clients, what, when):
-    if (UBATWARNING < -3):
+    if (UBAT_CAP < -3):
         # messageToAllClients(clients, "shutdown")
         # subprocess.call("sudo reboot", shell=True)
         subprocess.call("sudo shutdown -h now", shell=True)

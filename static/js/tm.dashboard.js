@@ -434,21 +434,27 @@ function rePosition() {
     // Elemente an der Mitte des Tachos (x,y) ausrichten
     var odoKmStage = document.getElementById("odometer-kmstage");
     var odoKmSector = document.getElementById("odometer-kmsector");
-    var statusBat = document.getElementById("status-bat");
     var statusGPS = document.getElementById("status-gps");
     var statusTyre = document.getElementById("status-tyre");
+    var statusBat = document.getElementById("status-bat");
+    var statusCPUTemp = document.getElementById("status-cputemp");
+    var statusCPULoad = document.getElementById("status-cpuload");
     
     //top ...
     // kmstage
     odoKmStage.style.top = y - spindleSize - parseFloat(odoKmStage.clientHeight) + "px";
     // kmsector
     odoKmSector.style.top = y + spindleSize + "px";
-    // bat
-    statusBat.style.top = parseFloat(odoKmStage.style.top) - statusBat.clientHeight * 1.5 + "px";
     // gps
     statusGPS.style.top = y - statusGPS.clientHeight / 2 + "px";
     // tyre
     statusTyre.style.top = y - statusTyre.clientHeight / 2 + "px";
+    // bat
+    statusBat.style.top = window.innerHeight - statusBat.clientHeight + "px";
+    // cputemp
+    statusCPUTemp.style.top = window.innerHeight - statusCPUTemp.clientHeight + "px";
+    // cpuload
+    statusCPULoad.style.top = window.innerHeight - statusCPULoad.clientHeight + "px";
     // ... und left
     // kmstage
     odoKmStage.style.left = x - odoKmStage.clientWidth / 2 + "px";
@@ -456,15 +462,21 @@ function rePosition() {
     // kmsector
     odoKmSector.style.left = x - odoKmSector.clientWidth / 2 + "px";
     odoKmSector.style.visibility = "visible";
-    // bat
-    statusBat.style.left = x - statusBat.clientWidth / 2 + "px";
     // gps
     statusGPS.style.left = x - statusGPS.clientWidth / 2 - spindleSize * 2 + "px";
     statusGPS.style.visibility = "visible";
     // tyre
     statusTyre.style.left = x - statusTyre.clientWidth / 2 + spindleSize * 2 + "px";
     statusTyre.style.visibility = "visible";
-    
+    // bat
+    statusBat.style.left = x - statusBat.clientWidth / 2 - spindleSize * 2 + "px";
+    statusBat.style.visibility = "visible";
+    // cputemp
+    statusCPUTemp.style.left = x - statusCPUTemp.clientWidth / 2 + "px";
+    statusCPUTemp.style.visibility = "visible";
+    // cpuload
+    statusCPULoad.style.left = x - statusCPULoad.clientWidth / 2 + spindleSize * 2 + "px";
+    statusCPULoad.style.visibility = "visible";
 };
 
 function buttonsToFront() {
