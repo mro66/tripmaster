@@ -1,7 +1,7 @@
 // WebSocket
 var wss;
 var wss_status = "closed";
-var LASTUBATWARNING = 0
+var LASTUBAT_CAP = 0
 
 function set_wss_status(status) {
     wss_status = status;
@@ -76,9 +76,10 @@ function WebSocket_Open(page) {
 			AVG_KMH               = parseFloat(values[17]);
 			DEV_AVG_KMH           = parseFloat(values[18]);
 			GPS_MODE              = parseInt(values[19]);
-			CPU_TEMP              = parseFloat(values[20]);
-			UBAT                  = parseFloat(values[21]);
-			UBATWARNING           = parseInt(values[22]);
+			UBAT                  = parseFloat(values[20]);
+			UBAT_CAP              = parseInt(values[21]);
+			CPU_TEMP              = parseFloat(values[22]);
+			CPU_LOAD              = parseFloat(values[23]);
 
             // Tacho
             if (document.getElementById("circulargauge-speed") !== null) {
@@ -131,25 +132,6 @@ function WebSocket_Open(page) {
                     } 
                 } ;
             };
-            // Statusanzeige: Akkuspannung
-            if (document.getElementById("status-bat") !== null) {
-                var statusBat = document.getElementById("status-bat");
-                if (UBATWARNING == 2) {
-                    statusBat.style.visibility = "hidden";
-                } else if (UBATWARNING == 1) {
-                    statusBat.style.visibility = "visible";
-                    statusBat.style.color = "var(--tm-yellow)";
-                    statusBat.className = "status-indicator";
-                } else {
-                    statusBat.style.visibility = "visible";
-                    statusBat.style.color = "var(--tm-red)";
-                    statusBat.className += " blink_me";
-                    if ((UBATWARNING < 0) && (LASTUBATWARNING != UBATWARNING)) {
-                        WebSocket_Send("ErrorToAll:Beende Tripmaster in wenigen Sekunden!")
-                    };
-                };
-                LASTUBATWARNING = UBATWARNING;
-            };
             // Statusanzeige: GPS
             if (document.getElementById("status-gps") !== null) {
                 switch(GPS_MODE) {
@@ -184,6 +166,102 @@ function WebSocket_Open(page) {
                         fontColor = "Ivory";
                 };
                 document.getElementById("status-tyre").style.color = fontColor;
+            };
+            // Statusanzeige: Akkuspannung
+            if (document.getElementById("status-bat") !== null) {
+                var statusBat = document.getElementById("status-bat");
+                statusBat.className = "status-indicator";
+                var batIcon = document.getElementById("bat-icon");
+                
+                if (UBAT_CAP == 5) {
+                    batIcon.className = "fas fa-plug";
+                } else if (UBAT_CAP == 4) {
+                    batIcon.className = "fas fa-battery-full";
+                    statusBat.style.color = "var(--tm-green)";
+                } else if (UBAT_CAP == 3) {
+                    batIcon.className = "fas fa-battery-three-quarters";
+                    statusBat.style.color = "var(--tm-green)";
+                } else if (UBAT_CAP == 2) {
+                    batIcon.className = "fas fa-battery-half";
+                    statusBat.style.color = "var(--tm-green)";
+                } else if (UBAT_CAP == 1) {
+                    batIcon.className = "fas fa-battery-quarter";
+                    statusBat.style.color = "var(--tm-yellow)";
+                } else {
+                    batIcon.className = "fas fa-battery-empty";
+                    statusBat.style.color = "var(--tm-red)";
+                    statusBat.className = "status-indicator blink_me";
+                    if ((UBAT_CAP < 0) && (LASTUBAT_CAP != UBAT_CAP)) {
+                        WebSocket_Send("ErrorToAll:Beende Tripmaster in wenigen Sekunden!")
+                    };
+                };
+                LASTUBAT_CAP = UBAT_CAP;
+            };
+            if (document.getElementById("textbox-ubat") !== null) {
+            	var textboxUbat = $("#textbox-ubat").dxTextBox("instance")
+                if (UBAT_CAP == 5) {
+                    $("#textbox-ubat").find(".dx-texteditor-input").css("color", "var(--tm-lightgray)");
+            		textboxUbat.option("value", "Netzteil");
+        		} else {
+                	textboxUbat.option("value", formatNumber(UBAT, 1) + " Volt");
+                	if (UBAT_CAP == 0) {
+	                    $("#textbox-ubat").find(".dx-texteditor-input").css("color", "var(--tm-red)");
+                	} else if (UBAT_CAP == 1) {
+	                    $("#textbox-ubat").find(".dx-texteditor-input").css("color", "var(--tm-yellow)");
+                	} else {
+	                    $("#textbox-ubat").find(".dx-texteditor-input").css("color", "var(--tm-green)");
+                	}
+            	};
+            };
+            // Statusanzeige: CPU Temperatur
+            if (document.getElementById("status-cputemp") !== null) {
+                var statusCPUTemp = document.getElementById("status-cputemp");
+                statusCPUTemp.className = "status-indicator";
+                var cputempIcon = document.getElementById("cputemp-icon");
+                
+                if (CPU_TEMP < 60.0) {
+                    cputempIcon.className = "fas fa-thermometer-half";
+                    statusCPUTemp.style.color = "var(--tm-green)";
+                } else if (CPU_TEMP < 70.0) {
+                    cputempIcon.className = "fas fa-thermometer-three-quarters";
+                    statusCPUTemp.style.color = "var(--tm-yellow)";
+                } else {
+                    cputempIcon.className = "fas fa-thermometer-full";
+                    statusCPUTemp.style.color = "var(--tm-red)";
+                    statusCPUTemp.className = "status-indicator blink_me";
+                };
+            };
+            if (document.getElementById("textbox-cputemp") !== null) {
+            	$("#textbox-cputemp").dxTextBox("instance").option("value", formatNumber(CPU_TEMP, 1) + "°C");
+                if (CPU_TEMP < 60.0) {
+		            $("#textbox-cputemp").find(".dx-texteditor-input").css("color", "var(--tm-green)");
+                } else if (CPU_TEMP < 70.0) {
+		            $("#textbox-cputemp").find(".dx-texteditor-input").css("color", "var(--tm-yellow)");
+                } else {
+		            $("#textbox-cputemp").find(".dx-texteditor-input").css("color", "var(--tm-red)");
+                };
+            };
+            // Statusanzeige: CPU Last
+            if (document.getElementById("status-cpuload") !== null) {
+                var statusCPULoad = document.getElementById("status-cpuload");
+                
+                if (CPU_LOAD < 60.0) {
+                    statusCPULoad.style.color = "var(--tm-green)";
+                } else if (CPU_LOAD < 90.0) {
+                    statusCPULoad.style.color = "var(--tm-yellow)";
+                } else {
+                    statusCPULoad.style.color = "var(--tm-red)";
+                };
+            };
+            if (document.getElementById("textbox-cpuload") !== null) {
+            	$("#textbox-cpuload").dxTextBox("instance").option("value", formatNumber(CPU_LOAD, 1) + " %");
+                if (CPU_LOAD < 60.0) {
+		            $("#textbox-cpuload").find(".dx-texteditor-input").css("color", "var(--tm-green)");
+                } else if (CPU_LOAD < 90.0) {
+		            $("#textbox-cpuload").find(".dx-texteditor-input").css("color", "var(--tm-yellow)");
+                } else {
+		            $("#textbox-cpuload").find(".dx-texteditor-input").css("color", "var(--tm-red)");
+                };
             };
             // Etappe starten und beenden
             if (document.getElementById("button-togglestage") !== null) {

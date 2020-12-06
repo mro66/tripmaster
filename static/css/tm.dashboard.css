@@ -39,14 +39,9 @@
 .status-indicator {
     position: absolute;
     visibility: hidden;
-    font-family: 'Tripmaster Font';
+/*     font-family: 'Tripmaster Font'; */
     font-size: 7vmin;
     color: var(--tm-lightgray);
-}
-
-#status-bat {
-    /* color: var(--tm-red); */
-    visibility: hidden;
 }
 
 /* Blinkendes Element */

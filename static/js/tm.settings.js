@@ -179,11 +179,6 @@ $(function(){
             icon: "fas fa-route",
             template: $("#tab-sector"),
         }, {
-            // GLP
-            "title": [],
-            icon: "fas fa-stopwatch",
-            template: $("#tab-regtest"),
-        }, {
             // Zählpunkte
             title: [],
             icon: "fas fa-hashtag",
@@ -193,6 +188,11 @@ $(function(){
             title: [],
             icon: "fas fa-map-marker-alt",
             template: $("#tab-checkpoint"),
+        }, {
+            // GLP
+            "title": [],
+            icon: "fas fa-stopwatch",
+            template: $("#tab-regtest"),
         }, {
             // Settings
             "title": [],
@@ -368,12 +368,64 @@ $(function(){
     }));
 
     // Anzeige km-Stand Etappe
-    var stageTextBox = $("#textbox-stage").dxTextBox($.extend(true, {}, textBoxOptions,{
-    })).dxTextBox("instance");
+    $("#textbox-stage").dxTextBox($.extend(true, {}, textBoxOptions,{
+    }));
     
     // Anzeige km-Stand Rallye
-    var rallyeTextBox = $("#textbox-rallye").dxTextBox($.extend(true, {}, textBoxOptions,{
-    })).dxTextBox("instance");
+    $("#textbox-rallye").dxTextBox($.extend(true, {}, textBoxOptions,{
+    }));
+
+// Tab Orientierungskontrollen
+
+    $("#datagrid-checkpoint").dxDataGrid($.extend(true, {}, dataGridOptions, {
+        columns: [
+            {
+                dataField: "ID",
+                allowEditing: false,
+                width: "11vmin",
+            },
+            {
+                dataField: "Name",
+                allowEditing: true,
+                lookup: {
+                    dataSource: getCheckpointList(),
+                }
+            },
+            {
+                dataField: "Wert",
+                allowEditing: true,
+                width: "19vmin",
+                alignment: "center",
+            },
+            {
+                dataField: "Aktiv",
+                dataType: "boolean",
+                caption: "Akt.",  
+                width: "15vmin",
+            },
+        ],
+        onRowUpdated: function(e) {
+            // ID zur Anzeige 1-basiert, im System 0-basiert
+            id = e.data.ID - 1;
+            name = e.data.Name;
+            // Schreibt jeden Klein- in Großbuchstaben um
+            e.data.Wert = e.data.Wert.toUpperCase();
+            value = e.data.Wert;
+            active = e.data.Aktiv;           
+            WebSocket_Send("changepoint:checkpoint&"+id+"&"+name+"&"+value+"&"+(active?1:0));
+        },
+        onContentReady: function(e){
+            if (jumpToLastPage) {  
+                jumpToLastPage = false;  
+                let totalCount = e.component.totalCount(); 
+                let pageSize = e.component.pageSize();  
+                let pageCount = Math.floor(totalCount / pageSize);  
+                if (pageCount && totalCount % pageSize) {  
+                    e.component.pageIndex(pageCount);  
+                }  
+            }
+        },
+    }));
 
 // Tab GLP
 
@@ -802,58 +854,6 @@ $(function(){
         },
     }));
 
-// Tab Orientierungskontrollen
-
-    $("#datagrid-checkpoint").dxDataGrid($.extend(true, {}, dataGridOptions, {
-        columns: [
-            {
-                dataField: "ID",
-                allowEditing: false,
-                width: "11vmin",
-            },
-            {
-                dataField: "Name",
-                allowEditing: true,
-                lookup: {
-                    dataSource: getCheckpointList(),
-                }
-            },
-            {
-                dataField: "Wert",
-                allowEditing: true,
-                width: "19vmin",
-                alignment: "center",
-            },
-            {
-                dataField: "Aktiv",
-                dataType: "boolean",
-                caption: "Akt.",  
-                width: "15vmin",
-            },
-        ],
-        onRowUpdated: function(e) {
-            // ID zur Anzeige 1-basiert, im System 0-basiert
-            id = e.data.ID - 1;
-            name = e.data.Name;
-            // Schreibt jeden Klein- in Großbuchstaben um
-            e.data.Wert = e.data.Wert.toUpperCase();
-            value = e.data.Wert;
-            active = e.data.Aktiv;           
-            WebSocket_Send("changepoint:checkpoint&"+id+"&"+name+"&"+value+"&"+(active?1:0));
-        },
-        onContentReady: function(e){
-            if (jumpToLastPage) {  
-                jumpToLastPage = false;  
-                let totalCount = e.component.totalCount(); 
-                let pageSize = e.component.pageSize();  
-                let pageCount = Math.floor(totalCount / pageSize);  
-                if (pageCount && totalCount % pageSize) {  
-                    e.component.pageIndex(pageCount);  
-                }  
-            }
-        },
-    }));
-
 // Tab Setup
 
 	// Rallye
@@ -1164,6 +1164,8 @@ $(function(){
         onClick: function(e) {
             confirmDialog("RasPi herunterfahren").show().done(function (dialogResult) {
                 if (dialogResult) {
+		            document.getElementById("reloadpage").style.display = "flex";
+		            document.getElementsByName("main")[0].style.display = "none";
                     WebSocket_Send('sudoHalt');
                 }
             });
@@ -1180,10 +1182,24 @@ $(function(){
         onClick: function(e) {
             confirmDialog("RasPi neu starten").show().done(function (dialogResult) {
                 if (dialogResult) {
+		            document.getElementById("reloadpage").style.display = "flex";
+		            document.getElementsByName("main")[0].style.display = "none";
                     WebSocket_Send('sudoReboot');
                 }
             });
         },
     })); 
     
+    // Anzeige Akkuspannung
+    $("#textbox-ubat").dxTextBox($.extend(true, {}, textBoxOptions,{
+    }));
+
+    // Anzeige CPU Temperatur
+    $("#textbox-cputemp").dxTextBox($.extend(true, {}, textBoxOptions,{
+    }));
+
+    // Anzeige CPU Last
+    $("#textbox-cpuload").dxTextBox($.extend(true, {}, textBoxOptions,{
+    }));
+
 });

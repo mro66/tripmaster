@@ -98,6 +98,20 @@
             </div>
         </script>
 
+        <!-- Zählpunkte -->
+        <script id="tab-countpoint" type="text/html">
+            <div class="flex-row">
+                <div id="datagrid-countpoint"></div>
+            </div>
+        </script>
+
+        <!-- Orientierungskontrollen -->
+        <script id="tab-checkpoint" type="text/html">
+            <div class="flex-row">
+                <div id="datagrid-checkpoint"></div>
+            </div>
+        </script>
+
         <!-- GLP -->
         <script id="tab-regtest" type="text/html">
         
@@ -148,21 +162,6 @@
             </div>
         </script>
         
-        
-        <!-- Zählpunkte -->
-        <script id="tab-countpoint" type="text/html">
-            <div class="flex-row">
-                <div id="datagrid-countpoint"></div>
-            </div>
-        </script>
-
-        <!-- Orientierungskontrollen -->
-        <script id="tab-checkpoint" type="text/html">
-            <div class="flex-row">
-                <div id="datagrid-checkpoint"></div>
-            </div>
-        </script>
-
         <!-- Setup -->
         <script id="tab-setup" type="text/html">
             <div class="flex-row">
@@ -225,6 +224,27 @@
                 <div>
                     <div id="button-sudohalt"></div>
                     <div id="button-sudoreboot"></div>
+                </div>
+            </div>
+
+            <div class="flex-row tm-background-output">
+                <div>Akkuspannung</div>
+                <div class="col50">
+                    <div id="textbox-ubat"></div>
+                </div>
+            </div>
+
+            <div class="flex-row tm-background-output">
+                <div>CPU Temperatur</div>
+                <div class="col50">
+                    <div id="textbox-cputemp"></div>
+                </div>
+            </div>
+
+            <div class="flex-row tm-background-output">
+                <div>CPU Last</div>
+                <div class="col50">
+                    <div id="textbox-cpuload"></div>
                 </div>
             </div>
 
