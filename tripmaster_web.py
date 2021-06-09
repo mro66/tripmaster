@@ -2,7 +2,7 @@
 
 from __future__ import print_function
 from datetime import datetime
-from gpiozero import CPUTemperature, DigitalInputDevice, DigitalOutputDevice
+from gpiozero import CPUTemperature, DigitalInputDevice, DigitalOutputDevice, LED
 from ina219 import INA219       
 from logging.handlers import RotatingFileHandler
 from psutil import cpu_percent, virtual_memory
@@ -85,6 +85,13 @@ REED2 = DigitalInputDevice(GPIO_PIN_2, pull_up=True)
 # DigitalOutputDevice setzt standardmäßig active_high=True (on() -> HIGH) und initial_value=False (device ist aus)
 # Der Lüfter an Pin 27 
 FAN = DigitalOutputDevice(27)
+
+# Zweifarbige Status-LED
+# Rot beim Start ausschalten...
+LED_RED = LED(26, initial_value=False)
+# ... und Grün blinkend ein, bis ein Client sich verbindet
+LED_GREEN = LED(19, initial_value=True)
+LED_GREEN.blink()
 
 # Verbindung zu pigpio Deamon
 pi = None
@@ -631,7 +638,7 @@ def syncTime(GPS_CURRENT):
         return False
 
 def getGPSCurrent():
-    global DEBUG_GPS_INDEX
+    global DEBUG_GPS_INDEX, LED_GREEN
     # Aktuelle Position
     GPS_CURRENT = gpsd.get_current()
     if DEBUG:
@@ -818,8 +825,9 @@ def calcGPSdistance(lambda1, lambda2, phi1, phi2):
 
 def pushSpeedData(clients, what, when):
     if (UBAT_CAP < -3):
-        # messageToAllClients(clients, "shutdown")
-        # subprocess.call("sudo reboot", shell=True)
+        messageToAllClients(clients, "Akku leer! Fahre RasPi herunter...")
+        stopTornado()
+        time.sleep(3)
         subprocess.call("sudo shutdown -h now", shell=True)
     else:
         what    = str(what)
@@ -871,6 +879,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         self.wsClients.append(self)
         # Die ID ist der Index in der Liste wsClients
         self.id = "Client #" + str(self.wsClients.index(self) + 1) + " (" + page + ")"
+        # Sobald sich mindestens ein Client angemeldet hat, hört die grüne LED auf zu blinken
+        LED_GREEN.on()
+
         
         # Wenn es der Timer Thread noch nicht gestartet ist, alles initialisieren
         if timerThreadStarted == False:
@@ -1144,6 +1155,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def on_close(self):
         # Aus der Liste laufender Clients entfernen
         self.wsClients.remove(self)
+        # Wenn kein Client mehr verbunden, dann blinkt die grüne LED
+        if len(self.wsClients) == 0:
+            LED_GREEN.blink()
 
         logger.info("CLOSE - Anzahl noch verbundener Clients: " + str(len(self.wsClients)))
 
@@ -1275,6 +1289,18 @@ def stopTornado():
     logger.debug("Beende Tornado")
     asyncio.get_event_loop().stop()
 #     tornado.ioloop.IOLoop.current().stop()
+
+    # Grüne LED ausschalten
+    LED_GREEN.off()
+    # Rote LED schließen und damit freigeben
+    LED_RED.close()
+    # Rote LED über die Shell einschalten, damit sie auch nach der Beendigung des Tripmasters leuchtet
+    # Nach mehrfachem Start/Stop gibt es u.U. den Pfad schon, doppelte Ausführung wirft Fehlermeldung
+    if not os.path.exists('/sys/class/gpio/gpio26'):
+        subprocess.call("echo 26 > /sys/class/gpio/export", shell=True)
+    subprocess.call('echo "out" > /sys/class/gpio/gpio26/direction', shell=True)
+    subprocess.call("echo 1 > /sys/class/gpio/gpio26/value", shell=True)
+
 
 if __name__ == "__main__":
     try:
