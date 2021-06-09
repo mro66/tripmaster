@@ -385,7 +385,8 @@ def saveKMZ(rallye):
     
     start_time = time.time()
 
-    KML = simplekml.Kml(open=1)
+    KML = simplekml.Kml(open=1, \
+                        description="Länge der Rallye: " + locale.format_string("%.1f", rallye.km) + " km")
     
     # Set aller genutzten POINT subtypes, Sets haben keine(!) Duplikate
     subtypes = set();
@@ -461,12 +462,15 @@ def saveKMZ(rallye):
         sf = KML.newfolder(name="Etappe " + str(stage.id+1))
         for p in stage.points:
             # 'name' ist der label, 'description' erscheint darunter
-            newpoint = sf.newpoint(coords = [(p.lon, p.lat)], name = POINTS[p.subtype].name, description = "Länge: " + locale.format_string("%.2f", stage.km)+" km")
+            newpoint = sf.newpoint(coords = [(p.lon, p.lat)], \
+                                   name = POINTS[p.subtype].name, \
+                                   description = "Länge: " + locale.format_string("%.2f", stage.km) + " km")
             newpoint.style = styles[p.subtype]
 
         f = sf.newfolder(name="Abschnitte")
         for sector in stage.subsection:
-            newtrack = f.newlinestring(name = "Abschnitt "+str(sector.id+1), description = "Länge: " + locale.format_string("%.2f", sector.km)+" km")
+            newtrack = f.newlinestring(name = "Abschnitt "+str(sector.id+1), \
+                                       description = "Länge: " + locale.format_string("%.2f", sector.km) + " km")
             newtrack.style = styles["track"+str(sector.id % 2)]
             for p in sector.points:
                 newtrack.coords.addcoordinates([(p.lon, p.lat)])
@@ -475,13 +479,16 @@ def saveKMZ(rallye):
             f = sf.newfolder(name="Zählpunkte")
             # Nur aktive Punkte werden gespeichert
             for p in (x for x in stage.countpoints if x.active == 1):
-                newpoint = f.newpoint(coords = [(p.lon, p.lat)], description = POINTS[p.subtype].name)
+                newpoint = f.newpoint(coords = [(p.lon, p.lat)], \
+                                      description = POINTS[p.subtype].name)
                 newpoint.style = styles[p.subtype]
 
         if len(stage.checkpoints) > 0:
             f = sf.newfolder(name="Orientierungskontrollen")
             for p in (x for x in stage.checkpoints if x.active == 1):
-                newpoint = f.newpoint(coords = [(p.lon, p.lat)], name = p.value, description = POINTS[p.subtype].name)
+                newpoint = f.newpoint(coords = [(p.lon, p.lat)], \
+                                      name = p.value, \
+                                      description = POINTS[p.subtype].name)
                 newpoint.style = styles[p.subtype]
 
     logger.debug("KML erstellen --- %s seconds ---" % (time.time() - start_time))
