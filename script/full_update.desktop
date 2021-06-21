@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=Full Update
-Comment=Aktualisiert den Pi
-Icon=/usr/share/pixmaps/debian-logo.png
-Exec=lxterminal -t "Pi update" -e full_update.sh
-Type=Application
-Encoding=UTF-8
-Terminal=false
-Categories=None

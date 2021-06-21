@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=Stop WLAN
-Comment=Stoppt den zweiten WLAN Adapter
-Icon=/usr/share/pixmaps/debian-logo.png
-Exec=sudo ifconfig wlan1 down
-Type=Application
-Encoding=UTF-8
-Terminal=true
-Categories=None
