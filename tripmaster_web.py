@@ -250,8 +250,11 @@ class SECTION:
         self.id          = None     # Index, bei subsections die Position in der Liste
         self.t           = 0.0      # Messpunkt
         self.autostart   = False    # Startzeit einer Etappe ist eingerichtet
-        self.start       = 0        # Startzeit
+        self.start       = 0        # Startzeit (wenn größer 0, dann ist gestartet)
         self.finish      = 0        # Zielzeit
+        self.dtstart     = None     # Startzeitpunkt
+        self.dtfinish    = None     # Zielzeitpunkt
+        self.duration    = None     # Zielzeitpunkt - Startzeitpunkt in Sekunden
         self.preset      = 0.0      # Streckenvorgabe
         self.reverse     = 1        # km-Zähler läuft ... 1 = normal, -1 = rückwärts
         self.km          = 0.0      # Strecke
@@ -275,31 +278,49 @@ class SECTION:
         self.start     = start
 
     def startStage(self, rallye, lon, lat):
-        newstage       = SECTION(rallye)
-        newstage.start = datetime.timestamp(datetime.now())
-        newstage.km    = 0.0
+        newstage         = SECTION(rallye)
+        dtnow            = datetime.timestamp(datetime.now())
+        newstage.start   = dtnow
+        newstage.dtstart = dtnow
+        newstage.km      = 0.0
         rallye.subsection.append(newstage)
         newstage.id    = rallye.subsection.index(newstage)
-        logger.debug("   Etappe " + str(newstage.id) + " gestartet: " + locale.format_string("%.2f", lon) + "/" + locale.format_string("%.2f", lat))
+        logger.debug("   Etappe " + str(newstage.id) + " gestartet: " + \
+                     locale.format_string("%.2f", lon) + "/" + locale.format_string("%.2f", lat) + "/" + \
+                     datetime.fromtimestamp(dtnow).strftime("%d.%m.%Y %H:%M"))
         newstage.setPoint(lon, lat, "stage", "stage_start")
         return newstage
 
     def endStage(self, lon, lat):
-        self.start = 0
+        self.start      = 0
+        dtnow           = datetime.timestamp(datetime.now())
+        self.dtfinish   = dtnow
+        self.duration   = time.gmtime(self.dtfinish - self.dtstart)
         self.setPoint(lon, lat, "stage", "stage_finish")
-        logger.debug("   Etappe " + str(self.id) + " gestoppt:  " + locale.format_string("%.2f", lon) + "/" + locale.format_string("%.2f", lat))
+        logger.debug("   Etappe " + str(self.id) + " gestoppt:  " + \
+                     locale.format_string("%.2f", lon) + "/" + locale.format_string("%.2f", lat) + "/" + \
+                     datetime.fromtimestamp(dtnow).strftime("%d.%m.%Y %H:%M"))
 
     def startSector(self, stage, lon, lat):
         newsector = SECTION(stage)
         stage.subsection.append(newsector)
         newsector.id = stage.subsection.index(newsector)
+        dtnow = datetime.timestamp(datetime.now())
+        newsector.dtstart = dtnow
         newsector.setPoint(lon, lat, "sector", "sector_start")
-        logger.debug("Abschnitt " + str(newsector.id) + " gestartet: " + locale.format_string("%.2f", lon) + "/" + locale.format_string("%.2f", lat))
+        logger.debug("Abschnitt " + str(newsector.id) + " gestartet: " + \
+                     locale.format_string("%.2f", lon) + "/" + locale.format_string("%.2f", lat) + "/" + \
+                     datetime.fromtimestamp(dtnow).strftime("%d.%m.%Y %H:%M"))
         return newsector
 
     def endSector(self, lon, lat):
+        dtnow = datetime.timestamp(datetime.now())
+        self.dtfinish   = dtnow
+        self.duration   = time.gmtime(self.dtfinish - self.dtstart)
         self.setPoint(lon, lat, "sector", "sector_finish")
-        logger.debug("Abschnitt " + str(self.id) + " gestoppt:  " + locale.format_string("%.2f", lon) + "/" + locale.format_string("%.2f", lat))
+        logger.debug("Abschnitt " + str(self.id) + " gestoppt:  " + \
+                     locale.format_string("%.2f", lon) + "/" + locale.format_string("%.2f", lat) + "/" + \
+                     datetime.fromtimestamp(dtnow).strftime("%d.%m.%Y %H:%M"))
 
     def setPoint(self, lon, lat, ptype, subtype):
         # Bounding Box von Deutschland: (5.98865807458, 47.3024876979, 15.0169958839, 54.983104153)),
@@ -427,14 +448,6 @@ def saveKMZ(rallye):
     logger.debug("deepcopy des RALLYE Objektes erstellen --- %s seconds ---" % (time.time() - start_time))
     start_time = time.time()
 
-    # Gespeicherte POINTS in den Abschnitten löschen
-    for stage in r.subsection:
-        for sector in stage.subsection:
-            sector.points.clear()    
-
-    logger.debug("Gespeicherte POINTS in den Abschnitten löschen --- %s seconds ---" % (time.time() - start_time))
-    start_time = time.time()
-    
     # Inhalt der TrackCSV in eine Liste kopieren
     with open(trackFile) as csv_file:
         tracks = list(csv.reader(csv_file))
@@ -442,7 +455,12 @@ def saveKMZ(rallye):
     logger.debug("Inhalt der TrackCSV in eine Liste kopieren --- %s seconds ---" % (time.time() - start_time))
     start_time = time.time()
     
-    # POINTS in die Abschnitte kopieren
+    # Gespeicherte POINTS in den Abschnitten löschen
+    for stage in r.subsection:
+        for sector in stage.subsection:
+            sector.points.clear()    
+
+    # Überschreiben der POINTS in den Abschnitten mit dem Inhalt der TrackCSV
     for row in tracks:
         stage_id = int(row[0])
         sector_id = int(row[1])
@@ -454,7 +472,7 @@ def saveKMZ(rallye):
                     newPoint = POINT(lon, lat, "sector", "track")
                     sector.points.append(newPoint)
 
-    logger.debug("POINTS in die Abschnitte kopieren --- %s seconds ---" % (time.time() - start_time))
+    logger.debug("Überschreiben der POINTS in den Abschnitten mit dem Inhalt der TrackCSV --- %s seconds ---" % (time.time() - start_time))
     start_time = time.time()
     
     for stage in r.subsection:
@@ -464,13 +482,19 @@ def saveKMZ(rallye):
             # 'name' ist der label, 'description' erscheint darunter
             newpoint = sf.newpoint(coords = [(p.lon, p.lat)], \
                                    name = POINTS[p.subtype].name, \
-                                   description = "Länge: " + locale.format_string("%.2f", stage.km) + " km")
+                                   description = "Länge: " + locale.format_string("%.2f", stage.km) + " km\n" + \
+                                                 "Start: " + datetime.fromtimestamp(stage.dtstart).strftime("%d.%m.%Y %H:%M") + "\n" + \
+                                                 "Ziel: " + datetime.fromtimestamp(stage.dtfinish).strftime("%d.%m.%Y %H:%M") + "\n" + \
+                                                 "Dauer: " + time.strftime('%H:%M', stage.duration) + " h")
             newpoint.style = styles[p.subtype]
 
         f = sf.newfolder(name="Abschnitte")
         for sector in stage.subsection:
             newtrack = f.newlinestring(name = "Abschnitt "+str(sector.id+1), \
-                                       description = "Länge: " + locale.format_string("%.2f", sector.km) + " km")
+                                       description = "Länge: " + locale.format_string("%.2f", sector.km) + " km\n" + \
+                                                     "Start: " + datetime.fromtimestamp(sector.dtstart).strftime("%d.%m.%Y %H:%M") + "\n" + \
+                                                     "Ziel: " + datetime.fromtimestamp(sector.dtfinish).strftime("%d.%m.%Y %H:%M") + "\n" + \
+                                                     "Dauer: " + time.strftime('%H:%M', sector.duration) + " h")
             newtrack.style = styles["track"+str(sector.id % 2)]
             for p in sector.points:
                 newtrack.coords.addcoordinates([(p.lon, p.lat)])
@@ -494,7 +518,7 @@ def saveKMZ(rallye):
     logger.debug("KML erstellen --- %s seconds ---" % (time.time() - start_time))
     start_time = time.time()
     
-    KML_FILE = tripmasterPath+"/out/{0:%Y%m%d_%H%M}.kmz".format(datetime.now());
+    KML_FILE = tripmasterPath+"/out/{0:%Y%m%d_%H%M}.kmz".format(datetime.now())
     KML.savekmz(KML_FILE)
 
     logger.debug("KMZ speichern --- %s seconds ---" % (time.time() - start_time))
@@ -517,16 +541,16 @@ def prettyprint(rallye):
     # eine deepcopy des RALLYE Objektes erstellen, da die POINTS der Abschnitte zum Ausgeben überschrieben werden
     r = copy.deepcopy(rallye)
 
+    # Inhalt der TrackCSV in eine Liste kopieren
+    with open(trackFile) as csv_file:
+        tracks = list(csv.reader(csv_file))
+        
     # Gespeicherte POINTS in den Abschnitten löschen
     for stage in r.subsection:
         for sector in stage.subsection:
             sector.points.clear()    
     
-    # Inhalt der TrackCSV in eine Liste kopieren
-    with open(trackFile) as csv_file:
-        tracks = list(csv.reader(csv_file))
-        
-    # POINTS in die Abschnitte kopieren
+    # Überschreiben der POINTS in den Abschnitten mit dem Inhalt der TrackCSV
     for row in tracks:
         stage_id = int(row[0])
         sector_id = int(row[1])
@@ -541,16 +565,23 @@ def prettyprint(rallye):
     for stage in r.subsection:
 
         print("Etappe " + str(stage.id+1))
+        print("  Start:  " + datetime.fromtimestamp(stage.dtstart).strftime("%d.%m.%Y %H:%M"))
+        print("   Ziel:  " + datetime.fromtimestamp(stage.dtfinish).strftime("%d.%m.%Y %H:%M"))
+        print("  Dauer:  " + time.strftime('%H:%M', stage.duration) + " h")
+        print("  Länge:  {:0.2f}".format(stage.km) +" km")
         for p in stage.points:
-            print("  name:   " + POINTS[p.subtype].name)
-            print("  Länge:  {:0.2f}".format(stage.km) +" km")
+            print("          " + POINTS[p.subtype].name)
             print("  coords: {0:0.4f}, {1:0.4f}".format(p.lon, p.lat))
 
         for sector in stage.subsection:
             print("  Abschnitt " + str(sector.id+1))
+            print("    Start:  " + datetime.fromtimestamp(sector.dtstart).strftime("%d.%m.%Y %H:%M"))
+            print("     Ziel:  " + datetime.fromtimestamp(sector.dtfinish).strftime("%d.%m.%Y %H:%M"))
+            print("    Dauer:  " + time.strftime('%H:%M', sector.duration) + " h")
             print("    Länge:  {:0.2f}".format(sector.km) +" km")
-            for p in sector.points:
-                print("    coords: {0:0.4f}, {1:0.4f}".format(p.lon, p.lat))
+            # Ausgabe aller Trackpoints im Abschnitt - kann lang werden
+            # for p in sector.points:
+                # print("    coords: {0:0.4f}, {1:0.4f}".format(p.lon, p.lat))
  
         if len(stage.countpoints) > 0:
             print("  Zählpunkte")
@@ -582,6 +613,9 @@ def startRallye(loadSavedData = True):
         else:
             STAGE  = RALLYE.getLastSubsection()
             SECTOR = STAGE.getLastSubsection()
+            if DEBUG: 
+                prettyprint(RALLYE)
+
 
     if loadSavedData == False:
         current_date = "{0:%Y%m%d_%H%M}".format(datetime.now())
@@ -599,7 +633,6 @@ def startRallye(loadSavedData = True):
         open(trackFile, 'a').close()
 
 startRallye()
-# if DEBUG: prettyprint(RALLYE)
 
 #-------------------------------------------------------------------
 
@@ -791,8 +824,8 @@ def getData():
 
         if SECTOR.preset > 0:
             FRAC_SECTOR_DRIVEN = int(min(SECTOR.km / SECTOR.preset * 100, 100))
-        # noch zurückzulegende Strecke im Abschnitt (mit der 0.005 wird der Wert 0 in der TextCloud vermieden)
-        SECTOR_PRESET_REST = max(SECTOR.preset - SECTOR.km, 0) #0.005)
+        # noch zurückzulegende Strecke im Abschnitt
+        SECTOR_PRESET_REST = max(SECTOR.preset - SECTOR.km, 0)
 
         if SECTOR.t > 0.0:
             # Durchschnittliche Geschwindigkeit in Kilometer pro Stunde im Abschnitt
