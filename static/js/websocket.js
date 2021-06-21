@@ -199,7 +199,6 @@ function WebSocket_Open(page) {
             };
             if (document.getElementById("textbox-ubat") !== null) {
             	var textboxUbat = $("#textbox-ubat").dxTextBox("instance")
-<<<<<<< HEAD
                 if (UBAT_CAP == 5) {
                     $("#textbox-ubat").find(".dx-texteditor-input").css("color", "var(--tm-lightgray)");
             		textboxUbat.option("value", "Netzteil");
@@ -263,7 +262,6 @@ function WebSocket_Open(page) {
                 } else {
 		            $("#textbox-cpuload").find(".dx-texteditor-input").css("color", "var(--tm-red)");
                 };
-=======
             	if (UBAT_CAP < 5) {
                 	textboxUbat.option("value", formatNumber(UBAT, 1) + " Volt");
             	} else {
@@ -306,7 +304,6 @@ function WebSocket_Open(page) {
             };
             if (document.getElementById("textbox-cpuload") !== null) {
             	$("#textbox-cpuload").dxTextBox("instance").option("value", formatNumber(CPU_LOAD, 1) + " %");
->>>>>>> branch 'main' of https://github.com/mro66/tripmaster.git
             };
             // Etappe starten und beenden
             if (document.getElementById("button-togglestage") !== null) {
