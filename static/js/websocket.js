@@ -199,6 +199,7 @@ function WebSocket_Open(page) {
             };
             if (document.getElementById("textbox-ubat") !== null) {
             	var textboxUbat = $("#textbox-ubat").dxTextBox("instance")
+<<<<<<< HEAD
                 if (UBAT_CAP == 5) {
                     $("#textbox-ubat").find(".dx-texteditor-input").css("color", "var(--tm-lightgray)");
             		textboxUbat.option("value", "Netzteil");
@@ -262,6 +263,50 @@ function WebSocket_Open(page) {
                 } else {
 		            $("#textbox-cpuload").find(".dx-texteditor-input").css("color", "var(--tm-red)");
                 };
+=======
+            	if (UBAT_CAP < 5) {
+                	textboxUbat.option("value", formatNumber(UBAT, 1) + " Volt");
+            	} else {
+                    $("#textbox-ubat").find(".dx-texteditor-input").css("color", "var(--tm-gray)");
+            		textboxUbat.option("value", "Netzteil");
+        		}
+            };
+            // Statusanzeige: CPU Temperatur
+            if (document.getElementById("status-cputemp") !== null) {
+                var statusCPUTemp = document.getElementById("status-cputemp");
+                statusCPUTemp.className = "status-indicator";
+                var cputempIcon = document.getElementById("cputemp-icon");
+                
+                if (CPU_TEMP < 60.0) {
+                    cputempIcon.className = "fas fa-thermometer-half";
+                    statusCPUTemp.style.color = "var(--tm-green)";
+                } else if (CPU_TEMP < 70.0) {
+                    cputempIcon.className = "fas fa-thermometer-three-quarters";
+                    statusCPUTemp.style.color = "var(--tm-yellow)";
+                } else {
+                    cputempIcon.className = "fas fa-thermometer-full";
+                    statusCPUTemp.style.color = "var(--tm-red)";
+                    statusCPUTemp.className = "status-indicator blink_me";
+                };
+            };
+            if (document.getElementById("textbox-cputemp") !== null) {
+            	$("#textbox-cputemp").dxTextBox("instance").option("value", formatNumber(CPU_TEMP, 1) + "°C");
+            };
+            // Statusanzeige: CPU Last
+            if (document.getElementById("status-cpuload") !== null) {
+                var statusCPULoad = document.getElementById("status-cpuload");
+                
+                if (CPU_LOAD < 60.0) {
+                    statusCPULoad.style.color = "var(--tm-green)";
+                } else if (CPU_LOAD < 90.0) {
+                    statusCPULoad.style.color = "var(--tm-yellow)";
+                } else {
+                    statusCPULoad.style.color = "var(--tm-red)";
+                };
+            };
+            if (document.getElementById("textbox-cpuload") !== null) {
+            	$("#textbox-cpuload").dxTextBox("instance").option("value", formatNumber(CPU_LOAD, 1) + " %");
+>>>>>>> branch 'main' of https://github.com/mro66/tripmaster.git
             };
             // Etappe starten und beenden
             if (document.getElementById("button-togglestage") !== null) {
