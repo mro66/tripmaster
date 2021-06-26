@@ -467,7 +467,7 @@ function WebSocket_Open(page) {
                 };
             } 
         } else {
-            mylog('TM ->: '+message);
+            // mylog('TM ->: '+message);
         
             TEXT = values[0].replace("&#058;", ":");
             TYPE = values[1]; // ("info", "warning", "error" or "success")
@@ -585,7 +585,7 @@ function WebSocket_Open(page) {
 function WebSocket_Send(data) {
     if (wss_status == "opened") {
         wss.send(data);
-        mylog('-> TM: '+data);
+        // mylog('-> TM: '+data);
     }
 }
 
