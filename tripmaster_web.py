@@ -28,7 +28,6 @@ import time
 import tornado.web
 import tornado.websocket
 import tornado.httpserver
-import TM
 # import tornado.ioloop
 
 #-------------------------------------------------------------------
@@ -124,6 +123,15 @@ COUNTDOWN = 0
 
 # Fortlaufender Index
 INDEX = 0
+
+# Rallye
+RALLYE = None
+
+# Etappe
+STAGE  = None
+
+# Abschnitt
+SECTOR = None
 
 # Ermittelt die aktuelle GPS-Position
 def getGPSCurrent():
@@ -352,17 +360,17 @@ def prettyprint(rallye):
 # ----------------------------------------------------------------
     
 def startRallye(loadSavedData = True):
-    global INDEX
+    global INDEX, RALLYE, STAGE, SECTOR
     # Daten laden sofern vorhanden
     if loadSavedData == True:
         if os.path.exists(rallyeFile) and (os.path.getsize(rallyeFile) > 0):
             try:
                 with open(rallyeFile, 'rb') as fp:
-                    TM.RALLYE = pickle.load(fp)
-                    TM.STAGE  = TM.RALLYE.getLastSubsection()
-                    TM.SECTOR = TM.STAGE.getLastSubsection()
-                    # if DEBUG: 
-                        # prettyprint(TM.RALLYE)
+                    RALLYE = pickle.load(fp)
+                STAGE  = RALLYE.getLastSubsection()
+                SECTOR = STAGE.getLastSubsection()
+                if DEBUG:
+                    prettyprint(RALLYE)
             # Gibt es einen Fehler beim Laden, dann gleich neu machen
             except EOFError:
                 logger.error("EOFError!")
@@ -376,11 +384,11 @@ def startRallye(loadSavedData = True):
         if os.path.exists(trackFile):
             os.rename(trackFile, tripmasterPath+"/out/"+current_date+".csv")
         INDEX  = 0
-        TM.RALLYE = SECTION(None)
-        TM.STAGE  = SECTION(TM.RALLYE)
-        TM.SECTOR = SECTION(TM.STAGE)
+        RALLYE = SECTION(None)
+        STAGE  = SECTION(RALLYE)
+        SECTOR = SECTION(STAGE)
         # legt leere Rallyedatei an
-        TM.RALLYE.pickleData()
+        RALLYE.pickleData()
         # legt leere TrackCSV an
         open(trackFile, 'a').close()
 
@@ -433,7 +441,7 @@ def WebRequestHandler(requestlist):
     return returnlist
 
 def getData():
-    global HAS_SENSORS, INDEX, AVG_KMH, SYSTEM
+    global HAS_SENSORS, INDEX, RALLYE, STAGE, SECTOR, AVG_KMH, SYSTEM
 
     # Ein 0 V Potential an einem der beiden Reedsensoren aktiviert die Antriebswellensensoren
     if (REED1.is_active or REED2.is_active) and not HAS_SENSORS:
@@ -472,14 +480,14 @@ def getData():
     STAGE_FRACTIME     = 0.0
 
     # Wenn die Etappe läuft ...
-    if TM.STAGE.isStarted():
+    if STAGE.isStarted():
 
         # Bei Autostart Etappe starten
-        if TM.STAGE.autostart == True:
+        if STAGE.autostart == True:
             # Etappe starten
-            TM.STAGE = TM.STAGE.startStage(TM.RALLYE, GPS_CURRENT.lon, GPS_CURRENT.lat)
+            STAGE = STAGE.startStage(RALLYE, GPS_CURRENT.lon, GPS_CURRENT.lat)
             # Abschnitt starten
-            TM.SECTOR = TM.SECTOR.startSector(TM.STAGE, GPS_CURRENT.lon, GPS_CURRENT.lat)
+            SECTOR = SECTOR.startSector(STAGE, GPS_CURRENT.lon, GPS_CURRENT.lat)
 
         # Mindestens ein 2D Fix
         if (GPS_CURRENT.mode >= 2):
@@ -488,17 +496,17 @@ def getData():
             if (GPS_CURRENT.hspeed > 1.0):
                 KMH_GPS = GPS_CURRENT.hspeed * 3.6
 
-            if (TM.SECTOR.getLon() is not None) and (TM.SECTOR.getLat() is not None) and (KMH_GPS > 0.0):
-                DIST = calcGPSdistance(TM.SECTOR.getLon(), GPS_CURRENT.lon, TM.SECTOR.getLat(), GPS_CURRENT.lat)
+            if (SECTOR.getLon() is not None) and (SECTOR.getLat() is not None) and (KMH_GPS > 0.0):
+                DIST = calcGPSdistance(SECTOR.getLon(), GPS_CURRENT.lon, SECTOR.getLat(), GPS_CURRENT.lat)
 
             KMH            = KMH_GPS
-            TM.RALLYE.km     += DIST
-            TM.RALLYE.km_gps  = TM.RALLYE.km
-            TM.STAGE.km      += DIST * TM.SECTOR.reverse
-            TM.STAGE.km_gps   = TM.STAGE.km
-            TM.SECTOR.km     += DIST * TM.SECTOR.reverse
-            TM.SECTOR.km_gps  = TM.SECTOR.km
-            TM.SECTOR.setPoint(GPS_CURRENT.lon, GPS_CURRENT.lat, "sector", "track")
+            RALLYE.km     += DIST
+            RALLYE.km_gps  = RALLYE.km
+            STAGE.km      += DIST * SECTOR.reverse
+            STAGE.km_gps   = STAGE.km
+            SECTOR.km     += DIST * SECTOR.reverse
+            SECTOR.km_gps  = SECTOR.km
+            SECTOR.setPoint(GPS_CURRENT.lon, GPS_CURRENT.lat, "sector", "track")
 
         ### Antriebswellensensor(en)
 
@@ -515,30 +523,30 @@ def getData():
             # Geschwindigkeit in Kilometer pro Stunde
             KMH = MS * 3.6
             # Zurückgelegte Kilometer - Rallye, Etappe und Abschnitt (Rückwärtszählen beim Umdrehen außer bei Rallye)
-            TM.RALLYE.km += MS * SAMPLE_TIME / 1000
-            TM.STAGE.km  += MS * SAMPLE_TIME / 1000 * TM.SECTOR.reverse
-            TM.SECTOR.km += MS * SAMPLE_TIME / 1000 * TM.SECTOR.reverse
+            RALLYE.km += MS * SAMPLE_TIME / 1000
+            STAGE.km  += MS * SAMPLE_TIME / 1000 * SECTOR.reverse
+            SECTOR.km += MS * SAMPLE_TIME / 1000 * SECTOR.reverse
 
         # Messzeitpunkte Abschnitt
-        TM.SECTOR.t += SAMPLE_TIME
+        SECTOR.t += SAMPLE_TIME
 
-        if TM.SECTOR.preset > 0:
-            FRAC_SECTOR_DRIVEN = int(min(TM.SECTOR.km / TM.SECTOR.preset * 100, 100))
+        if SECTOR.preset > 0:
+            FRAC_SECTOR_DRIVEN = int(min(SECTOR.km / SECTOR.preset * 100, 100))
         # noch zurückzulegende Strecke im Abschnitt
-        SECTOR_PRESET_REST = max(TM.SECTOR.preset - TM.SECTOR.km, 0)
+        SECTOR_PRESET_REST = max(SECTOR.preset - SECTOR.km, 0)
 
-        if TM.SECTOR.t > 0.0:
+        if SECTOR.t > 0.0:
             # Durchschnittliche Geschwindigkeit in Kilometer pro Stunde im Abschnitt
-            AVG_KMH = TM.SECTOR.km * 1000 / TM.SECTOR.t * 3.6
+            AVG_KMH = SECTOR.km * 1000 / SECTOR.t * 3.6
             if AVG_KMH_PRESET > 0.0:
                 DEV_AVG_KMH = AVG_KMH - AVG_KMH_PRESET
 
-        if TM.STAGE.getDuration() > 0:
-            STAGE_TIMETOFINISH = TM.STAGE.finish - int(datetime.timestamp(datetime.now()))
-            STAGE_FRACTIME     = round((1 - STAGE_TIMETOFINISH / TM.STAGE.getDuration()) * 100)
+        if STAGE.getDuration() > 0:
+            STAGE_TIMETOFINISH = STAGE.finish - int(datetime.timestamp(datetime.now()))
+            STAGE_FRACTIME     = round((1 - STAGE_TIMETOFINISH / STAGE.getDuration()) * 100)
     else:
-        if TM.STAGE.start > 0:
-            STAGE_TIMETOSTART = TM.STAGE.start - int(datetime.timestamp(datetime.now()))
+        if STAGE.start > 0:
+            STAGE_TIMETOSTART = STAGE.start - int(datetime.timestamp(datetime.now()))
 
     # Aktuelle Zeit als String HH-MM-SS
     NOW = datetime.now().strftime('%H-%M-%S') # .%f')[:-3]
@@ -546,9 +554,9 @@ def getData():
 
     datastring = "data:{0:}:{1:0.1f}:{2:0.6f}:{3:0.6f}:{4:}:{5:}:{6:}:{7:}:{8:}:{9:}:{10:0.2f}:{11:0.2f}:{12:0.2f}:{13:}:{14:0.2f}:{15:0.2f}:{16:0.1f}:{17:0.1f}:{18:}:{19:0.2f}:{20:}:{21:0.1f}:{22:0.1f}".format(
         NOW, KMH, GPS_CURRENT.lon, GPS_CURRENT.lat, 
-        int(HAS_SENSORS), int(SYSTEM.CLOCK_SYNCED), int(TM.STAGE.isStarted()), 
+        int(HAS_SENSORS), int(SYSTEM.CLOCK_SYNCED), int(STAGE.isStarted()), 
         int(STAGE_FRACTIME), STAGE_TIMETOSTART, STAGE_TIMETOFINISH, 
-        TM.SECTOR.km, TM.SECTOR.preset, SECTOR_PRESET_REST, FRAC_SECTOR_DRIVEN, TM.STAGE.km, TM.RALLYE.km, 
+        SECTOR.km, SECTOR.preset, SECTOR_PRESET_REST, FRAC_SECTOR_DRIVEN, STAGE.km, RALLYE.km, 
         AVG_KMH, DEV_AVG_KMH, 
         GPS_CURRENT.mode, SYSTEM.UBAT, SYSTEM.UBAT_CAP, SYSTEM.CPU_TEMP, SYSTEM.CPU_LOAD)
 
@@ -613,7 +621,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         return True
 
     def open(self, page):
-        global isInitialized, pi, UMIN_READER_1, UMIN_READER_2
+        global isInitialized, pi, UMIN_READER_1, UMIN_READER_2, RALLYE, STAGE, SECTOR
         self.stream.set_nodelay(True)
         # Jeder WebSocket Client wird der Liste wsClients hinzugefügt
         self.wsClients.append(self)
@@ -649,7 +657,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             self.write_message("::setButtons#" + button + "#" + POI[pointType].icon + "#" + POI[pointType].iconcolor + "#" + pointCategory + "#" + pointType)
 
         stagestatus = "stage_start"
-        if TM.STAGE.start == 0:
+        if STAGE.start == 0:
             stagestatus = "stage_finish"
 
         messageToAllClients(self.wsClients, "::setButtons#button-togglestage#" + POI[stagestatus].icon + "#" + POI[stagestatus].iconcolor + "#toggleStage#")
@@ -659,7 +667,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
     # the client sent a message
     def on_message(self, message):
-        global ACTIVE_CONFIG, COUNTDOWN, AVG_KMH_PRESET
+        global ACTIVE_CONFIG, COUNTDOWN, AVG_KMH_PRESET, RALLYE, STAGE, SECTOR
         logger.debug("Nachricht " + self.id + ": " + message + "")
         # command:param
         message      = message.strip()
@@ -674,49 +682,49 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         # Verfahren
         if command == "reverse":
             if param == 'true':
-                TM.SECTOR.reverse = -1
+                SECTOR.reverse = -1
                 messageToAllClients(self.wsClients, "Verfahren! km-Zähler rückwärts:warning")
             else:
-                TM.SECTOR.reverse = 1
+                SECTOR.reverse = 1
                 messageToAllClients(self.wsClients, "km-Zähler wieder normal:success")
 
         # Etappe starten/beenden
         elif command == "toggleStage":
             currentPos = self.getGPS();
             if currentPos is not None:
-                if (TM.STAGE.start == 0):
+                if (STAGE.start == 0):
                     # Etappe starten
-                    TM.STAGE = TM.STAGE.startStage(TM.RALLYE, currentPos.lon, currentPos.lat)
+                    STAGE = STAGE.startStage(RALLYE, currentPos.lon, currentPos.lat)
                     # Abschnitt starten
-                    TM.SECTOR = TM.SECTOR.startSector(TM.STAGE, currentPos.lon, currentPos.lat)
+                    SECTOR = SECTOR.startSector(STAGE, currentPos.lon, currentPos.lat)
                     messageToAllClients(self.wsClients, "Etappe gestartet:success:setButtons#button-togglestage#" + POI["stage_start"].icon + "#" + POI["stage_start"].iconcolor)
                 else:
                     # Abschnitt beenden
-                    TM.SECTOR.endSector(currentPos.lon, currentPos.lat)
+                    SECTOR.endSector(currentPos.lon, currentPos.lat)
                     # Etappe beenden
-                    TM.STAGE.endStage(TM.RALLYE, currentPos.lon, currentPos.lat)
+                    STAGE.endStage(RALLYE, currentPos.lon, currentPos.lat)
                     messageToAllClients(self.wsClients, "Etappe beendet:success:setButtons#button-togglestage#" + POI["stage_finish"].icon + "#" + POI["stage_finish"].iconcolor)
             # if DEBUG: 
-                # prettyprint(TM.RALLYE)
+                # prettyprint(RALLYE)
             
         # Zeit bis zum Ziel der Etappe
         elif command == "setStageFinish":
             if param == 'null':
-                TM.STAGE.finish = 0
+                STAGE.finish = 0
                 messageToAllClients(self.wsClients, "Etappenzielzeit gelöscht:success")
             else:
-                TM.STAGE.finish = int(int(param) / 1000)
+                STAGE.finish = int(int(param) / 1000)
                 messageToAllClients(self.wsClients, "Etappenzielzeit gesetzt:success")
 
         # Zeit bis zum Start der Etappe
         elif command == "setStageStart":
             if param == 'null':
-                TM.STAGE.setAutostart(False, 0)
+                STAGE.setAutostart(False, 0)
                 messageToAllClients(self.wsClients, "Etappenstartzeit gelöscht:success:setButtons#button-togglestage#" + POI["stage_finish"].icon + "#" + POI["stage_finish"].iconcolor)
                 messageToAllClients(self.wsClients, "::switchToMain")
             else:
-                TM.STAGE.setAutostart(True, int(int(param) / 1000))
-                starttime = datetime.fromtimestamp(TM.STAGE.start).strftime("%H&#058;%M")
+                STAGE.setAutostart(True, int(int(param) / 1000))
+                starttime = datetime.fromtimestamp(STAGE.start).strftime("%H&#058;%M")
                 messageToAllClients(self.wsClients, "Etappe startet automatisch um " + starttime + " Uhr:success:setButtons#button-togglestage#" + POI["stage_start"].icon + "#" + POI["stage_start"].iconcolor)
                 messageToAllClients(self.wsClients, "::switchToClock")
 
@@ -726,7 +734,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             if currentPos is not None:
                 ptype    = command
                 subptype = param
-                i        = TM.STAGE.setPoint(currentPos.lon, currentPos.lat, ptype, subptype)
+                i        = STAGE.setPoint(currentPos.lon, currentPos.lat, ptype, subptype)
                 messageToAllClients(self.wsClients, POI[subptype].name + " registriert:success:" + ptype + "Registered#" + str(i) + "#" + POI[subptype].name + "##1")
 
         # Punkte ändern
@@ -738,14 +746,14 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             value      = paramsplit[3]
             active     = int(paramsplit[4])
 
-            TM.STAGE.changePoint(ptype, i, active, value)
+            STAGE.changePoint(ptype, i, active, value)
 
             # ID zur Anzeige 1-basiert, im System 0-basiert
             self.write_message("ID " + str(i+1) + " - " + name + " geändert:success")
 
         # Alle Punkte beim Start laden
         elif command == "getAllPoints":
-            for countpoint in TM.STAGE.countpoints:
+            for countpoint in STAGE.countpoints:
                 # i im System 0-basiert
                 i      = countpoint.id
                 #                             or '') konvertiert None in ''
@@ -753,7 +761,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                 name   = POI[countpoint.poisubtype].name
                 active = countpoint.active
                 self.write_message("::countpointRegistered#" + str(i) + "#" + name + "#" + value + "#" + str(active))
-            for checkpoint in TM.STAGE.checkpoints:
+            for checkpoint in STAGE.checkpoints:
                 i      = checkpoint.id
                 value  = str(checkpoint.value or '')
                 name   = POI[checkpoint.poisubtype].name
@@ -765,18 +773,18 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             currentPos = self.getGPS();
             if currentPos is not None:
                 # Abschnitt beenden
-                TM.SECTOR.endSector(currentPos.lon, currentPos.lat)
+                SECTOR.endSector(currentPos.lon, currentPos.lat)
                 # Abschnitt starten
-                TM.SECTOR = TM.SECTOR.startSector(TM.STAGE, currentPos.lon, currentPos.lat)
+                SECTOR = SECTOR.startSector(STAGE, currentPos.lon, currentPos.lat)
                 messageToAllClients(self.wsClients, "Abschnittszähler zurückgesetzt!:success:sectorReset")
             # if DEBUG: 
-                # prettyprint(TM.RALLYE)
+                # prettyprint(RALLYE)
             
         # Abschnittsvorgabe setzen
         elif command == "setSectorLength":
-            TM.SECTOR.preset = float(param)
+            SECTOR.preset = float(param)
             if float(param) > 0.0:
-                messageToAllClients(self.wsClients, "Abschnitt auf "+locale.format_string("%.2f", TM.SECTOR.preset)+" km gesetzt!:success:sectorLengthset")
+                messageToAllClients(self.wsClients, "Abschnitt auf "+locale.format_string("%.2f", SECTOR.preset)+" km gesetzt!:success:sectorLengthset")
             else:
                 messageToAllClients(self.wsClients, "Vorgabe zurückgesetzt:success:sectorLengthreset")
 
@@ -784,7 +792,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         elif command == "startRegtest":
             paramsplit     = param.split("&")
             COUNTDOWN      = int(paramsplit[0])
-            TM.SECTOR.preset  = float(paramsplit[1])
+            SECTOR.preset  = float(paramsplit[1])
             AVG_KMH_PRESET = float(paramsplit[2])
             startRegtest(self)
             messageToAllClients(self.wsClients, "GLP gestartet:success:regTestStarted")
@@ -801,7 +809,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
         # KMZ Dateien erstellen und herunterladen oder löschen
         elif command == "getFiles":
-            if (not saveKMZ(TM.RALLYE)):
+            if (not saveKMZ(RALLYE)):
                 messageToAllClients(self.wsClients, "Neue KMZ Datei konnte nicht erstellt werden:error")
             filelist = glob.glob(tripmasterPath + "/out/*.kmz")
             filelist.sort(reverse = True)
@@ -932,7 +940,7 @@ class SettingsHandler(tornado.web.RequestHandler):
     #called every time someone sends a GET HTTP request
     @tornado.web.asynchronous
     def get(self):
-        if TM.SECTOR.reverse == 1:
+        if SECTOR.reverse == 1:
             sector_reverse = False
         else:
             sector_reverse = True

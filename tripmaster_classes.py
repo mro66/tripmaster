@@ -7,7 +7,6 @@ import locale
 import logging
 import pickle
 import time
-import TM
 
 logger = logging.getLogger('Tripmaster')
 
@@ -54,10 +53,15 @@ class POINT:
 class SECTION:
     def __init__(self, parent):
         if (parent == None):
-            parent_id = -1
+            # ... dann wird gerade das Wurzelobjekt initialisiert
+            root = self
+            pid = -1
         else:
-            parent_id = parent.id
-        self.parent_id   = parent_id
+            # ... ansonsten immer das Wurzelobjekt des Elternobjekts 'vererben'
+            root = parent.root                
+            pid = parent.id
+        self.root        = root     # Wurzelobjekt = RALLYE
+        self.parent_id   = pid      # ID des Elternobjekts (z.B. in welcher Etappe liegt der Abschnitt)
         self.id          = None     # Index, bei subsections die Position in der Liste
         self.t           = 0.0      # Messpunkt
         self.autostart   = False    # Startzeit einer Etappe ist eingerichtet
@@ -203,8 +207,8 @@ class SECTION:
         if (len(self.subsection) > 0):
             return self.subsection[-1]
         else:
-            return SECTION(TM.RALLYE)
+            return SECTION(self)
 
     def pickleData(self):
         with open(rallyeFile, 'wb') as fp:
-            pickle.dump(TM.RALLYE, fp)
+            pickle.dump(self.root, fp)
