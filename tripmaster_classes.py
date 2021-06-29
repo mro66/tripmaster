@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 
 from datetime import datetime
-from tripmaster_system import trackFile, rallyeFile
+from tripmaster_system import trackFile, rallyeFile, tripmasterPath
+import copy
 import csv
 import locale
 import logging
+import os
 import pickle
+import simplekml
 import time
 
 logger = logging.getLogger('Tripmaster')
@@ -92,6 +95,18 @@ class SECTION:
         self.autostart = autostart
         self.start     = start
 
+    def startRallye(self):
+        current_date = "{0:%Y%m%d_%H%M}".format(datetime.now())
+        if os.path.exists(rallyeFile):
+            os.rename(rallyeFile, tripmasterPath+"/out/"+current_date+".dat")
+        if os.path.exists(trackFile):
+            os.rename(trackFile, tripmasterPath+"/out/"+current_date+".csv")
+        # legt leere Rallyedatei an
+        self.saveRallye()
+        # legt leere TrackCSV an
+        open(trackFile, 'a').close()
+        
+    
     def startStage(self, rallye, lon, lat):
         newstage         = SECTION(rallye)
         dtnow            = datetime.timestamp(datetime.now())
@@ -178,7 +193,7 @@ class SECTION:
         else:
             logger.error("Unbekannter oder fehlender Punkttyp (ptype)")
         
-        self.pickleData()
+        self.saveRallye()
         return newPoint.id
 
     def changePoint(self, ptype, i, active, value):
@@ -187,7 +202,7 @@ class SECTION:
         elif ptype == "checkpoint":
             self.checkpoints[i].active = active
             self.checkpoints[i].value = value
-        self.pickleData()
+        self.saveRallye()
         
 
     # Nur für Abschnitt/SECTOR: Holt Koordinate des letzten Listeneintrags
@@ -209,6 +224,228 @@ class SECTION:
         else:
             return SECTION(self)
 
-    def pickleData(self):
+    def saveRallye(self):
         with open(rallyeFile, 'wb') as fp:
             pickle.dump(self.root, fp)
+
+            
+def loadRallye():
+    if os.path.exists(rallyeFile) and (os.path.getsize(rallyeFile) > 0):
+        try:
+            with open(rallyeFile, 'rb') as fp:
+                return pickle.load(fp)
+        except EOFError:
+            logger.error("EOFError!")
+    return None
+
+def saveKMZ(rallye):
+    
+    start_time = time.time()
+
+    KML = simplekml.Kml(open=1, \
+                        description="Länge der Rallye: " + locale.format_string("%.1f", rallye.km) + " km")
+    
+    # Set aller genutzten POINT subtypes, Sets haben keine(!) Duplikate
+    subtypes = set();
+
+    # RALLYE und SECTOR haben keine Punkte (SECTOR hat nur Tracks)
+    for stage in rallye.subsection:
+        # Etappebeginn, -ende
+        for p in stage.points:
+            subtypes.add(p.poisubtype)
+        # Zählpunkte
+        for p in stage.countpoints:
+            subtypes.add(p.poisubtype)
+        # Orientierungskontrollen
+        for p in stage.checkpoints:
+            subtypes.add(p.poisubtype)
+
+    # Nur die Styles für die genutzten POINT subtypes definieren
+    styles = {};
+    for s in subtypes:
+        icon = tripmasterPath + "/static/kmz/" + s + ".gif"
+        styles[s] = simplekml.Style()
+        styles[s].iconstyle.icon.href = KML.addfile(icon)
+
+    # Styles für Tracks
+    styles["track0"]                 = simplekml.Style()
+    styles["track0"].linestyle.width = 5
+    styles["track0"].linestyle.color = "ff4f53d9"  # rot
+    styles["track1"]                 = simplekml.Style()
+    styles["track1"].linestyle.width = 5
+    styles["track1"].linestyle.color = "ff5cb85c"  # grün
+
+    logger.debug("KML Vorbereitung --- %s seconds ---" % (time.time() - start_time))
+    start_time = time.time()
+
+    # Eine deepcopy des RALLYE Objektes erstellen, da die POINTS der Abschnitte zum Ausgeben überschrieben werden
+    r = copy.deepcopy(rallye)
+
+    logger.debug("deepcopy des RALLYE Objektes erstellen --- %s seconds ---" % (time.time() - start_time))
+    start_time = time.time()
+
+    # Inhalt der TrackCSV in eine Liste kopieren
+    with open(trackFile) as csv_file:
+        tracks = list(csv.reader(csv_file))
+        
+    logger.debug("Inhalt der TrackCSV in eine Liste kopieren --- %s seconds ---" % (time.time() - start_time))
+    start_time = time.time()
+    
+    # Gespeicherte POINTS in den Abschnitten löschen
+    for stage in r.subsection:
+        for sector in stage.subsection:
+            sector.points.clear()    
+
+    # Überschreiben der POINTS in den Abschnitten mit dem Inhalt der TrackCSV
+    for row in tracks:
+        stage_id  = int(row[0])
+        sector_id = int(row[1])
+        lon       = float(row[2])
+        lat       = float(row[3])
+        for stage in r.subsection:
+            for sector in stage.subsection:
+                if (stage.id == stage_id) and (sector.id == sector_id):
+                    newPoint = POINT(lon, lat, "sector", "track")
+                    sector.points.append(newPoint)
+
+    logger.debug("Überschreiben der POINTS in den Abschnitten mit dem Inhalt der TrackCSV --- %s seconds ---" % (time.time() - start_time))
+    start_time = time.time()
+    
+    for stage in r.subsection:
+
+        # Ausgabe der Etappen
+        sf = KML.newfolder(name="Etappe " + str(stage.id+1))
+        for p in stage.points:
+            # 'name' ist der label, 'description' erscheint darunter
+            newpoint = sf.newpoint(coords = [(p.lon, p.lat)], \
+                                   name = POI[p.poisubtype].name, \
+                                   description = "Länge: " + locale.format_string("%.2f", stage.km) + " km\n" + \
+                                                 "Start: " + datetime.fromtimestamp(stage.dtstart).strftime("%d.%m.%Y %H:%M") + "\n" + \
+                                                 "Ziel: " + datetime.fromtimestamp(stage.dtfinish).strftime("%d.%m.%Y %H:%M") + "\n" + \
+                                                 "Dauer: " + time.strftime('%H:%M', stage.duration) + " h")
+            newpoint.style = styles[p.poisubtype]
+
+        # Ausgabe der Abschnitte mit Zählpunkten und Orientierungskontrollen
+        f = sf.newfolder(name="Abschnitte")
+        for sector in stage.subsection:
+            newtrack = f.newlinestring(name = "Abschnitt "+str(sector.id+1), \
+                                       description = "Länge: " + locale.format_string("%.2f", sector.km) + " km\n" + \
+                                                     "Start: " + datetime.fromtimestamp(sector.dtstart).strftime("%d.%m.%Y %H:%M") + "\n" + \
+                                                     "Ziel: " + datetime.fromtimestamp(sector.dtfinish).strftime("%d.%m.%Y %H:%M") + "\n" + \
+                                                     "Dauer: " + time.strftime('%H:%M', sector.duration) + " h")
+            newtrack.style = styles["track"+str(sector.id % 2)]
+            for p in sector.points:
+                newtrack.coords.addcoordinates([(p.lon, p.lat)])
+
+        if len(stage.countpoints) > 0:
+            f = sf.newfolder(name="Zählpunkte")
+            # Nur aktive Punkte werden gespeichert
+            for p in (x for x in stage.countpoints if x.active == 1):
+                newpoint = f.newpoint(coords = [(p.lon, p.lat)], \
+                                      description = POI[p.poisubtype].name)
+                newpoint.style = styles[p.poisubtype]
+
+        if len(stage.checkpoints) > 0:
+            f = sf.newfolder(name="Orientierungskontrollen")
+            for p in (x for x in stage.checkpoints if x.active == 1):
+                newpoint = f.newpoint(coords = [(p.lon, p.lat)], \
+                                      name = p.value, \
+                                      description = POI[p.poisubtype].name)
+                newpoint.style = styles[p.poisubtype]
+
+    logger.debug("KML erstellen --- %s seconds ---" % (time.time() - start_time))
+    start_time = time.time()
+    
+    KML_FILE = tripmasterPath+"/out/{0:%Y%m%d_%H%M}.kmz".format(datetime.now())
+    KML.savekmz(KML_FILE)
+
+    logger.debug("KMZ speichern --- %s seconds ---" % (time.time() - start_time))
+    
+    now = time.time()
+    # Maximal fünf Sekunden warten
+    last_time = now + 5
+    while time.time() <= last_time:
+        if os.path.exists(KML_FILE):
+            return True
+        else:
+            # Eine halbe Sekunde warten, dann wieder prüfen
+            time.sleep(0.5)
+    return False
+
+
+# ----------------------------------------------------------------
+    
+def prettyprint(rallye):
+    print('\n------ prettyprint(rallye) ---------------')
+    
+    # eine deepcopy des RALLYE Objektes erstellen, da die POINTS der Abschnitte zum Ausgeben überschrieben werden
+    r = copy.deepcopy(rallye)
+
+    # Inhalt der TrackCSV in eine Liste kopieren
+    with open(trackFile) as csv_file:
+        tracks = list(csv.reader(csv_file))
+        
+    # Gespeicherte POINTS in den Abschnitten löschen
+    for stage in r.subsection:
+        for sector in stage.subsection:
+            sector.points.clear()    
+    
+    # Überschreiben der POINTS in den Abschnitten mit dem Inhalt der TrackCSV
+    for row in tracks:
+        stage_id  = int(row[0])
+        sector_id = int(row[1])
+        lon       = float(row[2])
+        lat       = float(row[3])
+        for stage in r.subsection:
+            for sector in stage.subsection:
+                if (stage.id == stage_id) and (sector.id == sector_id):
+                    newPoint = POINT(lon, lat, "sector", "track")
+                    sector.points.append(newPoint)
+
+    # Ausgabe der Rallye
+    if (r.dtstart != None) and (r.dtfinish != None):
+        print("\nRallye")
+        print("  Start:  " + datetime.fromtimestamp(r.dtstart).strftime("%d.%m.%Y %H:%M"))
+        print("   Ziel:  " + datetime.fromtimestamp(r.dtfinish).strftime("%d.%m.%Y %H:%M"))
+        print("  Dauer:  " + time.strftime('%H:%M', r.duration) + " h")
+        print("  Länge:  {:0.2f}".format(r.km) +" km")
+    
+        # Ausgabe der Etappen
+        for stage in r.subsection:
+    
+            print("\n  Etappe " + str(stage.id+1))
+            print("    Start:  " + datetime.fromtimestamp(stage.dtstart).strftime("%d.%m.%Y %H:%M"))
+            print("     Ziel:  " + datetime.fromtimestamp(stage.dtfinish).strftime("%d.%m.%Y %H:%M"))
+            print("    Dauer:  " + time.strftime('%H:%M', stage.duration) + " h")
+            print("    Länge:  {:0.2f}".format(stage.km) +" km")
+            for p in stage.points:
+                print("            " + POI[p.poisubtype].name)
+                print("    coords: {0:0.4f}, {1:0.4f}".format(p.lon, p.lat))
+    
+            # Ausgabe der Abschnitte mit Zählpunkten und Orientierungskontrollen
+            for sector in stage.subsection:
+                print("\n    Abschnitt " + str(sector.id+1))
+                print("      Start:  " + datetime.fromtimestamp(sector.dtstart).strftime("%d.%m.%Y %H:%M"))
+                print("       Ziel:  " + datetime.fromtimestamp(sector.dtfinish).strftime("%d.%m.%Y %H:%M"))
+                print("      Dauer:  " + time.strftime('%H:%M', sector.duration) + " h")
+                print("      Länge:  {:0.2f}".format(sector.km) +" km")
+                # Ausgabe aller Trackpoints im Abschnitt - kann lang werden
+                # for p in sector.points:
+                    # print("    coords: {0:0.4f}, {1:0.4f}".format(p.lon, p.lat))
+     
+            if len(stage.countpoints) > 0:
+                print("  Zählpunkte")
+                for p in (x for x in stage.countpoints if x.active == 1):
+                    print("    name:   " + POI[p.poisubtype].name)
+                    print("    coords: {0:0.4f}, {1:0.4f}".format(p.lon, p.lat))
+     
+            if len(stage.checkpoints) > 0:
+                print("  Orientierungskontrollen")
+                for p in (x for x in stage.checkpoints if x.active == 1):
+                    print("    name:   " + POI[p.poisubtype].name)
+                    if p.value == None:
+                        value = "-"
+                    else:
+                        value = p.value
+                    print("    value:  " + value)
+                    print("    coords: {0:0.4f}, {1:0.4f}".format(p.lon, p.lat))

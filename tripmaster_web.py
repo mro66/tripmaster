@@ -1,26 +1,21 @@
 #!/usr/bin/env python3
 
 from __future__ import print_function
-from datetime import datetime
+from datetime import datetime, timedelta
 from gpiozero import DigitalInputDevice, LED
 from read_RPM import reader
 from tornado.options import options
 from tornado.platform.asyncio import AsyncIOMainLoop
-from tripmaster_system import getSystemState, tripmasterPath, trackFile, rallyeFile
-from tripmaster_classes import POI, POINT, SECTION
+from tripmaster_system import SYSTEM, DEBUG, ThreadLED, getGPSCurrent, tripmasterPath
+from tripmaster_classes import POI, SECTION, loadRallye, saveKMZ, prettyprint
 import asyncio
 import configparser
-import copy
-import csv
 import glob
-import gpsd
 import locale
 import logging
 import math
 import os.path
-import pickle
 import pigpio
-import simplekml
 import subprocess
 import sys
 import threading
@@ -31,13 +26,10 @@ import tornado.httpserver
 # import tornado.ioloop
 
 #-------------------------------------------------------------------
-### --- Konfiguration DEBUG ---
-DEBUG = False
-# Kommandozeilenargument
-if len(sys.argv) > 1:
-    DEBUG = (sys.argv[1] == "debug")
-DEBUG_GPS_INDEX = 0
+### --- Konfiguration Logger ---
+logger = logging.getLogger('Tripmaster')
 
+### --- Systemressourcen ---
 ### --- Konfiguration Tornado ---
 WebServer = None
 WebsocketServer = None
@@ -46,15 +38,6 @@ WebsocketPort = 7070
 ### --- Konfiguration Tripmaster ---
 # Status Initialisierung
 isInitialized = False
-
-### --- Konfiguration Logger ---
-# Programmpfad für Dateiausgaben
-# tripmasterPath = os.path.dirname(os.path.abspath(__file__))
-logger = logging.getLogger('Tripmaster')
-if DEBUG:
-    logger.setLevel(logging.DEBUG)
-else:
-    logger.setLevel(logging.INFO)
 
 ### Konfiguration Antriebswellensensor(en)
 # GPIO Pins der Sensoren
@@ -74,9 +57,6 @@ UMIN_READER_1 = None
 UMIN_READER_2 = None
 # Impulse pro Umdrehung
 PULSES_PER_REV = 1.0
-
-### GPS Daemon
-gpsd.connect()
 
 ### Konfiguration Fahrzeug
 # INI-Datei
@@ -115,10 +95,9 @@ def getConfig():
 SAMPLE_TIME = 1.0
 # Hat Antriebswellensensor?
 HAS_SENSORS = False
-# Durchschnittsgeschwindigkeit - aktuell und Vorgabe
-AVG_KMH = 0.0
-AVG_KMH_PRESET = 0.0
-# Zeitvorgabe der GLP
+# GLP: Vorgabe der Durchschnittsgeschwindigkeit
+KMH_AVG_PRESET = 0.0
+# GLP: Vorgabe derZeit
 COUNTDOWN = 0
 
 # Fortlaufender Index
@@ -133,276 +112,29 @@ STAGE  = None
 # Abschnitt
 SECTOR = None
 
-# Ermittelt die aktuelle GPS-Position
-def getGPSCurrent():
-    global DEBUG_GPS_INDEX
-    # Aktuelle Position
-    gps_current = gpsd.get_current()
-    if DEBUG:
-        DEBUG_GPS_INDEX   += 1
-        gps_current.mode   = 3
-        gps_current.lon    = 10.45 + DEBUG_GPS_INDEX/5000
-        gps_current.lat    = 51.16 + DEBUG_GPS_INDEX/7500
-        gps_current.hspeed = 15
-    return gps_current
-
 # ----------------------------------------------------------------
 
-def saveKMZ(rallye):
-    
-    start_time = time.time()
-
-    KML = simplekml.Kml(open=1, \
-                        description="Länge der Rallye: " + locale.format_string("%.1f", rallye.km) + " km")
-    
-    # Set aller genutzten POINT subtypes, Sets haben keine(!) Duplikate
-    subtypes = set();
-
-    # RALLYE und SECTOR haben keine Punkte (SECTOR hat nur Tracks)
-    for stage in rallye.subsection:
-        # Etappebeginn, -ende
-        for p in stage.points:
-            subtypes.add(p.poisubtype)
-        # Zählpunkte
-        for p in stage.countpoints:
-            subtypes.add(p.poisubtype)
-        # Orientierungskontrollen
-        for p in stage.checkpoints:
-            subtypes.add(p.poisubtype)
-
-    # Nur die Styles für die genutzten POINT subtypes definieren
-    styles = {};
-    for s in subtypes:
-        icon = tripmasterPath + "/static/kmz/" + s + ".gif"
-        styles[s] = simplekml.Style()
-        styles[s].iconstyle.icon.href = KML.addfile(icon)
-
-    # Styles für Tracks
-    styles["track0"]                 = simplekml.Style()
-    styles["track0"].linestyle.width = 5
-    styles["track0"].linestyle.color = "ff4f53d9"  # rot
-    styles["track1"]                 = simplekml.Style()
-    styles["track1"].linestyle.width = 5
-    styles["track1"].linestyle.color = "ff5cb85c"  # grün
-
-    logger.debug("KML Vorbereitung --- %s seconds ---" % (time.time() - start_time))
-    start_time = time.time()
-
-    # Eine deepcopy des RALLYE Objektes erstellen, da die POINTS der Abschnitte zum Ausgeben überschrieben werden
-    r = copy.deepcopy(rallye)
-
-    logger.debug("deepcopy des RALLYE Objektes erstellen --- %s seconds ---" % (time.time() - start_time))
-    start_time = time.time()
-
-    # Inhalt der TrackCSV in eine Liste kopieren
-    with open(trackFile) as csv_file:
-        tracks = list(csv.reader(csv_file))
-        
-    logger.debug("Inhalt der TrackCSV in eine Liste kopieren --- %s seconds ---" % (time.time() - start_time))
-    start_time = time.time()
-    
-    # Gespeicherte POINTS in den Abschnitten löschen
-    for stage in r.subsection:
-        for sector in stage.subsection:
-            sector.points.clear()    
-
-    # Überschreiben der POINTS in den Abschnitten mit dem Inhalt der TrackCSV
-    for row in tracks:
-        stage_id  = int(row[0])
-        sector_id = int(row[1])
-        lon       = float(row[2])
-        lat       = float(row[3])
-        for stage in r.subsection:
-            for sector in stage.subsection:
-                if (stage.id == stage_id) and (sector.id == sector_id):
-                    newPoint = POINT(lon, lat, "sector", "track")
-                    sector.points.append(newPoint)
-
-    logger.debug("Überschreiben der POINTS in den Abschnitten mit dem Inhalt der TrackCSV --- %s seconds ---" % (time.time() - start_time))
-    start_time = time.time()
-    
-    for stage in r.subsection:
-
-        # Ausgabe der Etappen
-        sf = KML.newfolder(name="Etappe " + str(stage.id+1))
-        for p in stage.points:
-            # 'name' ist der label, 'description' erscheint darunter
-            newpoint = sf.newpoint(coords = [(p.lon, p.lat)], \
-                                   name = POI[p.poisubtype].name, \
-                                   description = "Länge: " + locale.format_string("%.2f", stage.km) + " km\n" + \
-                                                 "Start: " + datetime.fromtimestamp(stage.dtstart).strftime("%d.%m.%Y %H:%M") + "\n" + \
-                                                 "Ziel: " + datetime.fromtimestamp(stage.dtfinish).strftime("%d.%m.%Y %H:%M") + "\n" + \
-                                                 "Dauer: " + time.strftime('%H:%M', stage.duration) + " h")
-            newpoint.style = styles[p.poisubtype]
-
-        # Ausgabe der Abschnitte mit Zählpunkten und Orientierungskontrollen
-        f = sf.newfolder(name="Abschnitte")
-        for sector in stage.subsection:
-            newtrack = f.newlinestring(name = "Abschnitt "+str(sector.id+1), \
-                                       description = "Länge: " + locale.format_string("%.2f", sector.km) + " km\n" + \
-                                                     "Start: " + datetime.fromtimestamp(sector.dtstart).strftime("%d.%m.%Y %H:%M") + "\n" + \
-                                                     "Ziel: " + datetime.fromtimestamp(sector.dtfinish).strftime("%d.%m.%Y %H:%M") + "\n" + \
-                                                     "Dauer: " + time.strftime('%H:%M', sector.duration) + " h")
-            newtrack.style = styles["track"+str(sector.id % 2)]
-            for p in sector.points:
-                newtrack.coords.addcoordinates([(p.lon, p.lat)])
-
-        if len(stage.countpoints) > 0:
-            f = sf.newfolder(name="Zählpunkte")
-            # Nur aktive Punkte werden gespeichert
-            for p in (x for x in stage.countpoints if x.active == 1):
-                newpoint = f.newpoint(coords = [(p.lon, p.lat)], \
-                                      description = POI[p.poisubtype].name)
-                newpoint.style = styles[p.poisubtype]
-
-        if len(stage.checkpoints) > 0:
-            f = sf.newfolder(name="Orientierungskontrollen")
-            for p in (x for x in stage.checkpoints if x.active == 1):
-                newpoint = f.newpoint(coords = [(p.lon, p.lat)], \
-                                      name = p.value, \
-                                      description = POI[p.poisubtype].name)
-                newpoint.style = styles[p.poisubtype]
-
-    logger.debug("KML erstellen --- %s seconds ---" % (time.time() - start_time))
-    start_time = time.time()
-    
-    KML_FILE = tripmasterPath+"/out/{0:%Y%m%d_%H%M}.kmz".format(datetime.now())
-    KML.savekmz(KML_FILE)
-
-    logger.debug("KMZ speichern --- %s seconds ---" % (time.time() - start_time))
-    
-    now = time.time()
-    # Maximal fünf Sekunden warten
-    last_time = now + 5
-    while time.time() <= last_time:
-        if os.path.exists(KML_FILE):
-            return True
-        else:
-            # Eine halbe Sekunde warten, dann wieder prüfen
-            time.sleep(0.5)
-    return False
-
-def prettyprint(rallye):
-    print('\n------ prettyprint(rallye) ---------------')
-    
-    # eine deepcopy des RALLYE Objektes erstellen, da die POINTS der Abschnitte zum Ausgeben überschrieben werden
-    r = copy.deepcopy(rallye)
-
-    # Inhalt der TrackCSV in eine Liste kopieren
-    with open(trackFile) as csv_file:
-        tracks = list(csv.reader(csv_file))
-        
-    # Gespeicherte POINTS in den Abschnitten löschen
-    for stage in r.subsection:
-        for sector in stage.subsection:
-            sector.points.clear()    
-    
-    # Überschreiben der POINTS in den Abschnitten mit dem Inhalt der TrackCSV
-    for row in tracks:
-        stage_id  = int(row[0])
-        sector_id = int(row[1])
-        lon       = float(row[2])
-        lat       = float(row[3])
-        for stage in r.subsection:
-            for sector in stage.subsection:
-                if (stage.id == stage_id) and (sector.id == sector_id):
-                    newPoint = POINT(lon, lat, "sector", "track")
-                    sector.points.append(newPoint)
-
-    # Ausgabe der Rallye
-    if r.dtstart != None:
-        print("\nRallye")
-        print("  Start:  " + datetime.fromtimestamp(r.dtstart).strftime("%d.%m.%Y %H:%M"))
-        print("   Ziel:  " + datetime.fromtimestamp(r.dtfinish).strftime("%d.%m.%Y %H:%M"))
-        print("  Dauer:  " + time.strftime('%H:%M', r.duration) + " h")
-        print("  Länge:  {:0.2f}".format(r.km) +" km")
-    
-        # Ausgabe der Etappen
-        for stage in r.subsection:
-    
-            print("\n  Etappe " + str(stage.id+1))
-            print("    Start:  " + datetime.fromtimestamp(stage.dtstart).strftime("%d.%m.%Y %H:%M"))
-            print("     Ziel:  " + datetime.fromtimestamp(stage.dtfinish).strftime("%d.%m.%Y %H:%M"))
-            print("    Dauer:  " + time.strftime('%H:%M', stage.duration) + " h")
-            print("    Länge:  {:0.2f}".format(stage.km) +" km")
-            for p in stage.points:
-                print("            " + POI[p.poisubtype].name)
-                print("    coords: {0:0.4f}, {1:0.4f}".format(p.lon, p.lat))
-    
-            # Ausgabe der Abschnitte mit Zählpunkten und Orientierungskontrollen
-            for sector in stage.subsection:
-                print("\n    Abschnitt " + str(sector.id+1))
-                print("      Start:  " + datetime.fromtimestamp(sector.dtstart).strftime("%d.%m.%Y %H:%M"))
-                print("       Ziel:  " + datetime.fromtimestamp(sector.dtfinish).strftime("%d.%m.%Y %H:%M"))
-                print("      Dauer:  " + time.strftime('%H:%M', sector.duration) + " h")
-                print("      Länge:  {:0.2f}".format(sector.km) +" km")
-                # Ausgabe aller Trackpoints im Abschnitt - kann lang werden
-                # for p in sector.points:
-                    # print("    coords: {0:0.4f}, {1:0.4f}".format(p.lon, p.lat))
-     
-            if len(stage.countpoints) > 0:
-                print("  Zählpunkte")
-                for p in (x for x in stage.countpoints if x.active == 1):
-                    print("    name:   " + POI[p.poisubtype].name)
-                    print("    coords: {0:0.4f}, {1:0.4f}".format(p.lon, p.lat))
-     
-            if len(stage.checkpoints) > 0:
-                print("  Orientierungskontrollen")
-                for p in (x for x in stage.checkpoints if x.active == 1):
-                    print("    name:   " + POI[p.poisubtype].name)
-                    if p.value == None:
-                        value = "-"
-                    else:
-                        value = p.value
-                    print("    value:  " + value)
-                    print("    coords: {0:0.4f}, {1:0.4f}".format(p.lon, p.lat))
-
-# ----------------------------------------------------------------
-    
 def startRallye(loadSavedData = True):
     global INDEX, RALLYE, STAGE, SECTOR
-    # Daten laden sofern vorhanden
+    # Daten laden sofern vorhanden    
     if loadSavedData == True:
-        if os.path.exists(rallyeFile) and (os.path.getsize(rallyeFile) > 0):
-            try:
-                with open(rallyeFile, 'rb') as fp:
-                    RALLYE = pickle.load(fp)
-                STAGE  = RALLYE.getLastSubsection()
-                SECTOR = STAGE.getLastSubsection()
-                if DEBUG:
-                    prettyprint(RALLYE)
-            # Gibt es einen Fehler beim Laden, dann gleich neu machen
-            except EOFError:
-                logger.error("EOFError!")
-                loadSavedData = False
+        RALLYE = loadRallye()
+        # Gibt es einen Fehler beim Laden, dann gleich neu machen
+        if RALLYE == None:
+            loadSavedData = False
+        else:
+            STAGE  = RALLYE.getLastSubsection()
+            SECTOR = STAGE.getLastSubsection()
+            # if DEBUG:
+                # prettyprint(RALLYE)
 
     if loadSavedData == False:
-        logger.warning('loadSavedData == False')
-        current_date = "{0:%Y%m%d_%H%M}".format(datetime.now())
-        if os.path.exists(rallyeFile):
-            os.rename(rallyeFile, tripmasterPath+"/out/"+current_date+".dat")
-        if os.path.exists(trackFile):
-            os.rename(trackFile, tripmasterPath+"/out/"+current_date+".csv")
         INDEX  = 0
         RALLYE = SECTION(None)
         STAGE  = SECTION(RALLYE)
         SECTOR = SECTION(STAGE)
-        # legt leere Rallyedatei an
-        RALLYE.pickleData()
-        # legt leere TrackCSV an
-        open(trackFile, 'a').close()
+        RALLYE.startRallye()
 
-
-logger.info("------------------------------")
-logger.info("Starte Tripmaster V4.0")
-logger.info("DEBUG: " + str(DEBUG))
-
-# Thread, der den Systemstatus des Pi abfragt und anhand der Anzahl der Clients die Status-LED steuert
-SYSTEM = getSystemState()
-# While a non-daemon thread blocks the main program to exit if they are not dead.
-# A daemon thread runs without blocking the main program from exiting.
-SYSTEM.daemon = True
-SYSTEM.start()
 
 # Start der Rallye
 startRallye()
@@ -441,7 +173,7 @@ def WebRequestHandler(requestlist):
     return returnlist
 
 def getData():
-    global HAS_SENSORS, INDEX, RALLYE, STAGE, SECTOR, AVG_KMH, SYSTEM
+    global HAS_SENSORS, INDEX, RALLYE, STAGE, SECTOR
 
     # Ein 0 V Potential an einem der beiden Reedsensoren aktiviert die Antriebswellensensoren
     if (REED1.is_active or REED2.is_active) and not HAS_SENSORS:
@@ -459,7 +191,7 @@ def getData():
 
     # Geschwindigkeit in Kilometer pro Stunde
     KMH     = 0.0
-    AVG_KMH = 0.0
+    kmh_avg = 0.0
     KMH_GPS = 0.0
 
     # Gefahrene Distanz in km (berechnet aus Geokoordinaten)
@@ -470,7 +202,7 @@ def getData():
     # % zurückgelegte Strecke im Abschnitt
     FRAC_SECTOR_DRIVEN = 0
     # Abweichung der durchschnitlichen Geschwindigkeit von der Vorgabe
-    DEV_AVG_KMH        = 0.0
+    dev_kmh_avg        = 0.0
 
     # Zeit bis zum Start der Etappe
     STAGE_TIMETOSTART  = 0
@@ -537,9 +269,9 @@ def getData():
 
         if SECTOR.t > 0.0:
             # Durchschnittliche Geschwindigkeit in Kilometer pro Stunde im Abschnitt
-            AVG_KMH = SECTOR.km * 1000 / SECTOR.t * 3.6
-            if AVG_KMH_PRESET > 0.0:
-                DEV_AVG_KMH = AVG_KMH - AVG_KMH_PRESET
+            kmh_avg = SECTOR.km * 1000 / SECTOR.t * 3.6
+            if KMH_AVG_PRESET > 0.0:
+                dev_kmh_avg = kmh_avg - KMH_AVG_PRESET
 
         if STAGE.getDuration() > 0:
             STAGE_TIMETOFINISH = STAGE.finish - int(datetime.timestamp(datetime.now()))
@@ -550,14 +282,16 @@ def getData():
 
     # Aktuelle Zeit als String HH-MM-SS
     NOW = datetime.now().strftime('%H-%M-%S') # .%f')[:-3]
-
+    
+    # Ermittle Systemresourcen
+    SYSTEM.setState()
 
     datastring = "data:{0:}:{1:0.1f}:{2:0.6f}:{3:0.6f}:{4:}:{5:}:{6:}:{7:}:{8:}:{9:}:{10:0.2f}:{11:0.2f}:{12:0.2f}:{13:}:{14:0.2f}:{15:0.2f}:{16:0.1f}:{17:0.1f}:{18:}:{19:0.2f}:{20:}:{21:0.1f}:{22:0.1f}".format(
         NOW, KMH, GPS_CURRENT.lon, GPS_CURRENT.lat, 
         int(HAS_SENSORS), int(SYSTEM.CLOCK_SYNCED), int(STAGE.isStarted()), 
         int(STAGE_FRACTIME), STAGE_TIMETOSTART, STAGE_TIMETOFINISH, 
         SECTOR.km, SECTOR.preset, SECTOR_PRESET_REST, FRAC_SECTOR_DRIVEN, STAGE.km, RALLYE.km, 
-        AVG_KMH, DEV_AVG_KMH, 
+        kmh_avg, dev_kmh_avg, 
         GPS_CURRENT.mode, SYSTEM.UBAT, SYSTEM.UBAT_CAP, SYSTEM.CPU_TEMP, SYSTEM.CPU_LOAD)
 
     return datastring
@@ -581,11 +315,16 @@ def pushSpeedData(clients, what, when):
         what    = str(what)
         message = WebRequestHandler(what.splitlines());
         messageToAllClients(clients, message)
+        
+        # jetzt
         now     = datetime.now()
-        diff    = now - now.replace(microsecond=20000)
-        # f       = 1.0 # math.sqrt(2) # 1.582 * (1 - math.exp(-(now.microsecond/20000))) # math.sqrt(now.microsecond/20000)
-        when    = SAMPLE_TIME - diff.total_seconds() # * f  # float(when)
+        # Differenz zwischen Jetzt und Idealzeit
+        diff    = now - now.replace(microsecond=0)
+        # Zeit bis zum nächsten Lauf
+        when    = SAMPLE_TIME - diff.total_seconds() # - 0.02
+        
         # logger.debug(now.strftime('%H-%M-%S.%f')[:-3] + "\twhen\t{0:0.6f}\tdiff\t{1:0.3f}".format(when, diff.total_seconds()))
+        
         timed   = threading.Timer( when, pushSpeedData, [clients, what, when] )
         timed.daemon = True
         timed.start()
@@ -596,14 +335,14 @@ def startRegtest(client):
     timed.start()
 
 def pushRegtestData(clients, what, when):
-    global AVG_KMH_PRESET
+    global KMH_AVG_PRESET
     what      = str(what)
     when      = float(when)
     message   = WebRequestHandler(what.splitlines())
     countdown = int(message)
     if countdown == 0:
         messageToAllClients(clients, "countdown:"+message)
-        AVG_KMH_PRESET = 0.0
+        KMH_AVG_PRESET = 0.0
         messageToAllClients(clients, "GLP gestoppt:success:regTestStopped")
     elif countdown > 0:
         messageToAllClients(clients, "countdown:"+message)
@@ -662,12 +401,12 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
         messageToAllClients(self.wsClients, "::setButtons#button-togglestage#" + POI[stagestatus].icon + "#" + POI[stagestatus].iconcolor + "#toggleStage#")
 
-        SYSTEM.setNClients(len(self.wsClients))
+        ThreadLED.setNClients(len(self.wsClients))
         logger.info("OPEN - Anzahl verbundener Clients: " + str(len(self.wsClients)))
 
     # the client sent a message
     def on_message(self, message):
-        global ACTIVE_CONFIG, COUNTDOWN, AVG_KMH_PRESET, RALLYE, STAGE, SECTOR
+        global ACTIVE_CONFIG, COUNTDOWN, KMH_AVG_PRESET, RALLYE, STAGE, SECTOR
         logger.debug("Nachricht " + self.id + ": " + message + "")
         # command:param
         message      = message.strip()
@@ -704,8 +443,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                     # Etappe beenden
                     STAGE.endStage(RALLYE, currentPos.lon, currentPos.lat)
                     messageToAllClients(self.wsClients, "Etappe beendet:success:setButtons#button-togglestage#" + POI["stage_finish"].icon + "#" + POI["stage_finish"].iconcolor)
-            # if DEBUG: 
-                # prettyprint(RALLYE)
+            # prettyprint(RALLYE)
             
         # Zeit bis zum Ziel der Etappe
         elif command == "setStageFinish":
@@ -777,8 +515,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
                 # Abschnitt starten
                 SECTOR = SECTOR.startSector(STAGE, currentPos.lon, currentPos.lat)
                 messageToAllClients(self.wsClients, "Abschnittszähler zurückgesetzt!:success:sectorReset")
-            # if DEBUG: 
-                # prettyprint(RALLYE)
+            # prettyprint(RALLYE)
             
         # Abschnittsvorgabe setzen
         elif command == "setSectorLength":
@@ -793,12 +530,12 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             paramsplit     = param.split("&")
             COUNTDOWN      = int(paramsplit[0])
             SECTOR.preset  = float(paramsplit[1])
-            AVG_KMH_PRESET = float(paramsplit[2])
+            KMH_AVG_PRESET = float(paramsplit[2])
             startRegtest(self)
             messageToAllClients(self.wsClients, "GLP gestartet:success:regTestStarted")
         elif command == "stopRegtest":
             COUNTDOWN      = 0
-            AVG_KMH_PRESET = 0.0
+            KMH_AVG_PRESET = 0.0
             messageToAllClients(self.wsClients, "countdown:0")
             messageToAllClients(self.wsClients, "GLP gestoppt:success:regTestStopped")
 
@@ -901,7 +638,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
     def on_close(self):
         # Aus der Liste laufender Clients entfernen
         self.wsClients.remove(self)
-        SYSTEM.setNClients(len(self.wsClients))
+        ThreadLED.setNClients(len(self.wsClients))
         logger.info("CLOSE - Anzahl noch verbundener Clients: " + str(len(self.wsClients)))
 
 
@@ -981,7 +718,7 @@ class DownloadHandler(tornado.web.RequestHandler):
 def startTornado():
     global WebServer, WebsocketServer
 
-    logger.debug("Tornado-Version: " + tornado.version)
+    logger.debug("Starte Tornado V" + tornado.version)
 
     AsyncIOMainLoop().install()
     
@@ -1004,8 +741,11 @@ def startTornado():
     WebsocketServer.start()
     logger.debug("WebsocketServer gestartet")
 
-    # Tornado starten
-    logger.debug("Starte Tornado")
+    ThreadLED.start()
+    logger.debug("Thread für die Status-LED gestartet")
+
+    # Den Event Loop starten, damit Tornado dauerhaft auf Events von den obigen Sockets hört
+    logger.debug("Starte Event Loop")
 #     tornado.ioloop.IOLoop.current().start()
     asyncio.get_event_loop().run_forever()
 
@@ -1029,16 +769,16 @@ def stopTornado():
     WebServer.stop()
     logger.debug("WebServer gestoppt")
 
-    logger.debug("Beende Tornado")
     asyncio.get_event_loop().stop()
+    logger.debug("Event Loop gestoppt")
 #     tornado.ioloop.IOLoop.current().stop()
 
     # Der Status-Thread muss die Kontrolle über die LEDs an __main__ abgeben...
-    SYSTEM.releaseLEDs()
+    ThreadLED.releaseLEDs()
     # ... und __main__ mus die LED-Objekte schließen, sonst funktionieren die shell-Aufrufe nicht
     LED(19, initial_value=False).close()
     LED(26, initial_value=True).close()
-    # Grüne LED über die Shell ausschalten (benötigt dann keine globale Variable)
+    # Grüne LED über die Shell ausschalten
     # Nach mehrfachem Start/Stop gibt es u.U. den Pfad schon, doppelte Ausführung wirft Fehlermeldung
     if not os.path.exists('/sys/class/gpio/gpio19'):
         subprocess.call("echo 19 > /sys/class/gpio/export", shell=True)
@@ -1058,7 +798,7 @@ if __name__ == "__main__":
 
         # Ab Tornado-Version 5.0 wird asyncio verwendet
         # asyncio.set_event_loop(asyncio.new_event_loop())
-
+        
         startTornado()
 
     except (KeyboardInterrupt, SystemExit):
