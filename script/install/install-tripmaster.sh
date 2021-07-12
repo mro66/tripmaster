@@ -56,8 +56,10 @@ handle_gps() {
     # MRO Diese Bibliothek stellt auch etwas 'grafisches' zur Verfügung
     # MRO sudo apt-get -y install --no-install-recommends python-gi-cairo;
     # MRO Bei OS Lite ist pip nicht in der Distribution enthalten
+    echo -e "\e[36m    install python3-pip\e[0m";
     sudo apt-get install python3-pip -y
     # MRO Python3 GPS Daemon installieren
+    echo -e "\e[36m    install gpsd-py3\e[0m";
     sudo pip3 install gpsd-py3
 
     sudo usermod -a -G dialout $USER
@@ -214,30 +216,33 @@ install_ptp() {
 # MRO ################################################################
 install_tripmaster() {
     echo -e "\e[32minstall_tripmaster()\e[0m";
-    echo -e "\e[32minstall simplekml\e[0m";
+    echo -e "\e[36m    install simplekml\e[0m";
     sudo python3 -m pip install simplekml
     
-    echo -e "\e[32minstall pigpio\e[0m";
+    echo -e "\e[36m    install pigpio\e[0m";
     sudo apt-get install python3-pigpio -y
     sudo pigpiod
     sudo systemctl enable --now pigpiod
     
-    echo -e "\e[32minstall pytz\e[0m";
+    echo -e "\e[36m    install pytz\e[0m";
     sudo pip3 install pytz
     
-    echo -e "\e[32minstall pi-ina219\e[0m";
+    echo -e "\e[36m    install pi-ina219\e[0m";
     sudo raspi-config nonint do_i2c 0
     sudo apt-get install i2c-tools -y
     sudo i2cdetect -y 1
     sudo pip3 install pi-ina219
     
-    echo -e "\e[32minstall psutil\e[0m";
+    echo -e "\e[36m    install psutil\e[0m";
     sudo pip3 install psutil
     
-    echo -e "\e[32minstall tornado 4.5.3.\e[0m";
+    echo -e "\e[36m    install tornado 4.5.3.\e[0m";
     # aktuelle Version
     # sudo apt-get install python3-tornado
     sudo pip3 install tornado==4.5.3.
+    
+    echo -e "\e[36m    configure autostart\e[0m";
+    sudo nano /etc/rc.local
 }
 
 
