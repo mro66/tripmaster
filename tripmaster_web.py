@@ -320,8 +320,8 @@ def pushSpeedData(clients, what, when):
         now     = datetime.now()
         # Differenz zwischen Jetzt und Idealzeit
         diff    = now - now.replace(microsecond=0)
-        # Zeit bis zum nächsten Lauf
-        when    = SAMPLE_TIME - diff.total_seconds() # - 0.02
+        # Zeit bis zum nächsten Lauf (ACHTUNG! Die 0.03 sind **REIN EMPIRISCH**)
+        when    = SAMPLE_TIME - diff.total_seconds() - 0.03
         
         # logger.debug(now.strftime('%H-%M-%S.%f')[:-3] + "\twhen\t{0:0.6f}\tdiff\t{1:0.3f}".format(when, diff.total_seconds()))
         

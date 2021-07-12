@@ -5,13 +5,10 @@ from gpiozero import CPUTemperature, DigitalOutputDevice, LED
 from logging.handlers import RotatingFileHandler
 from ina219 import INA219       
 from psutil import cpu_percent, virtual_memory
-from pytz import timezone
 from threading import Thread
 import gpsd
 import logging
-import math
 import os
-import subprocess
 import sys
 import time
 
@@ -40,7 +37,7 @@ if DEBUG:
     logger.setLevel(logging.DEBUG)
 
 logger.info("------------------------------")
-logger.info("Starte Tripmaster V4.0")
+logger.info("Starte Tripmaster V5.0")
 logger.info("DEBUG: " + str(DEBUG))
 
 ### Lüfter (Pin 27)
@@ -49,7 +46,7 @@ FAN = DigitalOutputDevice(27)
 # Berechnen der Systemresourcen
 class __system():
     global DEBUG
-    def __init__(self, debug):
+    def __init__(self):
         ### Systemressourcen
         self.MEM_USED         = 0.0
         self.CPU_LOAD         = 0.0
@@ -57,7 +54,7 @@ class __system():
         self.UBAT             = 0.0
         self.UBAT_CAP         = 2
         # Systemuhr mit GPS synchron?
-        self.CLOCK_SYNCED     = False
+        self.CLOCK_SYNCED     = True
         # DigitalOutputDevice setzt standardmäßig active_high=True (on() -> HIGH) und initial_value=False (device ist aus)
         # Stacks zum Berechnen eines gleitenden Mittels
         self.__STACK_MEM_USED = []
@@ -119,19 +116,6 @@ class __system():
                     of.write('\t{:0.4f}'.format(v).replace('.', ','))
                 of.write('\n')
         
-        # Synchronisation der Systemuhr mit GPS
-        if (not self.CLOCK_SYNCED):
-            GPScurrent = getGPSCurrent()
-            if (len(GPScurrent.time) == 24):
-                naive = datetime.strptime(GPScurrent.time, '%Y-%m-%dT%H:%M:%S.%fZ')
-                utc   = timezone('UTC').localize(naive)
-                local = utc.astimezone(timezone('Europe/Berlin'))
-                subprocess.call("sudo date -u -s '"+str(local)+"' > /dev/null 2>&1", shell=True)
-                self.CLOCK_SYNCED = True
-                logger.info("Systemuhr wurde mit GPS sychronisiert")
-            else:
-                logger.warning("Systemuhr nicht mit GPS synchron")
-
     def __movingAverage(self, stack, newval, maxlength):
         # Neuen Wert am Ende des Stacks einfügen
         stack.append(newval)
@@ -141,7 +125,8 @@ class __system():
         # Mittelwert des Stacks zurückgeben
         return sum(stack) / len(stack)
 
-SYSTEM = __system(True)
+# System initialisieren
+SYSTEM = __system()
 
 
 ### Steuerung der Status-LED
@@ -159,22 +144,12 @@ class statusLED(Thread):
         # Anzahl der Clients, aktuell und beim letzten Durchlauf
         self.__nclients       = 0
         self.__last_nclients  = 0
-        # Status der Zeitsynchronisation beim letzten Durchlauf
-        self.__last_clocksync = False
         # 'Schlafenszeit'
         self.__timetosleep    = 2
 
     def run(self):
         while True:        
             GPScurrent = getGPSCurrent()
-            now = datetime.utcnow()
-            if (len(GPScurrent.time) == 24):
-                gpsnow = datetime.strptime(GPScurrent.time, '%Y-%m-%dT%H:%M:%S.%fZ')
-                logger.debug('time offset: %s', (gpsnow - now).total_seconds())
-                if abs((gpsnow - now).total_seconds()) > 0.2:
-                    SYSTEM.CLOCK_SYNCED = False
-
-
             
             # Seit dem letzten Durchlauf:
             # Hat sich das GPS-Signal geändert?
@@ -183,8 +158,6 @@ class statusLED(Thread):
                             (self.__last_gps >=2 and GPScurrent.mode < 2))
             # Hat sich die Anzahl der Clients geändert?
             hasnClientschanged = (self.__last_nclients == 0)
-            # Wurde die Systemuhr synchronisiert
-            hasClocksynced = (SYSTEM.CLOCK_SYNCED != self.__last_clocksync)
             
             # logger.debug('nclients: %s, hasGPSchanged: %s, last_gps: %s', self.__nclients, hasGPSchanged, self.__last_gps)
             
@@ -222,26 +195,17 @@ class statusLED(Thread):
                 # Schaltet die Überprüfung des Systemstatus in diesem Thread ab (s.o.)
                 self.__no_clients_yet = False
                 # LEDs nur ändern, wenn sich die Anzahl der Clients geändert hat (flackern sonst)
-                if (hasnClientschanged or hasClocksynced):
-                    if (SYSTEM.CLOCK_SYNCED):
-                        self.__led_red.off()
-                        self.__led_green.on()
-                        logger.debug('GRÜN permanent')
-                    else:
-                        self.__led_green.blink()
-                        time.sleep(1)
-                        self.__led_red.blink()
-                        logger.debug('ROT-GRÜN wechselblinken')
-                    if (hasnClientschanged):
-                        # Seltener aktualisieren, wenn Clients verbunden sind
-                        self.__timetosleep = 10
-                        # GPS-Modus zurücksetzen
-                        self.__last_gps = -1
-                        # Zustand sichern: Anzahl der Clients
-                        self.__last_nclients = self.__nclients
+                if (hasnClientschanged):
+                    self.__led_red.off()
+                    self.__led_green.on()
+                    logger.debug('GRÜN permanent')
+                    # Seltener aktualisieren, wenn Clients verbunden sind
+                    self.__timetosleep = 10
+                    # GPS-Modus zurücksetzen
+                    self.__last_gps = -1
+                    # Zustand sichern: Anzahl der Clients
+                    self.__last_nclients = self.__nclients
 
-            # Zustand sichern: Synchronisation der Systemuhr
-            self.__last_clocksync = SYSTEM.CLOCK_SYNCED
             time.sleep(self.__timetosleep)
             
     def setNClients(self, n):
