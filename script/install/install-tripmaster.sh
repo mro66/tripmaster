@@ -36,6 +36,66 @@ handle_update() {
 }
 
 
+# MRO ################################################################
+install_accesspoint() {
+    echo -e "\e[32minstall_accesspoint()\e[0m";
+
+    ##################################################################
+    echo -e "\e[36m    install hostapd\e[0m";
+    sudo apt install hostapd -y
+    sudo systemctl unmask hostapd
+    sudo systemctl enable hostapd
+    
+    ##################################################################
+    echo -e "\e[36m    install dnsmasq\e[0m";
+    sudo apt install dnsmasq -y
+    
+    ##################################################################
+    echo -e "\e[36m    configure dhcpcd/dnsmasq\e[0m";
+    do_backup /etc/dhcpcd.conf
+    cat << EOF | sudo tee -a /etc/dhcpcd.conf &>/dev/null
+
+# wlan0 als Tripmaster Access Point
+interface wlan0
+    static ip_address=19.66.71.1/24
+    nohook wpa_supplicant
+EOF
+    do_backup /etc/dnsmasq.conf
+    cat << EOF | sudo tee /etc/dnsmasq.conf &>/dev/null
+# Listening interface
+interface=wlan0
+# Pool of IP addresses served via DHCP
+dhcp-range=19.66.71.2,19.66.71.20,255.255.255.0,24h
+# Local wireless DNS domain
+domain=wlan
+# Alias for this router
+address=/trip.master/19.66.71.1
+EOF
+    sudo rfkill unblock wlan
+    
+    ##################################################################
+    echo -e "\e[36m    configure dhcpcd/dnsmasq\e[0m";
+    cat << EOF | sudo tee /etc/dnsmasq.conf &>/dev/null
+country_code=DE
+interface=wlan0
+driver=nl80211
+ssid=TripmasterAP
+hw_mode=g
+channel=7
+wmm_enabled=0
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_passphrase=tripmasterap
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+EOF
+    
+}
+
+
 ######################################################################
 handle_gps() {
     echo -e "\e[32mhandle_gps()\e[0m";
@@ -299,6 +359,9 @@ install_tripmaster() {
 
 
 handle_update
+
+# MRO Tripmaster Access Point
+install_accesspoint
 
 handle_gps
 handle_pps
