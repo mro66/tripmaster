@@ -77,7 +77,7 @@ handle_gps() {
 START_DAEMON="true"
 
 # Use USB hotplugging to add new USB devices automatically to the daemon
-USBAUTO="true"
+USBAUTO="false"
 
 # Devices gpsd should collect to at boot time.
 # They need to be read/writeable, either by user gpsd or the group dialout.
@@ -86,7 +86,7 @@ DEVICES="/dev/ttyAMA0 /dev/pps0"
 #DEVICES="/dev/ttyAMA0 /dev/pps0 /dev/pps1"
 
 # Other options you want to pass to gpsd
-GPSD_OPTIONS="-n -r -b"
+GPSD_OPTIONS="-n -r"
 EOF
 
     ##################################################################
@@ -155,6 +155,9 @@ dtoverlay=disable-bt
 #
 #dtoverlay=pps-gpio,gpiopin=7,capture_clear  # /dev/pps1
 dtoverlay=pps-gpio,gpiopin=4,capture_clear  # /dev/pps0
+
+# LED an GPIO26 (rot) beim Booten einschalten
+gpio=26=op,dh
 EOF
     }
 
@@ -206,6 +209,35 @@ install_ptp() {
     sudo apt-get -y install linuxptp;
     sudo ethtool --set-eee eth0 eee off &>/dev/null;
     sudo systemctl enable --now ptp4l.service;
+}
+
+# MRO ################################################################
+install_tripmaster() {
+    echo -e "\e[32minstall_tripmaster()\e[0m";
+    echo -e "\e[32minstall simplekml\e[0m";
+    sudo python3 -m pip install simplekml
+    
+    echo -e "\e[32minstall pigpio\e[0m";
+    sudo apt-get install python3-pigpio -y
+    sudo pigpiod
+    sudo systemctl enable --now pigpiod
+    
+    echo -e "\e[32minstall pytz\e[0m";
+    sudo pip3 install pytz
+    
+    echo -e "\e[32minstall pi-ina219\e[0m";
+    sudo raspi-config nonint do_i2c 0
+    sudo apt-get install i2c-tools -y
+    sudo i2cdetect -y 1
+    sudo pip3 install pi-ina219
+    
+    echo -e "\e[32minstall psutil\e[0m";
+    sudo pip3 install psutil
+    
+    echo -e "\e[32minstall tornado 4.5.3.\e[0m";
+    # aktuelle Version
+    # sudo apt-get install python3-tornado
+    sudo pip3 install tornado==4.5.3.
 }
 
 
@@ -271,7 +303,11 @@ disable_ntp;
 install_chrony;
 setup_chrony;
 
-install_ptp;
+# MRO Nur notwendig wenn Pi Timeserver in einem Netzwerk sein soll
+# MRO install_ptp;
+
+# MRO Tripmaster Installationen
+install_tripmaster
 
 
 ######################################################################
