@@ -17,10 +17,17 @@ fi
 wlan1_up() {
     while [[ "$wlan1ip" != "192.168."* ]]
     do
-         clear
+         # clear
          echo "Checke wlan1 IP...$wlan1ip"
          wlan1ip=$(ifconfig | grep -A 1 'wlan1' | tail -1 | cut -d ' ' -f 10)
          sleep 2
+         
+         if [[ "$wlan1ip" = "169.254."* ]]
+         then
+            sudo ifconfig wlan1 down
+            whiptail --msgbox "Der externe WLAN-Adapter\nwurde wegen interner IP $wlan1ip\ngestoppt" 10 40
+            break
+         fi
     done
     whiptail --msgbox "Der externe WLAN-Adapter\nhat die IP $wlan1ip" 10 40
 }
