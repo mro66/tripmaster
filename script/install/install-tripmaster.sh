@@ -75,7 +75,7 @@ EOF
     
     ##################################################################
     echo -e "\e[36m    configure dhcpcd/dnsmasq\e[0m";
-    cat << EOF | sudo tee /etc/dnsmasq.conf &>/dev/null
+    cat << EOF | sudo tee /etc/hostapd/hostapd.conf &>/dev/null
 country_code=DE
 interface=wlan0
 driver=nl80211
@@ -301,8 +301,34 @@ install_tripmaster() {
     # sudo apt-get install python3-tornado
     sudo pip3 install tornado==4.5.3.
     
+    echo -e "\e[36m    make scripts executable\e[0m";
+    cd ~/tripmaster/script/
+    sudo chmod +x ./chmod_cp_scripts.sh
+    sudo ./chmod_cp_scripts.sh
+
+    echo -e "\e[36m    disable wlan1 at boot\e[0m";
+    cd ~
+    sudo crontab -l > tempcron
+    echo "@reboot sudo sleep 60 && sudo ifconfig wlan1 down" >> tempcron
+    sudo crontab tempcron
+    rm tempcron
+    
     echo -e "\e[36m    configure autostart\e[0m";
-    sudo nano /etc/rc.local
+    # In der *€!$$* rc.local steht _zwei Mal_ exit 0, daher muss das erste Vorkommen (mit "") umbenannt werden
+    sudo sed -i 's/\"exit 0\"/\"exit_0\"/g' /etc/rc.local
+    # Vor dem zweiten Vorkommen von exit 0 die benötigten Befehle eintragen
+    sudo sed -i '/exit 0/i # Autostart Tripmaster' /etc/rc.local
+    sudo sed -i '/exit 0/i cd \/home\/pi\/tripmaster' /etc/rc.local
+    # Startet das Skript im Hintergrund, leitet stdout sowie stderr in eine Datei um und schreibt seine eigene Prozess-ID in die Datei run.pid
+    sudo sed -i '/exit 0/i \/bin\/sleep 5 && sudo .\/tripmaster_web.py > .\/out\/tripmaster.out 2>&1 & echo $! > .\/run.pid' /etc/rc.local
+    # Ermittelt den Kindprozess (das eigentliche Pythonskript) und überschreibt run.pid mit dessen Prozess-ID
+    sudo sed -i '/exit 0/i \/bin\/sleep 5 && sudo pgrep -P $(cat .\/run.pid) > .\/run.pid\n' /etc/rc.local
+    # Damit kann ein im Hintergrund gestarteter Tripmaster mit dem Befehl
+    # sudo kill -9 $(cat run.pid)
+    # gestoppt werden
+    # Das erste Vorkommen wieder zurück umbenennen
+    sudo sed -i 's/\"exit_0\"/\"exit 0\"/g' /etc/rc.local
+    
 }
 
 
@@ -380,4 +406,4 @@ install_tripmaster
 
 ######################################################################
 echo -e "\e[32mDone.\e[0m";
-echo -e "\e[1;31mPlease reboot\e[0m";
+echo -e "\e[1;31mPlease insert WLAN1 and reboot\e[0m";

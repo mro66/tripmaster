@@ -37,7 +37,7 @@ if DEBUG:
     logger.setLevel(logging.DEBUG)
 
 logger.info("------------------------------")
-logger.info("Starte Tripmaster V5.0")
+logger.info("Starte Tripmaster V5.1")
 logger.info("DEBUG: " + str(DEBUG))
 
 ### Lüfter (Pin 27)
