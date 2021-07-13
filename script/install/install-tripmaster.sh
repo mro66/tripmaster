@@ -74,7 +74,7 @@ EOF
     sudo rfkill unblock wlan
     
     ##################################################################
-    echo -e "\e[36m    configure dhcpcd/dnsmasq\e[0m";
+    echo -e "\e[36m    configure hostapd\e[0m";
     cat << EOF | sudo tee /etc/hostapd/hostapd.conf &>/dev/null
 country_code=DE
 interface=wlan0
@@ -302,12 +302,12 @@ install_tripmaster() {
     sudo pip3 install tornado==4.5.3.
     
     echo -e "\e[36m    make scripts executable\e[0m";
-    cd ~/tripmaster/script/
+    cd /home/pi/tripmaster/script/
     sudo chmod +x ./chmod_cp_scripts.sh
     sudo ./chmod_cp_scripts.sh
 
     echo -e "\e[36m    disable wlan1 at boot\e[0m";
-    cd ~
+    cd /home/pi/
     sudo crontab -l > tempcron
     echo "@reboot sudo sleep 60 && sudo ifconfig wlan1 down" >> tempcron
     sudo crontab tempcron
