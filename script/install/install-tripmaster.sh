@@ -24,6 +24,7 @@ fi
 
 ######################################################################
 handle_update() {
+    clear
     echo -e "\e[32mhandle_update()\e[0m";
 
     sudo sync \
@@ -37,8 +38,8 @@ handle_update() {
 
 
 # MRO ################################################################
-install_accesspoint() {
-    echo -e "\e[32minstall_accesspoint()\e[0m";
+install_accesspoint_ver1() {
+    echo -e "\e[32minstall_accesspoint_ver1()\e[0m";
 
     ##################################################################
     echo -e "\e[36m    install hostapd\e[0m";
@@ -93,6 +94,80 @@ wpa_pairwise=TKIP
 rsn_pairwise=CCMP
 EOF
     
+}
+
+
+# MRO ################################################################
+install_accesspoint_ver3() {
+    echo -e "\e[32minstall_accesspoint_ver3()\e[0m";
+
+    ##################################################################
+    echo -e "\e[36m    deactivate classic network config\e[0m";
+    sudo systemctl mask networking.service dhcpcd.service
+    sudo mv /etc/network/interfaces /etc/network/interfaces~
+    sudo sed -i '1i resolvconf=NO' /etc/resolvconf.conf
+    
+    ##################################################################
+    echo -e "\e[36m    install systemd-networkd\e[0m";
+    sudo systemctl enable systemd-networkd.service systemd-resolved.service
+    sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+
+    ##################################################################
+    echo -e "\e[36m    wlan0: access point\e[0m";
+    sudo cat > /etc/wpa_supplicant/wpa_supplicant-wlan0.conf <<EOF
+country=DE
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+
+network={
+    ssid="TripmasterAP"
+    mode=2
+    key_mgmt=WPA-PSK
+    psk="tripmasterap"
+    frequency=2412
+}
+EOF
+    sudo chmod 600 /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
+    sudo systemctl disable wpa_supplicant.service
+    sudo systemctl enable wpa_supplicant@wlan0.service
+
+    ##################################################################
+    echo -e "\e[36m    wlan1: wifi client\e[0m";
+    sudo cat > /etc/wpa_supplicant/wpa_supplicant-wlan1.conf <<EOF
+country=DE
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+
+network={
+	ssid="[WLAN SSID]" ("WLAN-WXRQUT")
+	psk="[WLAN PASSWORT]" ("8741562933437796")
+}
+EOF
+    sudo chmod 600 /etc/wpa_supplicant/wpa_supplicant-wlan1.conf
+    sudo systemctl disable wpa_supplicant.service
+    sudo systemctl enable wpa_supplicant@wlan1.service
+
+    ##################################################################
+    echo -e "\e[36m    configure interfaces\e[0m";
+    sudo cat > /etc/systemd/network/08-wlan0.network <<EOF
+[Match]
+Name=wlan0
+[Network]
+Address=192.168.4.1/24
+# IPMasquerade is doing NAT
+IPMasquerade=yes
+IPForward=yes
+DHCPServer=yes
+[DHCPServer]
+DNS=84.200.69.80 1.1.1.1
+EOF
+    sudo cat > /etc/systemd/network/12-wlan1.network <<EOF
+[Match]
+Name=wlan1
+[Network]
+DHCP=yes
+EOF
+
 }
 
 
@@ -387,7 +462,7 @@ install_tripmaster() {
 handle_update
 
 # MRO Tripmaster Access Point
-install_accesspoint
+install_accesspoint_ver3
 
 handle_gps
 handle_pps

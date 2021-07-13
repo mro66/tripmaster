@@ -10,12 +10,14 @@ hostname=tripmaster
 sudo raspi-config nonint do_hostname $hostname
 
 # Locale, Tastaturlayout und Zeitzone einstellen
-echo -e "\e[32mlocale, keyboard, timezone\e[0m";
 locale=de_DE.UTF-8
 layout=de
 timezone=Europe/Berlin
+echo -e "\e[32mlocale\e[0m";
 sudo raspi-config nonint do_change_locale $locale
+echo -e "\e[32mkeyboard\e[0m";
 sudo raspi-config nonint do_configure_keyboard $layout
+echo -e "\e[32mtimezone\e[0m";
 sudo timedatectl set-timezone $timezone
 
 # VNC aktivieren (nur bei OS mit Desktop aktivieren!)

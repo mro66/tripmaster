@@ -25,8 +25,9 @@ wlan1_up() {
          if [[ "$wlan1ip" = "169.254."* ]]
          then
             sudo ifconfig wlan1 down
-            whiptail --msgbox "Der externe WLAN-Adapter\nwurde wegen interner IP $wlan1ip\ngestoppt" 10 40
-            break
+            whiptail --msgbox "Externer WLAN-Adapter wurde gestoppt\n (interne IP $wlan1)" 10 40
+            # break
+            exit
          fi
     done
     whiptail --msgbox "Der externe WLAN-Adapter\nhat die IP $wlan1ip" 10 40
