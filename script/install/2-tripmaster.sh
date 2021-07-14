@@ -6,7 +6,7 @@
 
 ##################################################################
 BACKUP_FILE=backup.tar.xz
-BACKUP_TRANSFORM=s/^/$(date +%Y-%m-%dT%H_%M_%S)-stratum1\\//
+BACKUP_TRANSFORM=s/^/$(date +%Y-%m-%dT%H_%M_%S)-tripmaster\\//
 
 do_backup() {
     tar -ravf "$BACKUP_FILE" --transform="$BACKUP_TRANSFORM" -C / "$1" &>/dev/null
@@ -15,7 +15,7 @@ do_backup() {
 
 ##################################################################
 SCRIPT_DIR=`dirname "${BASH_SOURCE[0]}"`
-if ! [ -d "$SCRIPT_DIR/etc/chrony/stratum1" ]; then
+if ! [ -d "$SCRIPT_DIR/etc/chrony/tripmaster" ]; then
     echo -e "\e[1;31m'$SCRIPT_DIR'\e[0m";
     echo -e "\e[1;31mcan not find required files\e[0m";
     exit 1
@@ -326,12 +326,12 @@ install_tripmaster() {
     sudo chmod +x ./chmod_cp_scripts.sh
     sudo ./chmod_cp_scripts.sh
 
-    echo -e "\e[36m    disable wlan1 at boot\e[0m";
-    cd /home/pi/
-    sudo crontab -l > tempcron
-    echo "@reboot sudo sleep 60 && sudo ifconfig wlan1 down" >> tempcron
-    sudo crontab tempcron
-    rm tempcron
+    # echo -e "\e[36m    disable wlan1 at boot\e[0m";
+    # cd /home/pi/
+    # sudo crontab -l > tempcron
+    # echo "@reboot sudo sleep 60 && sudo ifconfig wlan1 down" >> tempcron
+    # sudo crontab tempcron
+    # rm tempcron
     
     echo -e "\e[36m    configure autostart\e[0m";
     # In der *€!$$* rc.local steht _zwei Mal_ exit 0, daher muss das erste Vorkommen (mit "") umbenannt werden
