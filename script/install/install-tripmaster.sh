@@ -38,8 +38,8 @@ handle_update() {
 
 
 # MRO ################################################################
-install_accesspoint_ver1() {
-    echo -e "\e[32minstall_accesspoint_ver1()\e[0m";
+install_accesspoint() {
+    echo -e "\e[32minstall_accesspoint\e[0m";
 
     ##################################################################
     echo -e "\e[36m    install hostapd\e[0m";
@@ -68,9 +68,11 @@ interface=wlan0
 # Pool of IP addresses served via DHCP
 dhcp-range=19.66.71.2,19.66.71.20,255.255.255.0,24h
 # Local wireless DNS domain
-domain=wlan
+domain=wlan.tripmaster
 # Alias for this router
 address=/trip.master/19.66.71.1
+# No dhcp for wlan1
+no-dhcp-interface=wlan1
 EOF
     sudo rfkill unblock wlan
     
@@ -93,81 +95,24 @@ wpa_key_mgmt=WPA-PSK
 wpa_pairwise=TKIP
 rsn_pairwise=CCMP
 EOF
+
+    ##################################################################
+    echo -e "\e[36m    configure routing and NAT\e[0m";
+        cat << EOF | sudo tee -a /etc/sysctl.conf &>/dev/null
+
+net.ipv4.ip_forward=1
+
+EOF
+    sudo iptables -t nat -A POSTROUTING -o wlan1 -j MASQUERADE
+    sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
     
-}
-
-
-# MRO ################################################################
-install_accesspoint_ver3() {
-    echo -e "\e[32minstall_accesspoint_ver3()\e[0m";
-
-    ##################################################################
-    echo -e "\e[36m    deactivate classic network config\e[0m";
-    sudo systemctl mask networking.service dhcpcd.service
-    sudo mv /etc/network/interfaces /etc/network/interfaces~
-    sudo sed -i '1i resolvconf=NO' /etc/resolvconf.conf
+    # In der *€!$$* rc.local steht _zwei Mal_ exit 0, daher muss das erste Vorkommen (mit "") umbenannt werden
+    sudo sed -i 's/\"exit 0\"/\"exit_0\"/g' /etc/rc.local
+    # Vor dem zweiten Vorkommen von exit 0 die benötigten Befehle eintragen
+    sudo sed -i '/exit 0/i iptables-restore < /etc/iptables.ipv4.nat\n' /etc/rc.local
+    # Das erste Vorkommen wieder zurück umbenennen
+    sudo sed -i 's/\"exit_0\"/\"exit 0\"/g' /etc/rc.local
     
-    ##################################################################
-    echo -e "\e[36m    install systemd-networkd\e[0m";
-    sudo systemctl enable systemd-networkd.service systemd-resolved.service
-    sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
-
-    ##################################################################
-    echo -e "\e[36m    wlan0: access point\e[0m";
-    sudo cat > /etc/wpa_supplicant/wpa_supplicant-wlan0.conf <<EOF
-country=DE
-ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-update_config=1
-
-network={
-    ssid="TripmasterAP"
-    mode=2
-    key_mgmt=WPA-PSK
-    psk="tripmasterap"
-    frequency=2412
-}
-EOF
-    sudo chmod 600 /etc/wpa_supplicant/wpa_supplicant-wlan0.conf
-    sudo systemctl disable wpa_supplicant.service
-    sudo systemctl enable wpa_supplicant@wlan0.service
-
-    ##################################################################
-    echo -e "\e[36m    wlan1: wifi client\e[0m";
-    sudo cat > /etc/wpa_supplicant/wpa_supplicant-wlan1.conf <<EOF
-country=DE
-ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-update_config=1
-
-network={
-	ssid="[WLAN SSID]" ("WLAN-WXRQUT")
-	psk="[WLAN PASSWORT]" ("8741562933437796")
-}
-EOF
-    sudo chmod 600 /etc/wpa_supplicant/wpa_supplicant-wlan1.conf
-    sudo systemctl disable wpa_supplicant.service
-    sudo systemctl enable wpa_supplicant@wlan1.service
-
-    ##################################################################
-    echo -e "\e[36m    configure interfaces\e[0m";
-    sudo cat > /etc/systemd/network/08-wlan0.network <<EOF
-[Match]
-Name=wlan0
-[Network]
-Address=192.168.4.1/24
-# IPMasquerade is doing NAT
-IPMasquerade=yes
-IPForward=yes
-DHCPServer=yes
-[DHCPServer]
-DNS=84.200.69.80 1.1.1.1
-EOF
-    sudo cat > /etc/systemd/network/12-wlan1.network <<EOF
-[Match]
-Name=wlan1
-[Network]
-DHCP=yes
-EOF
-
 }
 
 
@@ -462,7 +407,7 @@ install_tripmaster() {
 handle_update
 
 # MRO Tripmaster Access Point
-install_accesspoint_ver3
+install_accesspoint
 
 handle_gps
 handle_pps
