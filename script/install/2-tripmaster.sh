@@ -37,85 +37,6 @@ handle_update() {
 }
 
 
-# MRO ################################################################
-install_accesspoint() {
-    echo -e "\e[32minstall_accesspoint\e[0m";
-
-    ##################################################################
-    echo -e "\e[36m    install hostapd\e[0m";
-    sudo apt install hostapd -y
-    sudo systemctl unmask hostapd
-    sudo systemctl enable hostapd
-    
-    ##################################################################
-    echo -e "\e[36m    install dnsmasq\e[0m";
-    sudo apt install dnsmasq -y
-    
-    ##################################################################
-    echo -e "\e[36m    configure dhcpcd/dnsmasq\e[0m";
-    do_backup /etc/dhcpcd.conf
-    cat << EOF | sudo tee -a /etc/dhcpcd.conf &>/dev/null
-
-# wlan0 als Tripmaster Access Point
-interface wlan0
-    static ip_address=19.66.71.1/24
-    nohook wpa_supplicant
-EOF
-    do_backup /etc/dnsmasq.conf
-    cat << EOF | sudo tee /etc/dnsmasq.conf &>/dev/null
-# Listening interface
-interface=wlan0
-# Pool of IP addresses served via DHCP
-dhcp-range=19.66.71.2,19.66.71.20,255.255.255.0,24h
-# Local wireless DNS domain
-domain=wlan.tripmaster
-# Alias for this router
-address=/trip.master/19.66.71.1
-# No dhcp for wlan1
-no-dhcp-interface=wlan1
-EOF
-    sudo rfkill unblock wlan
-    
-    ##################################################################
-    echo -e "\e[36m    configure hostapd\e[0m";
-    cat << EOF | sudo tee /etc/hostapd/hostapd.conf &>/dev/null
-country_code=DE
-interface=wlan0
-driver=nl80211
-ssid=TripmasterAP
-hw_mode=g
-channel=7
-wmm_enabled=0
-macaddr_acl=0
-auth_algs=1
-ignore_broadcast_ssid=0
-wpa=2
-wpa_passphrase=tripmasterap
-wpa_key_mgmt=WPA-PSK
-wpa_pairwise=TKIP
-rsn_pairwise=CCMP
-EOF
-
-    ##################################################################
-    echo -e "\e[36m    configure routing and NAT\e[0m";
-        cat << EOF | sudo tee -a /etc/sysctl.conf &>/dev/null
-
-net.ipv4.ip_forward=1
-
-EOF
-    sudo iptables -t nat -A POSTROUTING -o wlan1 -j MASQUERADE
-    sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
-    
-    # In der *€!$$* rc.local steht _zwei Mal_ exit 0, daher muss das erste Vorkommen (mit "") umbenannt werden
-    sudo sed -i 's/\"exit 0\"/\"exit_0\"/g' /etc/rc.local
-    # Vor dem zweiten Vorkommen von exit 0 die benötigten Befehle eintragen
-    sudo sed -i '/exit 0/i iptables-restore < /etc/iptables.ipv4.nat\n' /etc/rc.local
-    # Das erste Vorkommen wieder zurück umbenennen
-    sudo sed -i 's/\"exit_0\"/\"exit 0\"/g' /etc/rc.local
-    
-}
-
-
 ######################################################################
 handle_gps() {
     echo -e "\e[32mhandle_gps()\e[0m";
@@ -253,14 +174,6 @@ EOF
 
 
 ######################################################################
-disable_ntp() {
-    echo -e "\e[32mdisable_ntp()\e[0m";
-    sudo systemctl disable --now ntp &>/dev/null;
-}
-
-
-
-######################################################################
 install_chrony() {
     echo -e "\e[32minstall_chrony()\e[0m";
     sudo apt-get -y install chrony;
@@ -284,14 +197,6 @@ setup_chrony() {
     sudo systemctl restart chrony;
 }
 
-
-######################################################################
-install_ptp() {
-    echo -e "\e[32minstall_ptp()\e[0m";
-    sudo apt-get -y install linuxptp;
-    sudo ethtool --set-eee eth0 eee off &>/dev/null;
-    sudo systemctl enable --now ptp4l.service;
-}
 
 # MRO ################################################################
 install_tripmaster() {
@@ -406,9 +311,6 @@ install_tripmaster() {
 
 handle_update
 
-# MRO Tripmaster Access Point
-install_accesspoint
-
 handle_gps
 handle_pps
 
@@ -417,13 +319,10 @@ disable_ntp;
 install_chrony;
 setup_chrony;
 
-# MRO Nur notwendig wenn Pi Timeserver in einem Netzwerk sein soll
-# MRO install_ptp;
-
 # MRO Tripmaster Installationen
 install_tripmaster
 
 
 ######################################################################
 echo -e "\e[32mDone.\e[0m";
-echo -e "\e[1;31mPlease insert WLAN1 and reboot\e[0m";
+echo -e "\e[1;31mPlease reboot\e[0m";
