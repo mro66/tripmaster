@@ -5,15 +5,6 @@ clear
 wlan1ip=$(ifconfig | grep -A 1 'wlan1' | tail -1 | cut -d ' ' -f 10)
 scriptdir=~/tripmaster/script
 
-if [ -z "$wlan1ip" ]
-then
-    updownwlan1="Starte"
-    ifconfigwlan1="up"
-else
-    updownwlan1="Stoppe"
-    ifconfigwlan1="down"
-fi
-
 wlan1_up() {
     while [[ "$wlan1ip" != "192.168."* ]]
     do
@@ -25,25 +16,24 @@ wlan1_up() {
          if [[ "$wlan1ip" = "169.254."* ]]
          then
             sudo ifconfig wlan1 down
-            whiptail --msgbox "Externer WLAN-Adapter wurde gestoppt\n (interne IP $wlan1)" 10 40
-            # break
-            exit
+            sleep 2
+            sudo ifconfig wlan1 up
+            sleep 2
          fi
     done
-    whiptail --msgbox "Der externe WLAN-Adapter\nhat die IP $wlan1ip" 10 40
 }
 
 while [ 1 ]
 do
+#                                              H  B  Listenhöhe
 CHOICE=$(
-whiptail --title "Tripmaster Steuerung" --menu "Auswahl treffen:" 14 50 7 \
+whiptail --title "Tripmaster Steuerung" --menu "" 13 50 6 \
     "1)" "Starte Tripmaster DEBUG" \
     "2)" "Starte Tripmaster" \
     "3)" "Stoppe Tripmaster" \
     "4)" "Verfolge Tripmaster LOG" \
     "5)" "Verfolge Tripmaster ERR" \
     "6)" "Full System Upgrade" \
-    "7)" "$updownwlan1 externen WLAN-Adapter"   \
     3>&2 2>&1 1>&3
 )
 
@@ -64,28 +54,18 @@ case $CHOICE in
         trap $scriptdir/tripmaster_err.sh EXIT
     ;;
     "6)")
-         sudo ifconfig wlan1 up
          wlan1_up
-         if (whiptail --title "Update" --yesno "Full System Upgrade?" 10 40)
+         clear
+         if (whiptail --title "Update" --yesno "Full System Upgrade?" 8 40)
          then
             sudo sync \
-            && echo -e "\e[1;32m\n--- update ---\n\e[0m" && sudo apt update \
-            && echo -e "\e[1;32m\nupgrade...\n\e[0m" && sudo apt full-upgrade -y \
-            && echo -e "\e[1;32m\nautoremove...\n\e[0m" && sudo apt autoremove -y --purge \
-            && echo -e "\e[1;32m\nautoclean...\n\e[0m" && sudo apt autoclean \
+            && echo -e "\e[1;32m\nFull System Upgrade\e[0m" \
+            && echo -e "\e[36m\n    update...\n\e[0m" && sudo apt update \
+            && echo -e "\e[36m\n    full-upgrade...\n\e[0m" && sudo apt full-upgrade -y \
+            && echo -e "\e[36m\n    autoremove...\n\e[0m" && sudo apt autoremove -y --purge \
+            && echo -e "\e[36m\n    autoclean...\n\e[0m" && sudo apt autoclean \
             && echo -e "\e[1;32m\nDone.\n\e[0m" \
             && sudo sync;
-        fi
-        sudo ifconfig wlan1 down
-        whiptail --msgbox "Externer WLAN-Adapter gestoppt" 10 40
-    ;;
-    "7)")
-        $(sudo ifconfig wlan1 $ifconfigwlan1)
-        if [ "$ifconfigwlan1" = "up" ]
-        then
-            wlan1_up
-        else
-            whiptail --msgbox "Externer WLAN-Adapter gestoppt" 10 40
         fi
     ;;
 esac

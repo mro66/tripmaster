@@ -61,7 +61,7 @@ handle_gps() {
     sudo apt-get install python3-pip -y
     # MRO Python3 GPS Daemon installieren
     echo -e "\e[36m    install gpsd-py3\e[0m";
-    sudo pip3 install gpsd-py3
+    sudo python3 -m pip install gpsd-py3
 
     sudo usermod -a -G dialout $USER
 
@@ -209,22 +209,19 @@ install_tripmaster() {
     sudo pigpiod
     sudo systemctl enable --now pigpiod
     
-    echo -e "\e[36m    install pytz\e[0m";
-    sudo pip3 install pytz
-    
     echo -e "\e[36m    install pi-ina219\e[0m";
     sudo raspi-config nonint do_i2c 0
     sudo apt-get install i2c-tools -y
     sudo i2cdetect -y 1
-    sudo pip3 install pi-ina219
+    sudo python3 -m pip install pi-ina219
     
     echo -e "\e[36m    install psutil\e[0m";
-    sudo pip3 install psutil
+    sudo python3 -m pip install psutil
     
     echo -e "\e[36m    install tornado 4.5.3.\e[0m";
     # aktuelle Version
     # sudo apt-get install python3-tornado
-    sudo pip3 install tornado==4.5.3.
+    sudo python3 -m pip install tornado==4.5.3.
     
     echo -e "\e[36m    make scripts executable\e[0m";
     cd /home/pi/tripmaster/script/
