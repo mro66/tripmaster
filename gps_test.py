@@ -1,73 +1,78 @@
 #!/usr/bin/env python3
 
-import gpsd, os, time
+from gps import gps, WATCH_ENABLE
+import datetime
+import time
+import threading
 
-# Connect to the local gpsd
-gpsd.connect()
+gpsd = None #seting the global variable
+gpsTimeFormat = '%Y-%m-%dT%H:%M:%S.%fZ'
 
-index = 1
+# Besser als os.system('clear'):
+# Cursor an den Bildschirmanfang
+print(chr(27) + "[H")
+# Bildschirm löschen
+print(chr(27) + "[2J")
 
-while True:
-    os.system('clear')
-    
-    # Get gps position
-    packet = gpsd.get_current()
-    
-    print("Loop " + str(index))
-    
-    # See the inline docs for GpsResponse for the available data
-    print(" ************ PROPERTIES ************* ")
-    print("              Mode: " + str(packet.mode))
-    print("        Satellites: " + str(packet.sats))
-    if packet.mode >= 2:
-        print("          Latitude: " + str(packet.lat))
-        print("         Longitude: " + str(packet.lon))
-        print("             Track: " + str(packet.track))
-        print("  Horizontal Speed: " + str(packet.hspeed))
-        print("              Time: " + str(packet.time))
-        # print("             Error: " + str(packet.error))
-    else:
-        print("          Latitude: NOT AVAILABLE")
-        print("         Longitude: NOT AVAILABLE")
-        print("             Track: NOT AVAILABLE")
-        print("  Horizontal Speed: NOT AVAILABLE")
-        # print(" Error: NOT AVAILABLE")
-    
-    if packet.mode >= 3:
-        print("          Altitude: " + str(packet.alt))
-        print("             Climb: " + str(packet.climb))
-    else:
-        print("          Altitude: NOT AVAILABLE")
-        print("             Climb: NOT AVAILABLE")
-    
-    print(" ************** METHODS ************** ")
-    if packet.mode >= 2:
-        print("          Location: " + str(packet.position()))
-        print("             Speed: " + str(packet.speed()))
-        print("Position Precision: " + str(packet.position_precision()))
-        # print("  Time UTC: " + str(packet.time_utc()))
-        # print("Time Local: " + str(packet.time_local()))
-        # print("   Map URL: " + str(packet.map_url()))
-    else:
-        print("          Location: NOT AVAILABLE")
-        print("             Speed: NOT AVAILABLE")
-        print("Position Precision: NOT AVAILABLE")
-        # print("  Time UTC: NOT AVAILABLE")
-        # print("Time Local: NOT AVAILABLE")
-        # print("   Map URL: NOT AVAILABLE")
-    
-    if packet.mode >= 3:
-        print("          Altitude: " + str(packet.altitude()))
-        # print("  Movement: " + str(packet.movement()))
-        # print("  Speed Vertical: " + str(packet.speed_vertical()))
-    else:
-        print("          Altitude: NOT AVAILABLE")
-        # print("  Movement: NOT AVAILABLE")
-        # print(" Speed Vertical: NOT AVAILABLE")
-    
-    print(" ************* FUNCTIONS ************* ")
-    print("Device: " + str(gpsd.device()))
-    
-    index = index + 1
-    
-    time.sleep(3)
+class GpsPoller(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        global gpsd #bring it in scope
+        gpsd = gps(mode=WATCH_ENABLE) #starting the stream of info
+        self.current_value = None
+        self.running = True #setting the thread running to true
+
+    def run(self):
+        global gpsd
+        while gpsp.running:
+            gpsd.next() #this will continue to loop and grab EACH set of gpsd info to clear the buffer
+
+if __name__ == '__main__':
+    gpsp = GpsPoller() # create the thread
+    try:
+        gpsp.start() # start it up
+        while True:
+            #It may take a second or two to get good data
+            #print gpsd.fix.latitude,', ',gpsd.fix.longitude,'  Time: ',gpsd.utc
+            
+            time_utc = None
+            time_local = None
+            if (gpsd.utc != None and len(gpsd.utc) > 0):
+                time_utc = datetime.datetime.strptime(gpsd.utc, gpsTimeFormat)
+                time_local = time_utc.replace(tzinfo=datetime.timezone.utc).astimezone()
+                
+            
+            print( 'GPS reading')
+            print( '----------------------------------------')
+            print( 'time local: ' , time_local)
+            print( 'time utc:   ' , time_utc)
+            print( 'latitude:   ' , gpsd.fix.latitude)
+            print( 'longitude:  ' , gpsd.fix.longitude)
+            print( 'altitude:   ' , gpsd.fix.altitude, 'm')
+            print( 'speed:      ' , gpsd.fix.speed, 'm/s')
+            print( 'heading:    ' , gpsd.fix.track, 'deg')
+            print( 'climb:      ' , gpsd.fix.climb, 'm/min')
+            print( 'status:      %s'  % ("NO SIG", "NO FIX", "2D FIX", "3D FIX")[gpsd.fix.mode])
+            print( 'longitude err:   +/-' , gpsd.fix.epx, 'm')
+            print( 'latitude err:    +/-' , gpsd.fix.epy, 'm')
+            print( 'altitude err:    +/-' , gpsd.fix.epv, 'm')
+            print( 'course err:      +/-' , gpsd.fix.epd, 'deg')
+            print( 'speed err:       +/-' , gpsd.fix.eps, 'm/s')
+            print( 'timestamp err:   +/-' , gpsd.fix.ept, 's')
+            print('')
+            index = 0
+            for satellite in gpsd.satellites:
+                index += 1
+                print ('Sat:', str(index).rjust(2, " "), '', satellite)
+            
+            time.sleep(3) #set to whatever
+            print(chr(27) + "[H")
+            print(chr(27) + "[2J", flush = True)
+            # os.system('clear')
+            
+    except (KeyboardInterrupt, SystemExit): #when you press ctrl+c
+        print ("\nKilling Thread...")
+        gpsp.running = False
+        gpsp.join() # wait for the thread to finish what it's doing
+        
+        print ("Done.\nExiting."    )
