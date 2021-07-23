@@ -34,6 +34,11 @@ handle_update() {
     && echo -e "\e[32mautoclean...\e[0m" && sudo apt autoclean \
     && echo -e "\e[32mDone.\e[0m" \
     && sudo sync;
+    
+    # Treiberaktualisierung des USB-WLAN-Adapters (muss zur Kernelversion passen)
+    # Installationsskript wurde in Schritt 1 heruntergeladen
+    sudo install-wifi  
+
 }
 
 
@@ -228,12 +233,12 @@ install_tripmaster() {
     sudo chmod +x ./chmod_cp_scripts.sh
     sudo ./chmod_cp_scripts.sh
 
-    # echo -e "\e[36m    disable wlan1 at boot\e[0m";
-    # cd /home/pi/
-    # sudo crontab -l > tempcron
-    # echo "@reboot sudo sleep 60 && sudo ifconfig wlan1 down" >> tempcron
-    # sudo crontab tempcron
-    # rm tempcron
+    echo -e "\e[36m    disable wlan1 at boot\e[0m";
+    cd /home/pi/
+    sudo crontab -l > tempcron
+    echo "@reboot sudo sleep 60 && sudo ifconfig wlan1 down" >> tempcron
+    sudo crontab tempcron
+    rm tempcron
     
     echo -e "\e[36m    configure autostart\e[0m";
     # In der *€!$$* rc.local steht _zwei Mal_ exit 0, daher muss das erste Vorkommen (mit "") umbenannt werden

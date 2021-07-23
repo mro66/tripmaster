@@ -65,8 +65,7 @@ install_wifidriver() {
     
     sudo chmod +x /usr/bin/install-wifi
     
-    sudo install-wifi
-    
+    sudo install-wifi  
     
 }
 
@@ -163,4 +162,4 @@ install_accesspoint
 
 ######################################################################
 echo -e "\e[32mDone.\e[0m";
-echo -e "\e[1;31mPlease insert WLAN1 and reboot\e[0m";
+echo -e "\e[1;31mPlease reboot\e[0m";
