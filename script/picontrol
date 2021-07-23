@@ -3,6 +3,7 @@
 clear
 
 wlan1ip=$(ifconfig | grep -A 1 'wlan1' | tail -1 | cut -d ' ' -f 10)
+tmdir=~/tripmaster
 scriptdir=~/tripmaster/script
 
 wlan1_up() {
@@ -25,15 +26,16 @@ wlan1_up() {
 
 while [ 1 ]
 do
-#                                              H  B  Listenhöhe
+#                                                 H  B  Listenhöhe
 CHOICE=$(
-whiptail --title "Tripmaster Steuerung" --menu "" 13 50 6 \
+whiptail --title "Tripmaster Steuerung" --menu "" 14 50 7 \
     "1)" "Starte Tripmaster DEBUG" \
     "2)" "Starte Tripmaster" \
     "3)" "Stoppe Tripmaster" \
     "4)" "Verfolge Tripmaster LOG" \
     "5)" "Verfolge Tripmaster ERR" \
-    "6)" "Full System Upgrade" \
+    "6)" "GPS Check" \
+    "7)" "Full System Upgrade" \
     3>&2 2>&1 1>&3
 )
 
@@ -54,6 +56,9 @@ case $CHOICE in
         trap $scriptdir/tripmaster_err.sh EXIT
     ;;
     "6)")
+        trap $tmdir/gps_test.py EXIT
+    ;;
+    "7)")
          wlan1_up
          clear
          if (whiptail --title "Update" --yesno "Full System Upgrade?" 8 40)

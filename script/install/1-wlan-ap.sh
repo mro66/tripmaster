@@ -55,7 +55,23 @@ handle_update() {
 }
 
 
-# MRO ################################################################
+# ####################################################################
+install_wifidriver() {
+    # Für meinen speziellen USB-Wifi-Adapter gibt es zurzeit (07/2021) keine direkte Unterstützung durch den Kernel, 
+    # so dass ein eigener Treiber installiert werden muss:
+    echo -e "\e[32minstall_wifidriver\e[0m";
+    
+    sudo wget http://downloads.fars-robotics.net/wifi-drivers/install-wifi -O /usr/bin/install-wifi
+    
+    sudo chmod +x /usr/bin/install-wifi
+    
+    sudo install-wifi
+    
+    
+}
+
+
+# ####################################################################
 install_accesspoint() {
     echo -e "\e[32minstall_accesspoint\e[0m";
 
@@ -133,11 +149,13 @@ EOF
     
 }
 
+
 ######################################################################
 
 setup_system
 
-# handle_update
+# MRO WIFI Treiber installieren
+install_wifidriver
 
 # MRO Tripmaster Access Point
 install_accesspoint
