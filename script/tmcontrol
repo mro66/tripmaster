@@ -6,14 +6,23 @@ wlan1ip=$(ifconfig | grep -A 1 'wlan1' | tail -1 | cut -d ' ' -f 10)
 tmdir=~/tripmaster
 scriptdir=~/tripmaster/script
 
+if [ -z "$wlan1ip" ]
+then
+    updownwlan1="Starte"
+else
+    updownwlan1="Stoppe"
+fi
+
 wlan1_up() {
+    sudo ifconfig wlan1 up
+    sleep 2
     while [[ "$wlan1ip" != "192.168."* ]]
     do
          # clear
          echo "Checke wlan1 IP...$wlan1ip"
          wlan1ip=$(ifconfig | grep -A 1 'wlan1' | tail -1 | cut -d ' ' -f 10)
          sleep 2
-         
+
          if [[ "$wlan1ip" = "169.254."* ]]
          then
             sudo ifconfig wlan1 down
@@ -28,7 +37,7 @@ while [ 1 ]
 do
 #                                                 H  B  Listenhöhe
 CHOICE=$(
-whiptail --title "Tripmaster Steuerung" --menu "" 14 50 7 \
+whiptail --title "Tripmaster Steuerung" --menu "" 15 50 8 \
     "1)" "Starte Tripmaster DEBUG" \
     "2)" "Starte Tripmaster" \
     "3)" "Stoppe Tripmaster" \
@@ -36,6 +45,7 @@ whiptail --title "Tripmaster Steuerung" --menu "" 14 50 7 \
     "5)" "Verfolge Tripmaster ERR" \
     "6)" "GPS Check" \
     "7)" "Full System Upgrade" \
+    "8)" "$updownwlan1 externen WLAN-Adapter"   \
     3>&2 2>&1 1>&3
 )
 
@@ -69,10 +79,20 @@ case $CHOICE in
             && echo -e "\e[36m\n    full-upgrade...\n\e[0m" && sudo apt full-upgrade -y \
             && echo -e "\e[36m\n    autoremove...\n\e[0m" && sudo apt autoremove -y --purge \
             && echo -e "\e[36m\n    autoclean...\n\e[0m" && sudo apt autoclean \
-            # Treiberaktualisierung des USB-WLAN-Adapters (muss zur Kernelversion passen)
             && echo -e "\e[36m\n    update wifi...\n\e[0m" && sudo install-wifi \
             && echo -e "\e[1;32m\nDone.\n\e[0m" \
             && sudo sync;
+        fi
+        sudo ifconfig wlan1 down
+    ;;
+    "8)")
+        if [ "$updownwlan1" = "Starte" ]
+        then
+            wlan1_up
+            whiptail --msgbox "Externer WLAN-Adapter gestartet\nIP: $wlan1ip" 8 40
+        else
+            sudo ifconfig wlan1 down
+            whiptail --msgbox "Externer WLAN-Adapter gestoppt" 8 40
         fi
     ;;
 esac
