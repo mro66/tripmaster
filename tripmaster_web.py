@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 from __future__ import print_function
-from datetime import datetime, timedelta
+from datetime import datetime
 from gpiozero import DigitalInputDevice, LED
 from read_RPM import reader
 from tornado.options import options
 from tornado.platform.asyncio import AsyncIOMainLoop
-from tripmaster_system import SYSTEM, DEBUG, ThreadLED, getGPSCurrent, tripmasterPath
+from tripmaster_system import DEBUG, SYSTEM, tripmasterPath
 from tripmaster_classes import POI, SECTION, loadRallye, saveKMZ, prettyprint
 import asyncio
 import configparser
@@ -183,9 +183,9 @@ def getData():
     # Index hochzählen
     INDEX  += 1
 
-    # Aktuelle GPS Position
-    GPS_CURRENT = getGPSCurrent()
-    
+    # Ermittle Systemstatus und GPS Position
+    SYSTEM.setState()
+
     # Umdrehungen der Antriebswelle(n) pro Minute
     UMIN    = 0.0
 
@@ -217,19 +217,19 @@ def getData():
         # Bei Autostart Etappe starten
         if STAGE.autostart == True:
             # Etappe starten
-            STAGE = STAGE.startStage(RALLYE, GPS_CURRENT.lon, GPS_CURRENT.lat)
+            STAGE = STAGE.startStage(RALLYE, SYSTEM.GPS_LON, SYSTEM.GPS_LAT)
             # Abschnitt starten
-            SECTOR = SECTOR.startSector(STAGE, GPS_CURRENT.lon, GPS_CURRENT.lat)
+            SECTOR = SECTOR.startSector(STAGE, SYSTEM.GPS_LON, SYSTEM.GPS_LAT)
 
         # Mindestens ein 2D Fix
-        if (GPS_CURRENT.mode >= 2):
+        if (SYSTEM.GPS_MODE >= 2):
 
             # KMH_GPS = GPS_CURRENT.speed() * 3.6 - gibt auf einmal nur noch 0.0 zurück
-            if (GPS_CURRENT.hspeed > 1.0):
-                KMH_GPS = GPS_CURRENT.hspeed * 3.6
+            if (SYSTEM.GPS_HSPEED > 1.0):
+                KMH_GPS = SYSTEM.GPS_HSPEED * 3.6
 
             if (SECTOR.getLon() is not None) and (SECTOR.getLat() is not None) and (KMH_GPS > 0.0):
-                DIST = calcGPSdistance(SECTOR.getLon(), GPS_CURRENT.lon, SECTOR.getLat(), GPS_CURRENT.lat)
+                DIST = calcGPSdistance(SECTOR.getLon(), SYSTEM.GPS_LON, SECTOR.getLat(), SYSTEM.GPS_LAT)
 
             KMH            = KMH_GPS
             RALLYE.km     += DIST
@@ -238,7 +238,7 @@ def getData():
             STAGE.km_gps   = STAGE.km
             SECTOR.km     += DIST * SECTOR.reverse
             SECTOR.km_gps  = SECTOR.km
-            SECTOR.setPoint(GPS_CURRENT.lon, GPS_CURRENT.lat, "sector", "track")
+            SECTOR.setPoint(SYSTEM.GPS_LON, SYSTEM.GPS_LAT, "sector", "track")
 
         ### Antriebswellensensor(en)
 
@@ -282,17 +282,17 @@ def getData():
 
     # Aktuelle Zeit als String HH-MM-SS
     NOW = datetime.now().strftime('%H-%M-%S') # .%f')[:-3]
+    # NOW2 = datetime.now().strftime('%H-%M-%S.%f')[:-3]
     
-    # Ermittle Systemresourcen
-    SYSTEM.setState()
-
     datastring = "data:{0:}:{1:0.1f}:{2:0.6f}:{3:0.6f}:{4:}:{5:}:{6:}:{7:}:{8:}:{9:}:{10:0.2f}:{11:0.2f}:{12:0.2f}:{13:}:{14:0.2f}:{15:0.2f}:{16:0.1f}:{17:0.1f}:{18:}:{19:0.2f}:{20:}:{21:0.1f}:{22:0.1f}".format(
-        NOW, KMH, GPS_CURRENT.lon, GPS_CURRENT.lat, 
+        NOW, KMH, SYSTEM.GPS_LON, SYSTEM.GPS_LAT, 
         int(HAS_SENSORS), int(SYSTEM.CLOCK_SYNCED), int(STAGE.isStarted()), 
         int(STAGE_FRACTIME), STAGE_TIMETOSTART, STAGE_TIMETOFINISH, 
         SECTOR.km, SECTOR.preset, SECTOR_PRESET_REST, FRAC_SECTOR_DRIVEN, STAGE.km, RALLYE.km, 
         kmh_avg, dev_kmh_avg, 
-        GPS_CURRENT.mode, SYSTEM.UBAT, SYSTEM.UBAT_CAP, SYSTEM.CPU_TEMP, SYSTEM.CPU_LOAD)
+        SYSTEM.GPS_MODE, SYSTEM.UBAT, SYSTEM.UBAT_CAP, SYSTEM.CPU_TEMP, SYSTEM.CPU_LOAD)
+    
+    # logger.info("data:{0:}".format(NOW2))
 
     return datastring
 
@@ -305,7 +305,7 @@ def calcGPSdistance(lambda1, lambda2, phi1, phi2):
     y  = (p2-p1)
     return math.sqrt(x*x + y*y) * 6371
 
-def pushSpeedData(clients, what, when):
+def checkLED(clients, what, when):
     if (SYSTEM.UBAT_CAP < -3):
         messageToAllClients(clients, "Akku leer! Fahre RasPi herunter...")
         stopTornado()
@@ -320,12 +320,12 @@ def pushSpeedData(clients, what, when):
         now     = datetime.now()
         # Differenz zwischen Jetzt und Idealzeit
         diff    = now - now.replace(microsecond=0)
-        # Zeit bis zum nächsten Lauf (ACHTUNG! Die 0.03 sind **REIN EMPIRISCH**)
-        when    = SAMPLE_TIME - diff.total_seconds() - 0.03
+        # Zeit bis zum nächsten Lauf
+        when    = SAMPLE_TIME - diff.total_seconds()
         
         # logger.debug(now.strftime('%H-%M-%S.%f')[:-3] + "\twhen\t{0:0.6f}\tdiff\t{1:0.3f}".format(when, diff.total_seconds()))
         
-        timed   = threading.Timer( when, pushSpeedData, [clients, what, when] )
+        timed   = threading.Timer( when, checkLED, [clients, what, when] )
         timed.daemon = True
         timed.start()
 
@@ -375,11 +375,11 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             UMIN_READER_1 = reader(pi, GPIO_PIN_1, PULSES_PER_REV)
             UMIN_READER_2 = reader(pi, GPIO_PIN_2, PULSES_PER_REV)
             # Timer starten
-            timed = threading.Timer(SAMPLE_TIME, pushSpeedData, [self.wsClients, "getData", "{:.1f}".format(SAMPLE_TIME)] )
+            timed = threading.Timer(SAMPLE_TIME, checkLED, [self.wsClients, "getData", "{:.1f}".format(SAMPLE_TIME)] )
             timed.daemon = True
             timed.start()
             isInitialized = True
-            logger.info("Tripmaster initialisiert")
+            logger.info("Thread für den Tripmaster gestartet")
             if (DEBUG):
                 messageToAllClients(self.wsClients, "Tripmaster DEBUG gestartet!:success")
             else:
@@ -401,7 +401,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
         messageToAllClients(self.wsClients, "::setButtons#button-togglestage#" + POI[stagestatus].icon + "#" + POI[stagestatus].iconcolor + "#toggleStage#")
 
-        ThreadLED.setNClients(len(self.wsClients))
+        SYSTEM.setNClients(len(self.wsClients))
         logger.info("OPEN - Anzahl verbundener Clients: " + str(len(self.wsClients)))
 
     # the client sent a message
@@ -429,19 +429,18 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
         # Etappe starten/beenden
         elif command == "toggleStage":
-            currentPos = self.getGPS();
-            if currentPos is not None:
+            if self.isGPSexact():
                 if (STAGE.start == 0):
                     # Etappe starten
-                    STAGE = STAGE.startStage(RALLYE, currentPos.lon, currentPos.lat)
+                    STAGE = STAGE.startStage(RALLYE, SYSTEM.GPS_LON, SYSTEM.GPS_LAT)
                     # Abschnitt starten
-                    SECTOR = SECTOR.startSector(STAGE, currentPos.lon, currentPos.lat)
+                    SECTOR = SECTOR.startSector(STAGE, SYSTEM.GPS_LON, SYSTEM.GPS_LAT)
                     messageToAllClients(self.wsClients, "Etappe gestartet:success:setButtons#button-togglestage#" + POI["stage_start"].icon + "#" + POI["stage_start"].iconcolor)
                 else:
                     # Abschnitt beenden
-                    SECTOR.endSector(currentPos.lon, currentPos.lat)
+                    SECTOR.endSector(SYSTEM.GPS_LON, SYSTEM.GPS_LAT)
                     # Etappe beenden
-                    STAGE.endStage(RALLYE, currentPos.lon, currentPos.lat)
+                    STAGE.endStage(RALLYE, SYSTEM.GPS_LON, SYSTEM.GPS_LAT)
                     messageToAllClients(self.wsClients, "Etappe beendet:success:setButtons#button-togglestage#" + POI["stage_finish"].icon + "#" + POI["stage_finish"].iconcolor)
             # prettyprint(RALLYE)
             
@@ -468,11 +467,10 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
         # Punkte registrieren
         elif (command == "countpoint") or (command == "checkpoint"):
-            currentPos = self.getGPS();
-            if currentPos is not None:
+            if self.isGPSexact():
                 ptype    = command
                 subptype = param
-                i        = STAGE.setPoint(currentPos.lon, currentPos.lat, ptype, subptype)
+                i        = STAGE.setPoint(SYSTEM.GPS_LON, SYSTEM.GPS_LAT, ptype, subptype)
                 messageToAllClients(self.wsClients, POI[subptype].name + " registriert:success:" + ptype + "Registered#" + str(i) + "#" + POI[subptype].name + "##1")
 
         # Punkte ändern
@@ -508,12 +506,11 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
         # Abschnitt zurücksetzen
         elif command == "resetSector":
-            currentPos = self.getGPS();
-            if currentPos is not None:
+            if self.isGPSexact():
                 # Abschnitt beenden
-                SECTOR.endSector(currentPos.lon, currentPos.lat)
+                SECTOR.endSector(SYSTEM.GPS_LON, SYSTEM.GPS_LAT)
                 # Abschnitt starten
-                SECTOR = SECTOR.startSector(STAGE, currentPos.lon, currentPos.lat)
+                SECTOR = SECTOR.startSector(STAGE, SYSTEM.GPS_LON, SYSTEM.GPS_LAT)
                 messageToAllClients(self.wsClients, "Abschnittszähler zurückgesetzt!:success:sectorReset")
             # prettyprint(RALLYE)
             
@@ -624,21 +621,21 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         else:
             self.write_message("Unbekannter Befehl - " + command + ":error")
 
-    def getGPS(self):
-        # Aktuelle Position
-        GPS_CURRENT = getGPSCurrent()
+    def isGPSexact(self):
+        # Ermittle Systemstatus und GPS Position
+        SYSTEM.setState()
         # Mindestens ein 2D Fix
-        if GPS_CURRENT.mode >= 2:
-            return GPS_CURRENT
+        if SYSTEM.GPS_MODE >= 2:
+            return True
         else:
             messageToAllClients(self.wsClients, "GPS ungenau! Wiederholen:error")
-            return None
+            return False
 
     # Client getrennt
     def on_close(self):
         # Aus der Liste laufender Clients entfernen
         self.wsClients.remove(self)
-        ThreadLED.setNClients(len(self.wsClients))
+        SYSTEM.setNClients(len(self.wsClients))
         logger.info("CLOSE - Anzahl noch verbundener Clients: " + str(len(self.wsClients)))
 
 
@@ -741,9 +738,6 @@ def startTornado():
     WebsocketServer.start()
     logger.debug("WebsocketServer gestartet")
 
-    ThreadLED.start()
-    logger.debug("Thread für die Status-LED gestartet")
-
     # Den Event Loop starten, damit Tornado dauerhaft auf Events von den obigen Sockets hört
     logger.debug("Starte Event Loop")
 #     tornado.ioloop.IOLoop.current().start()
@@ -760,9 +754,8 @@ def stopTornado():
     # # Laufende Etappe beenden
     # if STAGE.isStarted():
         # STAGE.start = 0
-        # currentPos = getGPS();
-        # if currentPos is not None:
-            # STAGE.endStage(currentPos.lon, currentPos.lat)
+        # if isGPSexact():
+            # STAGE.endStage(SYSTEM.GPS_LON, SYSTEM.GPS_LAT)
 
     WebsocketServer.stop()
     logger.debug("WebsocketServer gestoppt")
@@ -773,8 +766,8 @@ def stopTornado():
     logger.debug("Event Loop gestoppt")
 #     tornado.ioloop.IOLoop.current().stop()
 
-    # Der Status-Thread muss die Kontrolle über die LEDs an __main__ abgeben...
-    ThreadLED.releaseLEDs()
+    # Der GPS-Thread muss die Kontrolle über die LEDs an __main__ abgeben...
+    SYSTEM.releaseLEDs()
     # ... und __main__ mus die LED-Objekte schließen, sonst funktionieren die shell-Aufrufe nicht
     LED(19, initial_value=False).close()
     LED(26, initial_value=True).close()

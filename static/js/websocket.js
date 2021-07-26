@@ -388,8 +388,12 @@ function WebSocket_Open(page) {
                     smallclock.style.color = "var(--tm-gray)"; 
                     smallclock.innerHTML = TIME;
                 } else {
-                    smallclock.style.display = "none"; 
-                    clock.style.color = "var(--tm-gray)"; 
+                    smallclock.style.display = "none";
+                    if (IS_TIME_SYNC == 0) {
+                    	clock.style.color = "var(--tm-red)"; 
+                  	} else {
+                    	clock.style.color = "var(--tm-gray)"; 
+                  	}
                     clock.innerHTML = TIME;
                 }
             };
@@ -544,7 +548,7 @@ function WebSocket_Open(page) {
                         pointDataGrid.refresh();
                         // Wenn eine OK eingegeben wurde, zur Seite mit Datagrid springen wg Dateneingabe
                         if ((pointtype == "checkpoint") && (document.getElementById("tabpanel-settings") !== null)) {
-                            $("#tabpanel-settings").dxTabPanel("instance").option("selectedIndex", 3)
+                            $("#tabpanel-settings").dxTabPanel("instance").option("selectedIndex", 2)
                             if (isset(jumpToLastPage)) jumpToLastPage = true;
                         };
                     };
