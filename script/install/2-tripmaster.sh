@@ -64,9 +64,12 @@ handle_gps() {
     # MRO Bei OS Lite ist pip nicht in der Distribution enthalten
     echo -e "\e[36m    install python3-pip\e[0m";
     sudo apt-get install python3-pip -y
-    # MRO Python3 GPS Daemon installieren
+    # MRO Python3 GPS Daemon installieren: Tripmaster
     echo -e "\e[36m    install gpsd-py3\e[0m";
     sudo python3 -m pip install gpsd-py3
+    # MRO Python GPS Daemon installieren: gps_test
+    echo -e "\e[36m    install gps[0m";
+    sudo python3 -m pip install gps
 
     sudo usermod -a -G dialout $USER
 
@@ -316,10 +319,8 @@ handle_update
 handle_gps
 handle_pps
 
-disable_ntp;
-
-install_chrony;
-setup_chrony;
+install_chrony
+setup_chrony
 
 # MRO Tripmaster Installationen
 install_tripmaster
