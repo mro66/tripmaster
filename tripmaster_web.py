@@ -284,13 +284,14 @@ def getData():
     NOW = datetime.now().strftime('%H-%M-%S') # .%f')[:-3]
     # NOW2 = datetime.now().strftime('%H-%M-%S.%f')[:-3]
     
-    datastring = "data:{0:}:{1:0.1f}:{2:0.6f}:{3:0.6f}:{4:}:{5:}:{6:}:{7:}:{8:}:{9:}:{10:0.2f}:{11:0.2f}:{12:0.2f}:{13:}:{14:0.2f}:{15:0.2f}:{16:0.1f}:{17:0.1f}:{18:}:{19:0.2f}:{20:}:{21:0.1f}:{22:0.1f}".format(
+    datastring = "data:{0:}:{1:0.1f}:{2:0.6f}:{3:0.6f}:{4:}:{5:}:{6:}:{7:}:{8:}:{9:}:{10:0.2f}:{11:0.2f}:{12:0.2f}:{13:}:{14:0.2f}:{15:0.2f}:{16:0.1f}:{17:0.1f}:{18:}:{19:0.2f}:{20:}:{21:0.1f}:{22:0.1f}:{23:}".format(
         NOW, KMH, SYSTEM.GPS_LON, SYSTEM.GPS_LAT, 
         int(HAS_SENSORS), int(SYSTEM.CLOCK_SYNCED), int(STAGE.isStarted()), 
         int(STAGE_FRACTIME), STAGE_TIMETOSTART, STAGE_TIMETOFINISH, 
         SECTOR.km, SECTOR.preset, SECTOR_PRESET_REST, FRAC_SECTOR_DRIVEN, STAGE.km, RALLYE.km, 
         kmh_avg, dev_kmh_avg, 
-        SYSTEM.GPS_MODE, SYSTEM.UBAT, SYSTEM.UBAT_CAP, SYSTEM.CPU_TEMP, SYSTEM.CPU_LOAD)
+        SYSTEM.GPS_MODE, SYSTEM.UBAT, SYSTEM.UBAT_CAP, SYSTEM.CPU_TEMP, SYSTEM.CPU_LOAD,
+        int(DEBUG))
     
     # logger.info("data:{0:}".format(NOW2))
 
@@ -570,12 +571,12 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
         # Tripmaster
         elif command == "startDebug":
-            messageToAllClients(self.wsClients, "Starte Tornado im DEBUG-Modus neu...")
+            messageToAllClients(self.wsClients, "Starte Tripmaster im DEBUG-Modus neu...")
             time.sleep(3)
             subprocess.Popen(tripmasterPath + "/script/start_tripmaster_debug.sh", shell=True)
             sys.exit()
         elif command == "startNew":
-            messageToAllClients(self.wsClients, "Starte Tornado neu...")
+            messageToAllClients(self.wsClients, "Starte Tripmaster neu...")
             time.sleep(3)
             subprocess.Popen("sudo /etc/rc.local", shell=True)
             sys.exit()
