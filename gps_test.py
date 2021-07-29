@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from gps import gps, WATCH_ENABLE
-import datetime
+from datetime import datetime, timezone
 import time
 import threading
 
@@ -38,14 +38,21 @@ if __name__ == '__main__':
             time_utc = None
             time_local = None
             if (gpsd.utc != None and len(gpsd.utc) > 0):
-                time_utc = datetime.datetime.strptime(gpsd.utc, gpsTimeFormat)
-                time_local = time_utc.replace(tzinfo=datetime.timezone.utc).astimezone()
+                time_utc = datetime.strptime(gpsd.utc, gpsTimeFormat)
+                time_local = time_utc.replace(tzinfo=timezone.utc).astimezone()
                 
             
             print( 'GPS reading')
             print( '----------------------------------------')
             print( 'time local: ' , time_local)
             print( 'time utc:   ' , time_utc)
+            print( 'time system:' , datetime.now())
+            if time_local is not None:
+                td = time_local - datetime.now(time_local.tzinfo)
+                td = round(td.total_seconds(), 2)
+            else:
+                td = 'nan'
+            print( 'time diff:  ' , td)
             print( 'latitude:   ' , gpsd.fix.latitude)
             print( 'longitude:  ' , gpsd.fix.longitude)
             print( 'altitude:   ' , gpsd.fix.altitude, 'm')
@@ -64,6 +71,8 @@ if __name__ == '__main__':
             for satellite in gpsd.satellites:
                 index += 1
                 print ('Sat:', str(index).rjust(2, " "), '', satellite)
+            
+            print('')
             
             time.sleep(3) #set to whatever
             print(chr(27) + "[H")
