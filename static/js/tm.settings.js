@@ -1202,4 +1202,8 @@ $(function(){
     $("#textbox-cpuload").dxTextBox($.extend(true, {}, textBoxOptions,{
     }));
 
+    // Anzeige GPS Signal
+    $("#textbox-gps").dxTextBox($.extend(true, {}, textBoxOptions,{
+    }));
+
 });
