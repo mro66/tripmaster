@@ -82,11 +82,8 @@ class __statusSystem():
         # Zweifarbige Status-LED, grün aus, rot an (so kommt sie aus dem System)
         self.__led_green      = LED(19)
         self.__led_red        = LED(26, initial_value=True)
-        # Anzahl der Clients und ob die Anzahl beim letzten Durchlauf null war
+        # Anzahl der verbundenen Clients
         self.__nclients       = 0
-        self.__nclients_was_0 = True
-        # Wartezeit
-        self.__wait           = 2.0
 
     def setState(self):
         global DEBUG
@@ -127,7 +124,7 @@ class __statusSystem():
         elif (self.CPU_TEMP < 58.0):
             FAN.off()
 
-        # logger.info("MEM LOAD TEMP BAT CAP: {0:0.2f} {1:0.2f} {2:0.2f} {3:0.2f} {4:}".format(self.MEM_USED, self.CPU_LOAD, self.CPU_TEMP, self.UBAT, self.UBAT_CAP))
+        logger.info("MEM LOAD TEMP BAT CAP: {0:0.2f} {1:0.2f} {2:0.2f} {3:0.2f} {4:}".format(self.MEM_USED, self.CPU_LOAD, self.CPU_TEMP, self.UBAT, self.UBAT_CAP))
 
         # Die aktuelle GPS-Position ermitteln
         GPScurrent = gpsd.get_current()
@@ -150,8 +147,9 @@ class __statusSystem():
         if DEBUG:
             self.__DEBUG_GPS += 1
             self.GPS_MODE     = 3
-            now = datetime.now()
-            self.GPS_MODE     = now.minute % 2 + 1
+            # Jede Minute ändert sich der GOODFIX 
+            # now = datetime.now()
+            # self.GPS_MODE     = now.minute % 2 + 1
             self.GPS_LON      = 10.45 + self.__DEBUG_GPS/5000
             self.GPS_LAT      = 51.16 + self.__DEBUG_GPS/7500
             self.GPS_HSPEED   = 20.35
@@ -164,8 +162,19 @@ class __statusSystem():
                     of.write('\t{:0.4f}'.format(v).replace('.', ','))
                 of.write('\n')
     
+        # Wenn sich der GPS mode von < 2 (kein GOODFIX) auf >=2 (GOODFIX) und umgekehrt ändert, LEDs einstellen
         self.GPS_GOODFIX = (self.GPS_MODE >= 2)
+        if self.GPS_GOODFIX != self.__GPS_GOODFIX:
+            self.__statusLED()
+        self.__GPS_GOODFIX = self.GPS_GOODFIX
         
+        # Zeitgesteuert, so lange sich nicht wenigstens einmal ein Client verbunden hat
+        # Danach läuft immer ein Tripmaster Timer-Thread, der das erledigt
+        if self.__no_clients_yet:    
+            timed        = threading.Timer(2.0, self.setState)
+            timed.daemon = True
+            timed.start()
+
     def __movingAverage(self, stack, newval, maxlength):
         # Neuen Wert am Ende des Stacks einfügen
         stack.append(newval)
@@ -175,81 +184,56 @@ class __statusSystem():
         # Mittelwert des Stacks zurückgeben
         return sum(stack) / len(stack)
 
-    def checkLED(self):       
+    def __statusLED(self):       
         # Steuerung der Status-LED i.A.v. GPS-Modus und der Anzahl der verbundenen Clients
-        # GPS gilt als geändert beim Wechsel von < 2 (kein GOODFIX) auf >=2 (GOODFIX) und umgekehrt
-        gps_changed = self.GPS_GOODFIX != self.__GPS_GOODFIX
-        self.__GPS_GOODFIX = self.GPS_GOODFIX
         
         # Ohne Clients
         if self.__nclients == 0:
-            
-            # LEDs nur ändern, wenn sich der GPS-Modus geändert hat oder die Anzahl der Clients beim letzten Durchlauf *nicht* null war
-            if gps_changed or not self.__nclients_was_0:
-                # Wenn mindestens ein 2D Fix, ...
-                if (self.GPS_MODE >= 2):
-                    logger.debug('GRÜN blinkt (GPS Mode %s)', self.GPS_MODE)
-                    # ... dann blinkt die grüne LED
-                    self.__led_red.off()
-                    self.__led_green.blink()
-                else:
-                    logger.debug('ROT blinkt (GPS Mode %s)', self.GPS_MODE)
-                    # ... ansonsten blinkt die rote LED
-                    self.__led_green.off()
-                    self.__led_red.blink()
-
-            # Anzahl der Clients ist beim nächsten Durchlauf null
-            self.__nclients_was_0 = True
-
-            # Systemstatus überprüfen, jedoch nur so lange sich nicht wenigstens einmal ein Client verbunden hat
-            # Danach läuft immer ein Tripmaster Timer-Thread, der das erledigt
-            if self.__no_clients_yet:
-                self.setState()
+            # Wenn mindestens ein 2D Fix, ...
+            if (self.GPS_GOODFIX):
+                logger.debug('GRÜN blinkt (GPS Mode %s)', self.GPS_MODE)
+                # ... dann blinkt die grüne LED
+                self.__led_red.off()
+                self.__led_green.blink()
+            else:
+                logger.debug('ROT blinkt (GPS Mode %s)', self.GPS_MODE)
+                # ... ansonsten blinkt die rote LED
+                self.__led_green.off()
+                self.__led_red.blink()
         # Mit Clients
         else:
-            # LEDs nur ändern, wenn sich der GPS-Modus geändert hat oder die Anzahl der Clients beim letzten Durchlauf null war
-            if gps_changed or self.__nclients_was_0:
-                # Wenn mindestens ein 2D Fix, ...
-                if (self.GPS_MODE >= 2):
-                    logger.debug('GRÜN permanent (GPS Mode %s)', self.GPS_MODE)
-                    # ... dann leuchtet die grüne LED
-                    self.__led_red.off()
-                    self.__led_green.on()
-                else:
-                    logger.debug('Wechselblinken (GPS Mode %s)', self.GPS_MODE)
-                    # ... ansonsten blinken die grüne und rote LED im Wechsel
-                    self.__led_red.blink()
-                    time.sleep(1.0)
-                    self.__led_green.blink()
+            # Wenn mindestens ein 2D Fix, ...
+            if (self.GPS_GOODFIX):
+                logger.debug('GRÜN permanent (GPS Mode %s)', self.GPS_MODE)
+                # ... dann leuchtet die grüne LED
+                self.__led_red.off()
+                self.__led_green.on()
+            else:
+                logger.debug('Wechselblinken (GPS Mode %s)', self.GPS_MODE)
+                # ... ansonsten blinken die grüne und rote LED im Wechsel
+                self.__led_red.blink()
+                time.sleep(1.0)
+                self.__led_green.blink()
 
-            # Anzahl der Clients ist beim nächsten Durchlauf nicht null
-            self.__nclients_was_0 = False
-            
-        timed        = threading.Timer(self.__wait, self.checkLED)
-        timed.daemon = True
-        timed.start()
-        # logger.debug('checkLED alle %s Sekunden', self.__wait)
-            
     def setNClients(self, n):
         if n > 0:
             # Schaltet die Überprüfung des Systemstatus in diesem Thread ab (s.o.)
-            self.__no_clients_yet = False
-            # Seltener aktualisieren, wenn Clients verbunden sind
-            self.__wait = 10.0
-        else:
-            # Häufiger aktualisieren, wenn keine Clients verbunden sind
-            self.__wait = 2.0
-        self.__nclients_was_0 = (self.__nclients == 0)
+            if self.__no_clients_yet:
+                self.__no_clients_yet = False
+                logger.debug("Eigener Thread für den Systemstatus gestoppt")
         self.__nclients = n
+        # LEDs einstellen
+        self.__statusLED()
         
     def releaseLEDs(self):
         self.__led_green.close()
         self.__led_red.close()
 
 # System initialisieren
-SYSTEM = __statusSystem()
-# Thread zur Steuerung der Status-LED
-timed        = threading.Timer(2.0, SYSTEM.checkLED)
+SYSTEM       = __statusSystem()
+# Thread zur Überwachung des Systemstatus
+timed        = threading.Timer(2.0, SYSTEM.setState)
 timed.daemon = True
 timed.start()
-logger.debug("Thread für den GPS-Status gestartet")
+logger.debug("Eigener Thread für den Systemstatus gestartet")
+
