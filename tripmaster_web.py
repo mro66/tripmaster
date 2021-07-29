@@ -305,7 +305,7 @@ def calcGPSdistance(lambda1, lambda2, phi1, phi2):
     y  = (p2-p1)
     return math.sqrt(x*x + y*y) * 6371
 
-def checkLED(clients, what, when):
+def pushRallyeData(clients, what, when):
     if (SYSTEM.UBAT_CAP < -3):
         messageToAllClients(clients, "Akku leer! Fahre RasPi herunter...")
         stopTornado()
@@ -325,7 +325,7 @@ def checkLED(clients, what, when):
         
         # logger.debug(now.strftime('%H-%M-%S.%f')[:-3] + "\twhen\t{0:0.6f}\tdiff\t{1:0.3f}".format(when, diff.total_seconds()))
         
-        timed   = threading.Timer( when, checkLED, [clients, what, when] )
+        timed   = threading.Timer( when, pushRallyeData, [clients, what, when] )
         timed.daemon = True
         timed.start()
 
@@ -375,7 +375,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             UMIN_READER_1 = reader(pi, GPIO_PIN_1, PULSES_PER_REV)
             UMIN_READER_2 = reader(pi, GPIO_PIN_2, PULSES_PER_REV)
             # Timer starten
-            timed = threading.Timer(SAMPLE_TIME, checkLED, [self.wsClients, "getData", "{:.1f}".format(SAMPLE_TIME)] )
+            timed = threading.Timer(SAMPLE_TIME, pushRallyeData, [self.wsClients, "getData", "{:.1f}".format(SAMPLE_TIME)] )
             timed.daemon = True
             timed.start()
             isInitialized = True
@@ -402,7 +402,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         messageToAllClients(self.wsClients, "::setButtons#button-togglestage#" + POI[stagestatus].icon + "#" + POI[stagestatus].iconcolor + "#toggleStage#")
 
         SYSTEM.setNClients(len(self.wsClients))
-        logger.info("OPEN - Anzahl verbundener Clients: " + str(len(self.wsClients)))
+        logger.info("Websocket geöffnet - Clients: " + str(len(self.wsClients)))
 
     # the client sent a message
     def on_message(self, message):
@@ -622,21 +622,21 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
             self.write_message("Unbekannter Befehl - " + command + ":error")
 
     def isGPSexact(self):
-        # Ermittle Systemstatus und GPS Position
-        SYSTEM.setState()
-        # Mindestens ein 2D Fix
-        if SYSTEM.GPS_MODE >= 2:
-            return True
-        else:
+        # Check ob das GPS mindestens einen 2D Fix liefert
+        if not SYSTEM.GPS_GOODFIX:
             messageToAllClients(self.wsClients, "GPS ungenau! Wiederholen:error")
-            return False
+        return SYSTEM.GPS_GOODFIX
 
     # Client getrennt
     def on_close(self):
         # Aus der Liste laufender Clients entfernen
         self.wsClients.remove(self)
-        SYSTEM.setNClients(len(self.wsClients))
-        logger.info("CLOSE - Anzahl noch verbundener Clients: " + str(len(self.wsClients)))
+        n_clients = len(self.wsClients)
+        SYSTEM.setNClients(n_clients)
+        if n_clients == 0:            
+            logger.info("Alle Websockets geschlossen")
+        else:
+            logger.info("Websocket geschlossen - Clients: " + str(n_clients))
 
 
 #-------------------------------------------------------------------
