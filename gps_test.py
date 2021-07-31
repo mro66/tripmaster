@@ -2,17 +2,17 @@
 
 from gps import gps, WATCH_ENABLE
 from datetime import datetime, timezone
+import os
 import time
 import threading
 
 gpsd = None #seting the global variable
 gpsTimeFormat = '%Y-%m-%dT%H:%M:%S.%fZ'
 
-# Besser als os.system('clear'):
+# Bildschirm löschen
+os.system('clear')
 # Cursor an den Bildschirmanfang
 print(chr(27) + "[H")
-# Bildschirm löschen
-print(chr(27) + "[2J")
 
 class GpsPoller(threading.Thread):
     def __init__(self):
@@ -52,7 +52,7 @@ if __name__ == '__main__':
                 td = round(td.total_seconds(), 2)
             else:
                 td = 'nan'
-            print( 'time diff:  ' , td)
+            print( 'time diff:  ' , td, 's')
             print( 'latitude:   ' , gpsd.fix.latitude)
             print( 'longitude:  ' , gpsd.fix.longitude)
             print( 'altitude:   ' , gpsd.fix.altitude, 'm')
@@ -67,17 +67,16 @@ if __name__ == '__main__':
             print( 'speed err:       +/-' , gpsd.fix.eps, 'm/s')
             print( 'timestamp err:   +/-' , gpsd.fix.ept, 's')
             print('')
-            index = 0
-            for satellite in gpsd.satellites:
-                index += 1
+            for index, satellite in enumerate(gpsd.satellites, start=1):
                 print ('Sat:', str(index).rjust(2, " "), '', satellite)
             
             print('')
             
             time.sleep(3) #set to whatever
+            # Bildschirm löschen
+            os.system('clear')
+            # Cursor an den Bildschirmanfang
             print(chr(27) + "[H")
-            print(chr(27) + "[2J", flush = True)
-            # os.system('clear')
             
     except (KeyboardInterrupt, SystemExit): #when you press ctrl+c
         print ("\nKilling Thread...")
