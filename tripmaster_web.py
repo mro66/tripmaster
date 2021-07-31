@@ -16,6 +16,7 @@ import logging
 import math
 import os.path
 import pigpio
+import signal
 import subprocess
 import sys
 import threading
@@ -571,12 +572,12 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
         # Tripmaster
         elif command == "startDebug":
-            messageToAllClients(self.wsClients, "Starte Tripmaster im DEBUG-Modus neu...")
+            messageToAllClients(self.wsClients, "Starte Server im DEBUG-Modus neu...")
             time.sleep(3)
             subprocess.Popen(tripmasterPath + "/script/start_tripmaster_debug.sh", shell=True)
             sys.exit()
         elif command == "startNew":
-            messageToAllClients(self.wsClients, "Starte Tripmaster neu...")
+            messageToAllClients(self.wsClients, "Starte Server neu...")
             time.sleep(3)
             subprocess.Popen("sudo /etc/rc.local", shell=True)
             sys.exit()
@@ -784,12 +785,18 @@ def stopTornado():
     subprocess.call('echo "out" > /sys/class/gpio/gpio26/direction', shell=True)
     subprocess.call("echo 1 > /sys/class/gpio/gpio26/value", shell=True)
 
+def sigint_handler(signal, frame):
+    sys.exit(0)
+
 
 if __name__ == "__main__":
     try:
         # If you want Tornado to leave the logging configuration alone so you can manage it yourself
         options.logging = None
 
+        # SIGINT abfangen
+        signal.signal(signal.SIGINT, sigint_handler)
+        
         # Ab Tornado-Version 5.0 wird asyncio verwendet
         # asyncio.set_event_loop(asyncio.new_event_loop())
         
@@ -797,3 +804,4 @@ if __name__ == "__main__":
 
     except (KeyboardInterrupt, SystemExit):
         stopTornado()
+        logger.info("Tripmaster heruntergefahren")

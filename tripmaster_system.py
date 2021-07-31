@@ -76,10 +76,10 @@ class __statusSystem():
         self.GPS_LON          = 0.0
         self.GPS_HSPEED       = 0.0
         self.GPS_GOODFIX      = False
-        self.__GPS_GOODFIX    = True    # letzter Durchlauf
+        self.__GPS_GOODFIX    = None    # letzter Durchlauf
         # Wurde noch kein Client gestartet?
         self.__no_clients_yet = True
-        # Zweifarbige Status-LED, grün aus, rot an (so kommt sie aus dem System)
+        # Zweifarbige Status-LED, grün aus, rot an (so kommt sie aus dem Booten)
         self.__led_green      = LED(19)
         self.__led_red        = LED(26, initial_value=True)
         # Anzahl der verbundenen Clients
@@ -124,7 +124,7 @@ class __statusSystem():
         elif (self.CPU_TEMP < 58.0):
             FAN.off()
 
-        logger.info("MEM LOAD TEMP BAT CAP: {0:0.2f} {1:0.2f} {2:0.2f} {3:0.2f} {4:}".format(self.MEM_USED, self.CPU_LOAD, self.CPU_TEMP, self.UBAT, self.UBAT_CAP))
+        # logger.info("MEM LOAD TEMP BAT CAP: {0:0.2f} {1:0.2f} {2:0.2f} {3:0.2f} {4:}".format(self.MEM_USED, self.CPU_LOAD, self.CPU_TEMP, self.UBAT, self.UBAT_CAP))
 
         # Die aktuelle GPS-Position ermitteln
         GPScurrent = gpsd.get_current()
@@ -135,8 +135,9 @@ class __statusSystem():
                 if gps_local is not None:
                     time_diff = gps_local - datetime.now(gps_local.tzinfo)
                     time_diff = round(time_diff.total_seconds(), 2)
-                    logger.debug('GPS-Zeit - Systemzeit = %s s', time_diff)
                     if abs(time_diff) < 2.0:
+                        logger.debug('GPS-Zeit - Systemzeit = %s s', time_diff)
+                        logger.debug('Systemzeit synchronisiert')
                         self.CLOCK_SYNCED = True
 
             self.GPS_MODE   = GPScurrent.mode

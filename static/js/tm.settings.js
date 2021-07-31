@@ -1206,4 +1206,8 @@ $(function(){
     $("#textbox-gps").dxTextBox($.extend(true, {}, textBoxOptions,{
     }));
 
+    // Anzeige Uhrzeit
+    $("#textbox-clock").dxTextBox($.extend(true, {}, textBoxOptions,{
+    }));
+
 });

@@ -214,6 +214,20 @@ function WebSocket_Open(page) {
 
             };
             
+            // Uhrzeit
+            if (IS_TIME_SYNC) {
+                label = "Uhrzeit (sync)"
+                color = "var(--tm-green)"; 
+            } else {
+                label = "Uhrzeit"
+                color = "var(--tm-red)"; 
+            };
+            if (settings) {
+                document.getElementById("label-clock").innerHTML = label;
+            	$("#textbox-clock").dxTextBox("instance").option("value", TIME);
+                $("#textbox-clock").find(".dx-texteditor-input").css("color", color);
+            };           
+            
             // GPS
             if(GPS_MODE == 0) {
                 color = "var(--tm-lightgray)";
@@ -319,7 +333,7 @@ function WebSocket_Open(page) {
                 color = "var(--tm-red)";
             };
             if (dashboard) {
-                var statusCPULoad = document.getElementById("status-cpuload").style.color = color;
+                document.getElementById("status-cpuload").style.color = color;
             };
             if (settings) {
             	$("#textbox-cpuload").dxTextBox("instance").option("value", formatNumber(CPU_LOAD, 1) + " %");
