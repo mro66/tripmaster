@@ -135,6 +135,7 @@ handle_pps() {
         echo -e "\e[36m    setup config.txt for PPS\e[0m";
         do_backup boot/config.txt
         cat << EOF | sudo tee -a /boot/config.txt &>/dev/null
+
 [all]
 #########################################
 # https://www.raspberrypi.org/documentation/configuration/config-txt.md
@@ -169,6 +170,15 @@ dtoverlay=pps-gpio,gpiopin=4,capture_clear  # /dev/pps0
 
 # LED an GPIO26 (rot) beim Booten einschalten
 gpio=26=op,dh
+
+# Fast boot options
+dtoverlay=sdtweak,overclock_50=100
+disable_splash=1
+boot_delay=0
+dtparam=audio=off
+dtparam=act_led_trigger=none
+dtparam=act_led_activelow=on
+
 EOF
     }
 
@@ -244,19 +254,24 @@ install_tripmaster() {
     rm tempcron
     
     echo -e "\e[36m    configure autostart\e[0m";
-    # In der *€!$$* rc.local steht _zwei Mal_ exit 0, daher muss das erste Vorkommen (mit "") umbenannt werden
+    # In der *€!$$* rc.local steht _zwei Mal_ 'exit 0', daher muss das erste Vorkommen in 'exit_0' umbenannt werden
     sudo sed -i 's/\"exit 0\"/\"exit_0\"/g' /etc/rc.local
-    # Vor dem zweiten Vorkommen von exit 0 die benötigten Befehle eintragen
+    
+    # Vor dem zweiten Vorkommen von 'exit 0' die benötigten Befehle eintragen
     sudo sed -i '/exit 0/i # Autostart Tripmaster' /etc/rc.local
     sudo sed -i '/exit 0/i cd \/home\/pi\/tripmaster' /etc/rc.local
     # Startet das Skript im Hintergrund, leitet stdout sowie stderr in eine Datei um und schreibt seine eigene Prozess-ID in die Datei run.pid
-    sudo sed -i '/exit 0/i \/bin\/sleep 5 && sudo .\/tripmaster_web.py > .\/out\/tripmaster.out 2>&1 & echo $! > .\/run.pid' /etc/rc.local
-    # Ermittelt den Kindprozess (das eigentliche Pythonskript) und überschreibt run.pid mit dessen Prozess-ID
-    sudo sed -i '/exit 0/i \/bin\/sleep 5 && sudo pgrep -P $(cat .\/run.pid) > .\/run.pid\n' /etc/rc.local
+    # sudo sed -i '/exit 0/i \/bin\/sleep 5 && sudo .\/tripmaster_web.py > .\/out\/tripmaster.out 2>&1 & echo $! > .\/run.pid' /etc/rc.local
+    sudo sed -i '/exit 0/i sudo .\/tripmaster_web.py > .\/out\/tripmaster.out 2>&1 & echo $! > .\/run.pid' /etc/rc.local
     # Damit kann ein im Hintergrund gestarteter Tripmaster mit dem Befehl
-    # sudo kill -9 $(cat run.pid)
+    # sudo kill -SIGINT $(cat run.pid)
     # gestoppt werden
-    # Das erste Vorkommen wieder zurück umbenennen
+    
+    # Stromsparoption: HDMI ausschalten
+    sudo sed -i '/exit 0/i # Energiesparoption: HDMI ausschalten' /etc/rc.local    
+    sudo sed -i '/exit 0/i /usr/bin/tvservice -o\n' /etc/rc.local    
+    
+    # Das erste Vorkommen von 'exit 0' wieder zurück umbenennen
     sudo sed -i 's/\"exit_0\"/\"exit 0\"/g' /etc/rc.local
     
 }

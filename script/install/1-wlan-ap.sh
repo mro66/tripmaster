@@ -34,6 +34,10 @@ setup_system() {
     # sudo raspi-config nonint do_configure_keyboard $layout
     echo -e "\e[36m    timezone\e[0m";
     sudo timedatectl set-timezone $timezone
+    
+    # Fastboot aktivieren
+    echo -e "\e[36m    fast boot\e[0m";
+    sudo raspi-config nonint do_boot_wait 1
 
     # VNC aktivieren (nur bei OS mit Desktop aktivieren!)
     # echo -e "\e[36m    VNC\e[0m";
@@ -154,7 +158,7 @@ EOF
 setup_system
 
 # MRO WIFI Treiber installieren
-install_wifidriver
+# install_wifidriver
 
 # MRO Tripmaster Access Point
 install_accesspoint
