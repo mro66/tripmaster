@@ -143,11 +143,11 @@ EOF
     sudo iptables -t nat -A POSTROUTING -o wlan1 -j MASQUERADE
     sudo sh -c "iptables-save > /etc/iptables.ipv4.nat"
     
-    # In der *€!$$* rc.local steht _zwei Mal_ exit 0, daher muss das erste Vorkommen (mit "") umbenannt werden
+    # In der *€!$$* rc.local steht _zwei Mal_ 'exit 0', daher muss das erste Vorkommen in 'exit_0' umbenannt werden
     sudo sed -i 's/\"exit 0\"/\"exit_0\"/g' /etc/rc.local
-    # Vor dem zweiten Vorkommen von exit 0 die benötigten Befehle eintragen
+    # Vor dem zweiten Vorkommen von 'exit 0' die benötigten Befehle eintragen
     sudo sed -i '/exit 0/i iptables-restore < /etc/iptables.ipv4.nat\n' /etc/rc.local
-    # Das erste Vorkommen wieder zurück umbenennen
+    # Das erste Vorkommen von 'exit 0' wieder zurück umbenennen
     sudo sed -i 's/\"exit_0\"/\"exit 0\"/g' /etc/rc.local
     
 }
@@ -166,4 +166,4 @@ install_accesspoint
 
 ######################################################################
 echo -e "\e[32mDone.\e[0m";
-echo -e "\e[1;31mPlease reboot\e[0m";
+echo -e "\e[1;31mPlease install Wifi USB adapter and reboot\e[0m";

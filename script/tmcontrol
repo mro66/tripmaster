@@ -79,7 +79,6 @@ case $CHOICE in
             && echo -e "\e[36m\n    full-upgrade...\n\e[0m" && sudo apt full-upgrade -y \
             && echo -e "\e[36m\n    autoremove...\n\e[0m" && sudo apt autoremove -y --purge \
             && echo -e "\e[36m\n    autoclean...\n\e[0m" && sudo apt autoclean \
-            && echo -e "\e[36m\n    update wifi...\n\e[0m" && sudo install-wifi \
             && echo -e "\e[1;32m\nDone.\n\e[0m" \
             && sudo sync;
         fi
