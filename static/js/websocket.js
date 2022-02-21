@@ -1,8 +1,9 @@
 // WebSocket
 var wss;
 var wss_status = "closed";
-var LASTUBAT_CAP = 0
-
+var LASTUBAT_CAP = 0;
+var aKMH = [0, 0, 0];
+var aKMHmedian = 3;
 
 function set_wss_status(status) {
     wss_status = status;
@@ -14,6 +15,12 @@ function set_wss_status(status) {
 function WebSocket_Close() {
     wss.close();
 }
+
+const median = arr => {
+  const mid = Math.floor(arr.length / 2),
+    nums = [...arr].sort((a, b) => a - b);
+  return arr.length % 2 !== 0 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
+};
 
 function WebSocket_Open(page) {
     wss = new WebSocket("wss://"+location.hostname+":7070/"+page);
@@ -97,8 +104,13 @@ function WebSocket_Open(page) {
 
                 // Seite Tacho
                 let speedGauge = $('#circulargauge-speed').dxCircularGauge("instance");
-                // Hauptwert: Gerundete aktuelle Geschwindigkeit 
-                speedGauge.value(parseInt(KMH));
+                // Hauptwert: Aktuelle Geschwindigkeit
+                	// Alternativ: Median der letzten x Werte
+	                // aKMH.push((KMH));
+	                // if (aKMH.length > aKMHmedian) aKMH.shift(); 
+	                // speedGauge.value(median(aKMH));
+                speedGauge.value(KMH);
+                // speedGauge.value(parseInt(KMH));
                 // Nebenwert: Durchschnittsgeschwindigkeit oder prozentuale Etappenrestzeit
                 if (STAGE_FRACTIME == 0) {
                     speedGauge.subvalues([AVG_KMH]);
@@ -257,7 +269,7 @@ function WebSocket_Open(page) {
             if(HAS_SENSORS == 0) {
                 color = "var(--tm-lightgray)";
             } else if (HAS_SENSORS == 1) {
-                color = "var(--tm-red)";
+                color = "var(--tm-green)";
            } else {
                 color = "Ivory";
             };
