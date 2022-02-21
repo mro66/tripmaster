@@ -3,10 +3,11 @@
 from datetime import datetime, timezone
 from gpiozero import CPUTemperature, DigitalOutputDevice, LED
 from logging.handlers import RotatingFileHandler
-from ina219 import INA219       
+from ina219 import INA219
 from psutil import cpu_percent, virtual_memory
 from gps import gps, WATCH_ENABLE
 import logging
+import math
 import os
 import sys
 import statistics
@@ -157,26 +158,32 @@ class __statusSystem():
             gps_local = gps_utc.replace(tzinfo=timezone.utc).astimezone()
             time_diff = gps_local - datetime.now(gps_local.tzinfo)
             time_diff = abs(round(time_diff.total_seconds(), 2))
-            logger.info('GPS-Zeit - Systemzeit = %s s', time_diff)
             if time_diff < 2.0:
                 logger.info('Systemzeit durch CHRONY synchronisiert')
+                logger.info('Diff zw. GPS- und Systemzeit = %s s', time_diff)
                 self.CLOCK_SYNCED = True
 
-        self.GPS_MODE   = gpsd.fix.mode
-        self.GPS_LON    = gpsd.fix.longitude
-        self.GPS_LAT    = gpsd.fix.latitude
-        self.GPS_HSPEED = gpsd.fix.speed
-        # logger.info("Mode: " + str(self.GPS_MODE)  + ", local not NONE?: " + str(gps_local != None))
-   
-        if DEBUG:
+        if not DEBUG:
+            self.GPS_MODE   = gpsd.fix.mode
+            self.GPS_LON    = gpsd.fix.longitude
+            self.GPS_LAT    = gpsd.fix.latitude
+            self.GPS_HSPEED = gpsd.fix.speed
+            # logger.info("Mode: " + str(self.GPS_MODE)  + ", local not NONE?: " + str(gps_local != None))
+        else:
             self.__DEBUG_GPS += 1
             self.GPS_MODE     = 3
             # Jede Minute ändert sich der GOODFIX 
             # now = datetime.now()
             # self.GPS_MODE     = now.minute % 2 + 1
-            self.GPS_LON      = 10.45 + self.__DEBUG_GPS/5000
-            self.GPS_LAT      = 51.16 + self.__DEBUG_GPS/7500
-            self.GPS_HSPEED   = 20.35
+            
+            # schwingt zwischen 0 und dem letzten Faktor
+            sine = abs(math.sin((self.__DEBUG_GPS * 2)/180 * math.pi) * 20)
+            # m/s
+            self.GPS_HSPEED   = 10 + sine
+            self.GPS_LAT      = 50
+            # new_longitude = longitude + (dx / r_earth) * (180 / pi) / cos(latitude * pi/180);
+            # dx = Entfernung in km, r_earth = Erdradius = 6371 km
+            self.GPS_LON      = self.GPS_LON + (self.GPS_HSPEED/1000/6371) * (180/math.pi) / math.cos(self.GPS_LAT*math.pi/180)
 
             # Systemvariable speichern: Genutztes RAM, CPU Last, CPU Temperatur, Spannung
             if self.__first_line:
