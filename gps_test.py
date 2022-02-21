@@ -44,8 +44,8 @@ if __name__ == '__main__':
             
             print( 'GPS reading')
             print( '----------------------------------------')
-            print( 'time local: ' , time_local)
             print( 'time utc:   ' , time_utc)
+            print( 'time local: ' , time_local)
             print( 'time system:' , datetime.now())
             if time_local is not None:
                 td = time_local - datetime.now(time_local.tzinfo)
