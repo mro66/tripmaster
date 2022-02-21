@@ -46,18 +46,29 @@ GPIO_PIN_1 = 17 # weiß
 GPIO_PIN_2 = 18 # blau
 
 # DigitalInputDevice setzt standardmäßig pull_up=False, d.h. is_active ist True, wenn Pin ist HIGH
-# Reedsensor 1 an Pin 17 (weiß)
-REED1 = DigitalInputDevice(GPIO_PIN_1, pull_up=True)
-# Reedsensor 2 an Pin 18 (blau)
-REED2 = DigitalInputDevice(GPIO_PIN_2, pull_up=True)
+# Wahlweise Antriebswellensensor(en) (z.B. Reedschalter im Trabant) oder externes Signal (z.B. Audi)
+# Impulsschalter 1 an Pin 17 (weiß)
+IMPULS1 = DigitalInputDevice(GPIO_PIN_1, pull_up=True)
+# Impulsschalter 2 an Pin 18 (blau)
+IMPULS2 = DigitalInputDevice(GPIO_PIN_2, pull_up=True)
+# Anzahl Sensoren
+N_IMPULS = 0
 
-# Verbindung zu pigpio Deamon
-pi = None
-# Die UMIN_READER
-UMIN_READER_1 = None
-UMIN_READER_2 = None
+def activated(impuls):
+    global N_IMPULS
+    logger.info("Impulsschalter an {0:} aktiviert".format(impuls.pin))
+    N_IMPULS =+ 1
+    impuls.when_activated = None
+    
+# Ein 0 V Potential an einem der beiden Impulsschalter
+IMPULS1.when_activated = activated
+IMPULS2.when_activated = activated
 # Impulse pro Umdrehung
 PULSES_PER_REV = 1.0
+# Die UMIN_READER
+RPM_READER_1 = None
+UMIN_READER_2 = None
+
 
 ### Konfiguration Fahrzeug
 # INI-Datei
@@ -69,8 +80,6 @@ config.read(configFileName)
 # aktive Konfiguration
 ACTIVE_CONFIG = config.get("Settings", "aktiv")
 
-# Anzahl Sensoren
-N_SENSORS = 1
 # Übersetzung Abtriebswelle - Achswelle (z. B. Differenzial beim Jaguar)
 TRANSMISSION_RATIO = 1.0
 # Reifenumfang in m
@@ -78,8 +87,7 @@ TYRE_SIZE = 2.0
 
 # Liest die Parameter der aktiven Konfiguration und setzt die globalen Variablen
 def setConfig():
-    global N_SENSORS, TRANSMISSION_RATIO, TYRE_SIZE
-    N_SENSORS = config.getint(ACTIVE_CONFIG, "Sensoren")
+    global TRANSMISSION_RATIO, TYRE_SIZE
     TRANSMISSION_RATIO = eval(config.get(ACTIVE_CONFIG, "Übersetzung"))
     TYRE_SIZE = config.getint(ACTIVE_CONFIG, "Radumfang") / 100
 
@@ -94,8 +102,6 @@ def getConfig():
 
 # Messen alle ... Sekunden
 SAMPLE_TIME = 1.0
-# Hat Antriebswellensensor?
-HAS_SENSORS = False
 # GLP: Vorgabe der Durchschnittsgeschwindigkeit
 KMH_AVG_PRESET = 0.0
 # GLP: Vorgabe derZeit
@@ -174,12 +180,7 @@ def WebRequestHandler(requestlist):
     return returnlist
 
 def getData():
-    global HAS_SENSORS, INDEX, RALLYE, STAGE, SECTOR
-
-    # Ein 0 V Potential an einem der beiden Reedsensoren aktiviert die Antriebswellensensoren
-    if (REED1.is_active or REED2.is_active) and not HAS_SENSORS:
-        HAS_SENSORS = True
-        logger.info("Antriebswellensensor(en) automatisch aktiviert!")
+    global N_IMPULS, INDEX, RALLYE, STAGE, SECTOR
 
     # Index hochzählen
     INDEX  += 1
@@ -188,11 +189,11 @@ def getData():
     SYSTEM.setState()
 
     # Umdrehungen der Antriebswelle(n) pro Minute
-    UMIN    = 0.0
+    RPM    = 0.0
 
     # Geschwindigkeit in Kilometer pro Stunde
     KMH     = 0.0
-    kmh_avg = 0.0
+    KMH_AVG = 0.0
     KMH_GPS = 0.0
 
     # Gefahrene Distanz in km (berechnet aus Geokoordinaten)
@@ -203,7 +204,7 @@ def getData():
     # % zurückgelegte Strecke im Abschnitt
     FRAC_SECTOR_DRIVEN = 0
     # Abweichung der durchschnitlichen Geschwindigkeit von der Vorgabe
-    dev_kmh_avg        = 0.0
+    DEV_KMH_AVG        = 0.0
 
     # Zeit bis zum Start der Etappe
     STAGE_TIMETOSTART  = 0
@@ -233,25 +234,25 @@ def getData():
                 DIST = calcGPSdistance(SECTOR.getLon(), SYSTEM.GPS_LON, SECTOR.getLat(), SYSTEM.GPS_LAT)
 
             KMH            = KMH_GPS
-            RALLYE.km     += DIST
-            RALLYE.km_gps  = RALLYE.km
-            STAGE.km      += DIST * SECTOR.reverse
-            STAGE.km_gps   = STAGE.km
-            SECTOR.km     += DIST * SECTOR.reverse
-            SECTOR.km_gps  = SECTOR.km
+            RALLYE.km_gps += DIST
+            STAGE.km_gps  += DIST * SECTOR.reverse
+            SECTOR.km_gps += DIST * SECTOR.reverse
             SECTOR.setPoint(SYSTEM.GPS_LON, SYSTEM.GPS_LAT, "sector", "track")
 
         ### Antriebswellensensor(en)
 
-        if HAS_SENSORS:
+        if N_IMPULS > 0:
 
-            # UMIN ermitteln
-            UMIN = int(UMIN_READER_1.RPM() + 0.5)
-            if N_SENSORS > 1:
-                UMIN += int(UMIN_READER_2.RPM() + 0.5)
-                UMIN  = UMIN / 2
+            # RPM ermitteln
+            RPM = int(RPM_READER_1.RPM() + 0.5)
+            
+            logger.info('RPM: {0:}'.format(RPM))
+            
+            if N_IMPULS > 1:
+                RPM += int(UMIN_READER_2.RPM() + 0.5)
+                RPM  = RPM / 2
             # Geschwindigkeit in Meter pro Sekunde
-            MS = UMIN / TRANSMISSION_RATIO / 60 * TYRE_SIZE
+            MS = RPM / TRANSMISSION_RATIO / 60 * TYRE_SIZE
 
             # Geschwindigkeit in Kilometer pro Stunde
             KMH = MS * 3.6
@@ -260,6 +261,12 @@ def getData():
             STAGE.km  += MS * SAMPLE_TIME / 1000 * SECTOR.reverse
             SECTOR.km += MS * SAMPLE_TIME / 1000 * SECTOR.reverse
 
+        else:
+            
+            RALLYE.km = RALLYE.km_gps
+            STAGE.km  = STAGE.km_gps
+            SECTOR.km = SECTOR.km_gps
+            
         # Messzeitpunkte Abschnitt
         SECTOR.t += SAMPLE_TIME
 
@@ -270,9 +277,10 @@ def getData():
 
         if SECTOR.t > 0.0:
             # Durchschnittliche Geschwindigkeit in Kilometer pro Stunde im Abschnitt
-            kmh_avg = SECTOR.km * 1000 / SECTOR.t * 3.6
+            KMH_AVG = SECTOR.km * 1000 / SECTOR.t * 3.6
             if KMH_AVG_PRESET > 0.0:
-                dev_kmh_avg = kmh_avg - KMH_AVG_PRESET
+                # Abweichung der tatsächlichen Durchschnittsgeschwindigkeit von der GLP Vorgabe
+                DEV_KMH_AVG = KMH_AVG - KMH_AVG_PRESET
 
         if STAGE.getDuration() > 0:
             STAGE_TIMETOFINISH = STAGE.finish - int(datetime.timestamp(datetime.now()))
@@ -285,12 +293,12 @@ def getData():
     NOW = datetime.now().strftime('%H-%M-%S') # .%f')[:-3]
     # NOW2 = datetime.now().strftime('%H-%M-%S.%f')[:-3]
     
-    datastring = "data:{0:}:{1:0.1f}:{2:0.6f}:{3:0.6f}:{4:}:{5:}:{6:}:{7:}:{8:}:{9:}:{10:0.2f}:{11:0.2f}:{12:0.2f}:{13:}:{14:0.2f}:{15:0.2f}:{16:0.1f}:{17:0.1f}:{18:}:{19:0.2f}:{20:}:{21:0.1f}:{22:0.1f}:{23:}".format(
+    datastring = "data:{0:}:{1:0.2f}:{2:0.6f}:{3:0.6f}:{4:}:{5:}:{6:}:{7:}:{8:}:{9:}:{10:0.2f}:{11:0.2f}:{12:0.2f}:{13:}:{14:0.2f}:{15:0.2f}:{16:0.1f}:{17:0.1f}:{18:}:{19:0.2f}:{20:}:{21:0.1f}:{22:0.1f}:{23:}".format(
         NOW, KMH, SYSTEM.GPS_LON, SYSTEM.GPS_LAT, 
-        int(HAS_SENSORS), int(SYSTEM.CLOCK_SYNCED), int(STAGE.isStarted()), 
+        int(N_IMPULS > 0), int(SYSTEM.CLOCK_SYNCED), int(STAGE.isStarted()), 
         int(STAGE_FRACTIME), STAGE_TIMETOSTART, STAGE_TIMETOFINISH, 
         SECTOR.km, SECTOR.preset, SECTOR_PRESET_REST, FRAC_SECTOR_DRIVEN, STAGE.km, RALLYE.km, 
-        kmh_avg, dev_kmh_avg, 
+        KMH_AVG, DEV_KMH_AVG, 
         SYSTEM.GPS_MODE, SYSTEM.UBAT, SYSTEM.UBAT_CAP, SYSTEM.CPU_TEMP, SYSTEM.CPU_LOAD,
         int(DEBUG))
     
@@ -362,7 +370,7 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         return True
 
     def open(self, page):
-        global isInitialized, pi, UMIN_READER_1, UMIN_READER_2, RALLYE, STAGE, SECTOR
+        global isInitialized, RPM_READER_1, UMIN_READER_2, RALLYE, STAGE, SECTOR
         self.stream.set_nodelay(True)
         # Jeder WebSocket Client wird der Liste wsClients hinzugefügt
         self.wsClients.append(self)
@@ -371,11 +379,9 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
         
         # Wenn es der Timer Thread noch nicht gestartet ist, alles initialisieren
         if isInitialized == False:
-            # Verbinden mit pigpio
-            pi = pigpio.pi()
             # UMIN_READER starten
-            UMIN_READER_1 = reader(pi, GPIO_PIN_1, PULSES_PER_REV)
-            UMIN_READER_2 = reader(pi, GPIO_PIN_2, PULSES_PER_REV)
+            RPM_READER_1 = reader(pigpio.pi(), GPIO_PIN_1, PULSES_PER_REV)
+            UMIN_READER_2 = reader(pigpio.pi(), GPIO_PIN_2, PULSES_PER_REV)
             # Timer starten
             timed = threading.Timer(SAMPLE_TIME, pushRallyeData, [self.wsClients, "getData", "{:.1f}".format(SAMPLE_TIME)] )
             timed.daemon = True
@@ -748,8 +754,8 @@ def startTornado():
 def stopTornado():
 
     # # UMIN_READER stoppen
-    # UMIN_READER_1.cancel()
-    # UMIN_READER_2.cancel()
+    # RPM_READER_1.cancel()
+    # RPM_READER_2.cancel()
     # # Verbindung mit pigpio beenden
     # pi.stop()
 
