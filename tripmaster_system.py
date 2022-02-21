@@ -5,7 +5,7 @@ from gpiozero import CPUTemperature, DigitalOutputDevice, LED
 from logging.handlers import RotatingFileHandler
 from ina219 import INA219       
 from psutil import cpu_percent, virtual_memory
-import gpsd
+from gps import gps, WATCH_ENABLE
 import logging
 import os
 import sys
@@ -46,7 +46,24 @@ FAN = DigitalOutputDevice(27)
 
 
 ### Mit dem GPS Daemon verbinden
-gpsd.connect()
+gpsd = gps(mode=WATCH_ENABLE) #starting the stream of info
+gpsTimeFormat = '%Y-%m-%dT%H:%M:%S.%fZ'
+
+class GpsPoller(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+        global gpsd #bring it in scope
+        gpsd = gps(mode=WATCH_ENABLE) #starting the stream of info
+        self.current_value = None
+        self.running = True #setting the thread running to true
+
+    def run(self):
+        global gpsd
+        while gpsp.running:
+            gpsd.next() #this will continue to loop and grab EACH set of gpsd info to clear the buffer
+
+gpsp = GpsPoller()
+gpsp.start()
 
 # Ermitteln des Systemstatus und der GPS Position
 class __statusSystem():
@@ -134,24 +151,22 @@ class __statusSystem():
 
         # logger.info("MEM LOAD TEMP BAT CAP: {0:0.2f} {1:0.2f} {2:0.2f} {3:0.2f} {4:}".format(self.MEM_USED, self.CPU_LOAD, self.CPU_TEMP, self.UBAT, self.UBAT_CAP))
 
-        # Die aktuelle GPS-Position ermitteln
-        GPScurrent = gpsd.get_current()
-        if GPScurrent is not None:
-            if (not self.CLOCK_SYNCED) and (GPScurrent.mode >= 2):
-                gps_utc = datetime.strptime(GPScurrent.time, '%Y-%m-%dT%H:%M:%S.%fZ')
-                gps_local = gps_utc.replace(tzinfo=timezone.utc).astimezone()
-                if gps_local is not None:
-                    time_diff = gps_local - datetime.now(gps_local.tzinfo)
-                    time_diff = round(time_diff.total_seconds(), 2)
-                    if abs(time_diff) < 2.0:
-                        logger.debug('GPS-Zeit - Systemzeit = %s s', time_diff)
-                        logger.debug('Systemzeit synchronisiert')
-                        self.CLOCK_SYNCED = True
+        # Den Synchronisationsstatus der Systemuhr und die aktuelle GPS-Position ermitteln
+        if (not self.CLOCK_SYNCED) and (gpsd.utc != None and len(gpsd.utc) > 0):
+            gps_utc = datetime.strptime(gpsd.utc, gpsTimeFormat)
+            gps_local = gps_utc.replace(tzinfo=timezone.utc).astimezone()
+            time_diff = gps_local - datetime.now(gps_local.tzinfo)
+            time_diff = abs(round(time_diff.total_seconds(), 2))
+            logger.info('GPS-Zeit - Systemzeit = %s s', time_diff)
+            if time_diff < 2.0:
+                logger.info('Systemzeit durch CHRONY synchronisiert')
+                self.CLOCK_SYNCED = True
 
-            self.GPS_MODE   = GPScurrent.mode
-            self.GPS_LON    = GPScurrent.lon
-            self.GPS_LAT    = GPScurrent.lat
-            self.GPS_HSPEED = GPScurrent.hspeed
+        self.GPS_MODE   = gpsd.fix.mode
+        self.GPS_LON    = gpsd.fix.longitude
+        self.GPS_LAT    = gpsd.fix.latitude
+        self.GPS_HSPEED = gpsd.fix.speed
+        # logger.info("Mode: " + str(self.GPS_MODE)  + ", local not NONE?: " + str(gps_local != None))
    
         if DEBUG:
             self.__DEBUG_GPS += 1
