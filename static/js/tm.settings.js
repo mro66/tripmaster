@@ -1077,7 +1077,7 @@ $(function(){
         value: "1",
         maskInvalidMessage: "Unzulässiger Wert",
         showClearButton: true,
-        onChange: function(e) {
+        onInput: function(e) {
             var isAllValid = true;
 
             try {
@@ -1092,7 +1092,7 @@ $(function(){
                 DevExpress.ui.notify("Keine auswertbare Anweisung", "error");
             };
 
-            for (var i=0; i<3; i++) {
+            for (var i=0; i<2; i++) {
                 isAllValid = $("#textbox-key"+i).dxTextBox('instance').option("isValid");
                 if (!isAllValid) break;
             }
@@ -1107,15 +1107,13 @@ $(function(){
         closeOnOutsideClick: true,
         onShown: function (e) {
             e.component.option("title", "Konfiguration '" + configurationSelectBox.option("value") + "'");
+            // Radumfang
             $("#textbox-key0").dxTextBox($.extend(true, {}, inputTextBoxOptions, {
-                mask: "x",
-                maskRules: {"x": /[12]/}
-            }));
-            $("#textbox-key1").dxTextBox($.extend(true, {}, inputTextBoxOptions, {
                 mask: "xxx",
                 maskRules: {"x": /[0-9]/}
             }));
-            $("#textbox-key2").dxTextBox($.extend(true, {}, inputTextBoxOptions, {
+            // Übersetzung
+            $("#textbox-key1").dxTextBox($.extend(true, {}, inputTextBoxOptions, {
                 mask: "xxxxxxxxxxxxxxxxxxxx",
                 maskRules: {"x": /[0-9 + - / *]/},
             }));
@@ -1127,7 +1125,7 @@ $(function(){
                 },
                 onClick: function(e) {
                     var writeConfig = '';
-                    for (var i=0; i<3; i++) {
+                    for (var i=0; i<2; i++) {
                         writeConfig += document.getElementById("label-key"+i).innerHTML + "=" +
                         $("#textbox-key"+i).dxTextBox('instance').option("value") + "&";
                     }
